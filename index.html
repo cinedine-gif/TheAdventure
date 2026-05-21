@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Adventure</title>
+  <style>
+    :root {
+      --bg: #f5d24f;
+      --panel: #fff4c2;
+      --text: #2d2410;
+      --accent: #136f63;
+      --accent-2: #1a936f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Verdana", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 20%, #ffe38b 0, transparent 35%),
+        radial-gradient(circle at 80% 80%, #ffd36b 0, transparent 35%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .app { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    .screen {
+      display: none;
+      background: rgba(255, 244, 194, 0.9);
+      border: 2px solid #c5a53f;
+      border-radius: 12px;
+      padding: 1rem;
+      position: relative;
+    }
+    .screen-visible { display: block; }
+    #screen-menu {
+      max-width: 960px;
+      min-height: 540px;
+      margin: 0 auto;
+      padding: 1.2rem 1.2rem 1.4rem;
+      border: 2px solid #c5a53f;
+      background: rgba(255, 244, 194, 0.9);
+    }
+    #screen-menu.screen-visible {
+      display: flex;
+      flex-direction: column;
+    }
+    h1, h2 { margin-top: 0; }
+    .subtitle { margin-top: -0.5rem; opacity: 0.85; }
+    .menu-actions, .game-actions { display: flex; gap: 0.75rem; }
+    #screen-menu h1,
+    #screen-menu .subtitle {
+      color: var(--text);
+      text-shadow: none;
+    }
+    #screen-menu .menu-actions {
+      justify-content: center;
+      gap: 1rem;
+      margin-top: auto;
+      margin-bottom: 3cm;
+    }
+    #screen-menu .menu-actions button {
+      font-size: 1.16rem;
+      padding: 0.95rem 1.6rem;
+      border: 2px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: var(--accent-2); }
+    .btn-danger { background: #c0392b; }
+    .btn-danger:hover { background: #922b21; }
+    .skins-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+    .skin-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255,255,255,0.5);
+      border-radius: 10px;
+      padding: 0.75rem 0.4rem 0.5rem;
+    }
+    .skin-preview {
+      border-radius: 50%;
+      background: #2d6a4f;
+      border: 2px solid #114025;
+      display: block;
+    }
+    .skin-card .skin-btn { width: 100%; }
+    .status { min-height: 1.2rem; font-weight: 700; }
+    .hud { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.6rem; align-items: center; }
+    .hud-hp-wrap { display:flex; align-items:center; gap:0.4rem; }
+    .hud-hp-bar-outer { width:90px; height:10px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; }
+    .hud-hp-bar-inner { height:100%; width:100%; background:#22c55e; border-radius:4px; transition:width 0.18s, background 0.18s; }
+    #game-message { color: #8e1c1c; margin: 0.2rem 0 0.6rem; }
+    #game-canvas {
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      background: #1f693e;
+      border: 2px solid #114025;
+      border-radius: 8px;
+      display: block;
+    }
+    .skin-btn.owned   { background: #2d8a57; }
+    .skin-btn.equipped { background: #0f5132; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .skin-price { margin: 0.25rem 0 0.15rem; font-weight: 700; font-size: 0.9rem; color: #7d5a00; }
+    .store-section { margin-bottom: 1.2rem; }
+    .store-section h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #5a3e00;
+      border-bottom: 2px solid #c5a53f;
+      padding-bottom: 0.25rem;
+    }
+    .store-section .empty-msg {
+      font-style: italic;
+      color: #888;
+      font-size: 0.85rem;
+    }
+    /* ── Islands ── */
+    .islands-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .island-card {
+      background: rgba(255,255,255,0.55);
+      border: 2px solid #c5a53f;
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .island-card:hover { background: rgba(255,255,255,0.85); }
+    .island-card.locked { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+    .island-card h3 { margin: 0 0 0.5rem; }
+    .island-sub { margin: 0.3rem 0 0; font-size: 0.8rem; opacity: 0.65; }
+    .level-dots { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 0.5rem; }
+    .level-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #d9d9d9;
+      border: 2px solid #aaa;
+    }
+    .level-dot.done    { background: #22c55e; border-color: #16a34a; }
+    .level-dot.current { background: #f59e0b; border-color: #d97706; }
+    /* ── Level overlay ── */
+    #screen-game { position: relative; }
+    .level-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.55);
+      border-radius: 12px;
+      z-index: 20;
+    }
+    .level-overlay.hidden { display: none; }
+    .level-overlay-box {
+      background: #fff4c2;
+      border: 2px solid #c5a53f;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      min-width: 300px;
+      max-width: 400px;
+      width: 90%;
+    }
+    .lo-trophy   { font-size: 2.4rem; display: block; margin-bottom: 0.15rem; }
+    .lo-title    { margin: 0 0 0.1rem; font-size: 1.15rem; }
+    .lo-subtitle { margin: 0 0 0.8rem; opacity: 0.7; font-size: 0.82rem; }
+    .lo-section  { width: 100%; margin-bottom: 0.4rem; }
+    .lo-row {
+      display: flex; align-items: center;
+      gap: 0.5rem; padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid rgba(197,165,63,0.3);
+    }
+    .lo-ico    { font-size: 1.1rem; width: 1.4rem; flex-shrink: 0; }
+    .lo-name   { flex: 1; text-align: left; font-size: 0.88rem; }
+    .lo-detail { font-size: 0.75rem; opacity: 0.6; }
+    .lo-amount { font-weight: 700; color: #136f63; min-width: 2.5rem; text-align: right; font-size: 0.95rem; }
+    .lo-bonus-row { background: rgba(255,200,50,0.2); border-radius: 6px; border-bottom: none; }
+    .lo-divider { border-top: 2px solid #c5a53f; margin: 0.6rem 0 0.5rem; }
+    .lo-totals  { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1rem; }
+    .lo-total-row { display: flex; justify-content: space-between; align-items: center; padding: 0 0.2rem; }
+    .lo-coins-big { font-weight: 700; font-size: 1rem; color: #136f63; }
+    .lo-bag-total { color: #7d5a00; }
+    .level-dot.done { cursor: pointer; }
+    .level-dot.done:hover { opacity: 0.75; transform: scale(1.18); }
+    .consumible-row { display: flex; align-items: center; gap: 1rem; padding: 0.6rem 0.8rem; background: rgba(255,244,194,0.7); border: 1px solid #c5a53f; border-radius: 8px; flex-wrap: wrap; }
+    .consumible-info { flex: 1; }
+    .consumible-name { font-weight: 700; display: block; }
+    .consumible-desc { font-size: 0.82rem; opacity: 0.7; }
+    .consumible-stock { font-size: 0.9rem; white-space: nowrap; }
+    .btn-reset-icon {
+      position: absolute; top: 0.7rem; right: 0.8rem;
+      background: transparent; border: 1px solid rgba(192,57,43,0.45); color: #c0392b;
+      border-radius: 8px; padding: 0.3rem 0.55rem; font-size: 0.9rem; cursor: pointer;
+      opacity: 0.6; line-height: 1; transition: opacity 0.15s, background 0.15s;
+    }
+    .btn-reset-icon:hover { background: rgba(192,57,43,0.1); opacity: 1; }
+    .confirm-overlay {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.52); z-index: 200;
+    }
+    .confirm-overlay.hidden { display: none; }
+    .confirm-box {
+      background: #fff4c2; border: 2px solid #c5a53f; border-radius: 14px;
+      padding: 2rem 2.2rem; text-align: center; max-width: 370px; width: 90%;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.28);
+    }
+    .confirm-icon-big { font-size: 2.6rem; display: block; margin-bottom: 0.4rem; }
+    .confirm-box h3 { margin: 0 0 0.55rem; font-size: 1.08rem; }
+    .confirm-box p  { margin: 0 0 1.5rem; opacity: 0.72; font-size: 0.87rem; line-height: 1.55; }
+    .confirm-actions { display: flex; gap: 0.75rem; justify-content: center; }
+    .confirm-cancel { background: #6b7280; }
+    .confirm-cancel:hover { background: #4b5563; }
+    .boss-hud { background: rgba(15,23,42,0.9); border: 2px solid #ef4444; border-radius: 10px; padding: 0.45rem 1.2rem; text-align: center; margin-bottom: 0.5rem; color: #fff; }
+    .boss-hud.hidden { display: none; }
+    .boss-hud-inner { display: flex; align-items: center; gap: 0.9rem; justify-content: center; }
+    .boss-name { font-weight: 700; font-size: 0.9rem; color: #fca5a5; white-space: nowrap; }
+    .boss-hp-outer { width: 220px; height: 14px; background: rgba(255,255,255,0.15); border-radius: 6px; overflow: hidden; }
+    .boss-hp-inner { height: 100%; width: 100%; background: linear-gradient(90deg,#ef4444,#b91c1c); border-radius: 6px; transition: width 0.2s; }
+    #boss-hp-text { font-size: 0.8rem; opacity: 0.82; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="screen-menu" class="screen screen-visible" style="text-align:center">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 132" width="140" height="132" style="display:block;margin:0 auto 0.4rem" aria-hidden="true">
+        <!-- Straw hat brim -->
+        <ellipse cx="70" cy="54" rx="60" ry="15" fill="#D4A843" stroke="#9A7520" stroke-width="2"/>
+        <!-- Straw hat dome -->
+        <path d="M32,54 C34,18 106,18 108,54" fill="#EEC96A" stroke="#9A7520" stroke-width="2"/>
+        <!-- Straw hat shading lines -->
+        <path d="M45,42 C48,26 92,26 95,42" fill="none" stroke="#D4A843" stroke-width="1.2" opacity="0.6"/>
+        <!-- Red band -->
+        <path d="M32,54 C50,47 90,47 108,54" fill="none" stroke="#CC2222" stroke-width="6" stroke-linecap="round"/>
+        <!-- Skull -->
+        <ellipse cx="70" cy="92" rx="33" ry="36" fill="#F2EED8" stroke="#C8B88A" stroke-width="1.5"/>
+        <!-- Eye sockets -->
+        <ellipse cx="57" cy="87" rx="9.5" ry="11" fill="#2a2a2a"/>
+        <ellipse cx="83" cy="87" rx="9.5" ry="11" fill="#2a2a2a"/>
+        <!-- Eye glints -->
+        <circle cx="60" cy="83" r="2.5" fill="#fff" opacity="0.4"/>
+        <circle cx="86" cy="83" r="2.5" fill="#fff" opacity="0.4"/>
+        <!-- Nose hole -->
+        <path d="M65,99 L70,106 L75,99 Z" fill="#C8B88A"/>
+        <!-- Jaw seam -->
+        <line x1="47" y1="113" x2="93" y2="113" stroke="#C8B88A" stroke-width="1"/>
+        <!-- Teeth -->
+        <rect x="49" y="113" width="9" height="12" rx="2" fill="#F2EED8" stroke="#C8B88A" stroke-width="1"/>
+        <rect x="60" y="113" width="9" height="12" rx="2" fill="#F2EED8" stroke="#C8B88A" stroke-width="1"/>
+        <rect x="71" y="113" width="9" height="12" rx="2" fill="#F2EED8" stroke="#C8B88A" stroke-width="1"/>
+        <rect x="82" y="113" width="9" height="12" rx="2" fill="#F2EED8" stroke="#C8B88A" stroke-width="1"/>
+        <!-- Crossbones -->
+        <line x1="37" y1="75" x2="103" y2="109" stroke="#C8B88A" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
+        <line x1="103" y1="75" x2="37" y2="109" stroke="#C8B88A" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
+      </svg>
+      <h1>The Adventure</h1>
+      <p class="subtitle">⚓ Donde termina el mapa, comienza la aventura</p>
+      <div class="menu-actions">
+        <button id="btn-play">Play</button>
+        <button id="btn-progress">Mapa de progreso</button>
+        <button id="btn-store">Tienda</button>
+      </div>
+      <button id="btn-reset" class="btn-reset-icon" title="Reiniciar progreso">🗑️</button>
+    </section>
+
+    <section id="screen-store" class="screen">
+      <h2>Tienda</h2>
+      <p>Monedas: <strong id="store-coins">0</strong></p>
+      <div class="store-section">
+        <h3>Mi taquilla</h3>
+        <div id="locker-grid" class="skins-grid"></div>
+      </div>
+      <div class="store-section">
+        <h3>Tienda</h3>
+        <div id="shop-grid" class="skins-grid"></div>
+      </div>
+      <div class="store-section">
+        <h3>Consumibles</h3>
+        <div class="consumible-row">
+          <div class="consumible-info">
+            <span class="consumible-name">♥ Pack de vidas</span>
+            <span class="consumible-desc">+3 vidas · 100 🪙</span>
+          </div>
+          <span class="consumible-stock">Tienes: <strong id="store-lives">3</strong></span>
+          <button id="btn-buy-lives">Comprar</button>
+        </div>
+        <div class="consumible-row" style="margin-top:0.55rem">
+          <div class="consumible-info">
+            <span class="consumible-name">💣 Pack de bombas</span>
+            <span class="consumible-desc">+10 bombas · 200 🪙</span>
+          </div>
+          <span class="consumible-stock">Tienes: <strong id="store-bombs">0</strong></span>
+          <button id="btn-buy-bombs">Comprar</button>
+        </div>
+      </div>
+      <p id="store-message" class="status"></p>
+      <button id="btn-store-back">Volver</button>
+    </section>
+
+    <section id="screen-islands" class="screen">
+      <h2>Mapa del progreso</h2>
+      <div id="islands-grid" class="islands-grid"></div>
+      <button id="btn-islands-back">Volver al menú</button>
+    </section>
+
+    <section id="screen-game" class="screen">
+      <div class="hud">
+        <span class="hud-hp-wrap">❤️ <span class="hud-hp-bar-outer"><span id="hud-hp-bar" class="hud-hp-bar-inner"></span></span> <strong id="hud-health">25</strong><strong id="hud-health-max" style="display:none">25</strong></span>
+        <span>🪙 <strong id="hud-coins">0</strong></span>
+        <span>❤️ Vidas: <strong id="hud-lives">3</strong></span>
+        <span>💣 Bombas: <strong id="hud-bombs">0</strong> (B)</span>
+        <span>Isla: <strong id="hud-island">—</strong> · Nivel: <strong id="hud-level">—</strong></span>
+        <span>Skin: <strong id="hud-skin">default</strong></span>
+      </div>
+      <p id="game-message" class="status"></p>
+      <div id="boss-hud" class="boss-hud hidden">
+        <div class="boss-hud-inner">
+          <span class="boss-name">🔱 Gran Tanque</span>
+          <div class="boss-hp-outer"><div id="boss-hp-bar" class="boss-hp-inner"></div></div>
+          <span id="boss-hp-text">100/100</span>
+        </div>
+      </div>
+      <canvas id="game-canvas" width="960" height="540"></canvas>
+      <div class="game-actions">
+        <button id="btn-back-menu">Salir al menú</button>
+      </div>
+      <div id="level-overlay" class="level-overlay hidden">
+        <div class="level-overlay-box">
+          <div id="lo-stats"></div>
+          <button id="btn-next-level">Siguiente nivel</button>
+        </div>
+      </div>
+      <div id="level-ready" class="level-overlay hidden">
+        <div class="level-overlay-box" style="min-width:240px">
+          <span style="font-size:2.4rem;display:block;margin-bottom:0.4rem">⚔️</span>
+          <h2 id="ready-title" style="margin:0 0 0.3rem">Nivel 1</h2>
+          <p style="margin:0 0 1.3rem;opacity:0.72;font-size:0.88rem">Prepara tu estrategia y…</p>
+          <button id="btn-start-level">¡Inicia la aventura!</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="confirm-modal" class="confirm-overlay hidden">
+    <div class="confirm-box">
+      <span class="confirm-icon-big">⚠️</span>
+      <h3>¿Reiniciar todo el progreso?</h3>
+      <p>Perderás todas las monedas, skins, vidas y avance en las islas.<br>Esta acción no se puede deshacer.</p>
+      <div class="confirm-actions">
+        <button id="btn-confirm-cancel" class="confirm-cancel">Cancelar</button>
+        <button id="btn-confirm-ok" class="btn-danger">Sí, borrar todo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── CONFIG ─────────────────────────────────────────────
+    const STORAGE_KEYS = {
+      coins: "lahistoria_coins",
+      selectedSkin: "lahistoria_selected_skin",
+      unlockedSkins: "lahistoria_unlocked_skins",
+      progress: "lahistoria_progress",
+      resetVersion: "lahistoria_reset_version"
+    };
+
+    // Incrementa este valor cuando quieras forzar un reseteo global
+    // en todos los navegadores al cargar la nueva version.
+    const GLOBAL_RESET_VERSION = "2";
+
+    // Modo prueba para arrancar en un jefe concreto.
+    // Deja solo uno en true a la vez.
+    const DEBUG_START_TANK_TEST = false;
+    const DEBUG_START_PIRATE_TEST = false;
+    const DEBUG_START_KRAKEN_TEST = false;
+
+    const ISLANDS = [
+      { id: 0, name: "Isla 1", levels: 10 },
+      { id: 1, name: "Isla 2", levels: 10 },
+      { id: 2, name: "Isla 3", levels: 10 }
+    ];
+
+    const SKINS = {
+      default: { label: "default", color: "#2f80ed", price: 0 },
+      green:   { label: "verde",   color: "#2f9e44", price: 600 },
+      yellow:  { label: "amarillo",color: "#f2c94c", price: 825 },
+      white:   { label: "blanco",  color: "#f8f9fa", border: "#111111", price: 1350 },
+      orange:  { label: "naranja", color: "#f97316", price: 1125 },
+      red:     { label: "rojo",    color: "#e63030", price: 100 }
+    };
+
+    const PLAYER_START = { x: 480, y: 270, radius: 14, speed: 220, maxHealth: 25 };
+
+    const GAMEPLAY = {
+      chestCount: 6,
+      chestReward: 5,
+      chestRespawnMs: 20000,
+      enemySpawnMs: 3000,
+      enemySpawnPerWave: 2,
+      maxEnemies: 8,
+      enemyHealth: 10,
+      enemyDamage: 1,
+      enemyDamageCooldownMs: 1000,
+      enemyKillReward: 1,
+      levelCompleteBonus: 10,
+      bulletDamage: 5,
+      bulletSpeed: 480,
+      fireCooldownMs: 180,
+      bombBossDamage: 10,
+      bombSpeed: 320,
+      bombRadius: 8,
+      bombCooldownMs: 320,
+      worldGrid: 40,
+      startingLives: 3,
+      livesCost: 100,
+      livesPerPack: 3,
+      bombPackCost: 200,
+      bombsPerPack: 10
+    };
+
+    const ENEMY_COLORS = ["#8b5cf6", "#ec4899", "#06b6d4", "#f59e0b"];
+
+    const BOSS_ISLAND_1 = {
+      // Isla 1 — Gran Tanque
+      type: "tank",
+      hudName: "🔱 Gran Tanque",
+      bodyRadius: 44,
+      health: 500,
+      bossSpeed: 22,
+      spawnIntervalMs: 10000,
+      spawnCount: 3,
+      miniRadius: 16,
+      miniHealth: 5,
+      miniDamage: 1,
+      miniSpeed: 55,
+      miniShotCooldownMs: 1800,
+      miniBulletDamage: 2,
+      miniBulletSpeed: 300
+    };
+
+    const BOSS_ISLAND_2 = {
+      // Isla 2 — Barco Pirata
+      type: "pirate",
+      hudName: "🏴‍☠️ Barco Pirata",
+      bodyRadius: 56,
+      health: 500,
+      patrolSpeed: 82,
+      spawnIntervalMs: 5200,
+      spawnCount: 2,
+      miniRadius: 14,
+      miniHealth: 7,
+      miniDamage: 2,
+      miniSpeed: 55,
+      miniShotCooldownMs: 2300,
+      miniBulletDamage: 2,
+      miniBulletSpeed: 200,
+      cannonCooldownMs: 3300,
+      cannonDamage: 3,
+      cannonSpeed: 145,
+      cannonGravity: 210
+    };
+
+    const BOSS_ISLAND_3 = {
+      // Isla 3 — Kraken
+      type: "kraken",
+      hudName: "🐙 Kraken Abisal",
+      bodyRadius: 64,
+      health: 500,
+      bossSpeed: 26,
+      fishSpawnIntervalMs: 6200,
+      fishSpawnCount: 3,
+      fishRadius: 12,
+      fishHealth: 8,
+      fishDamage: 2,
+      fishSpeed: 82,
+      tentacleSpawnMs: 1800,
+      tentacleSpeed: 340,
+      tentacleWidth: 16,
+      tentacleMinLength: 90,
+      tentacleMaxLength: 320,
+      tentacleDamage: 4,
+      maxTentacles: 5
+    };
+
+    const BOSS_CONFIGS = [BOSS_ISLAND_1, BOSS_ISLAND_2, BOSS_ISLAND_3];
+
+    // ── STATE ──────────────────────────────────────────────
+    function toInt(value, fallback) {
+      const n = Number.parseInt(value, 10);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function loadState() {
+      const coins = toInt(localStorage.getItem(STORAGE_KEYS.coins), 0);
+      const selectedSkin = localStorage.getItem(STORAGE_KEYS.selectedSkin) || "default";
+      const unlockedRaw = localStorage.getItem(STORAGE_KEYS.unlockedSkins);
+      const unlocked = unlockedRaw ? JSON.parse(unlockedRaw) : ["default"];
+      const progressRaw = localStorage.getItem(STORAGE_KEYS.progress);
+      const progress = progressRaw ? JSON.parse(progressRaw) : { unlockedIslands: [0], islandLevels: {}, bossDefeated: [] };
+      if (!progress.bossDefeated) progress.bossDefeated = [];
+      if (typeof progress.lives !== 'number') progress.lives = GAMEPLAY.startingLives;
+      if (typeof progress.bombs !== 'number') progress.bombs = 0;
+      return {
+        coins,
+        selectedSkin: SKINS[selectedSkin] ? selectedSkin : "default",
+        unlockedSkins: Array.isArray(unlocked) ? unlocked : ["default"],
+        progress: progress
+      };
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEYS.coins, String(state.coins));
+      localStorage.setItem(STORAGE_KEYS.selectedSkin, state.selectedSkin);
+      localStorage.setItem(STORAGE_KEYS.unlockedSkins, JSON.stringify(state.unlockedSkins));
+      localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(state.progress));
+    }
+
+    function applyGlobalResetIfNeeded() {
+      
+      var savedVersion = localStorage.getItem(STORAGE_KEYS.resetVersion);
+      if (savedVersion === GLOBAL_RESET_VERSION) return;
+      localStorage.removeItem(STORAGE_KEYS.coins);
+      localStorage.removeItem(STORAGE_KEYS.selectedSkin);
+      localStorage.removeItem(STORAGE_KEYS.unlockedSkins);
+      localStorage.removeItem(STORAGE_KEYS.progress);
+      localStorage.setItem(STORAGE_KEYS.resetVersion, GLOBAL_RESET_VERSION);
+    }
+
+    function applyBossTestProgress(state, targetBossIslandIdx) {
+      var unlocked = [];
+      for (var i = 0; i < ISLANDS.length; i++) unlocked.push(i);
+      state.progress.unlockedIslands = unlocked;
+
+      for (var isl = 0; isl <= targetBossIslandIdx; isl++) {
+        state.progress.islandLevels[String(isl)] = ISLANDS[isl].levels;
+      }
+
+      if (!state.progress.bossDefeated) state.progress.bossDefeated = [];
+      for (var prev = 0; prev < targetBossIslandIdx; prev++) {
+        if (!state.progress.bossDefeated.includes(prev)) state.progress.bossDefeated.push(prev);
+      }
+      state.progress.bossDefeated = state.progress.bossDefeated.filter(function(id) {
+        return id !== targetBossIslandIdx;
+      });
+
+      state.progress.unlockedIslands = [0, 1, 2];
+      state.progress.lives = Math.max(state.progress.lives || 0, 9);
+      state.progress.bombs = Math.max(state.progress.bombs || 0, 25);
+      state.coins = Math.max(state.coins || 0, 1500);
+    }
+
+    function buyOrEquipSkin(state, skinId) {
+      const skin = SKINS[skinId];
+      if (!skin) return { ok: false, message: "Skin invalida" };
+      var alwaysFree = skinId === "default";
+      if (alwaysFree || state.unlockedSkins.includes(skinId)) {
+        state.selectedSkin = skinId;
+        return { ok: true, message: "Skin equipada: " + skin.label };
+      }
+      if (state.coins < skin.price) {
+        return { ok: false, message: "Te faltan " + (skin.price - state.coins) + " monedas" };
+      }
+      state.coins -= skin.price;
+      state.unlockedSkins.push(skinId);
+      state.selectedSkin = skinId;
+      return { ok: true, message: "Compraste " + skin.label };
+    }
+
+    // ── UI ─────────────────────────────────────────────────
+    function showScreen(screenId) {
+      document.querySelectorAll(".screen").forEach(function(s) {
+        s.classList.toggle("screen-visible", s.id === screenId);
+      });
+      // Evita mantener el scroll previo entre pantallas (menu -> juego).
+      window.scrollTo(0, 0);
+    }
+
+    function updateHud(opts) {
+      if (typeof opts.health === "number") {
+        document.getElementById("hud-health").textContent = opts.health;
+        var maxH = typeof opts.maxHealth === "number" ? opts.maxHealth
+                   : (parseInt(document.getElementById("hud-health-max").textContent) || 25);
+        var pct  = Math.max(0, Math.min(1, opts.health / maxH));
+        var bar  = document.getElementById("hud-hp-bar");
+        bar.style.width = (pct * 100) + "%";
+        bar.style.background = pct > 0.5 ? "#22c55e" : pct > 0.25 ? "#f59e0b" : "#ef4444";
+      }
+      if (typeof opts.lives === "number") document.getElementById("hud-lives").textContent = opts.lives;
+      if (typeof opts.bombs === "number") document.getElementById("hud-bombs").textContent = opts.bombs;
+      if (typeof opts.maxHealth === "number") document.getElementById("hud-health-max").textContent = opts.maxHealth;
+      if (typeof opts.coins === "number")     document.getElementById("hud-coins").textContent = opts.coins;
+      if (typeof opts.skin === "string")      document.getElementById("hud-skin").textContent = opts.skin;
+    }
+
+    function updateStoreCoins(coins) {
+      document.getElementById("store-coins").textContent = coins;
+    }
+
+    function setStoreMessage(msg) {
+      document.getElementById("store-message").textContent = msg;
+    }
+
+    function setGameMessage(msg) {
+      document.getElementById("game-message").textContent = msg;
+    }
+
+    function updateHudIsland(islandName, level, totalLevels) {
+      document.getElementById("hud-island").textContent = islandName;
+      document.getElementById("hud-level").textContent = level + "/" + totalLevels;
+    }
+
+    function renderIslands(state) {
+      var grid = document.getElementById("islands-grid");
+      grid.innerHTML = "";
+      ISLANDS.forEach(function(island) {
+        var unlocked  = state.progress.unlockedIslands.includes(island.id);
+        var completed = state.progress.islandLevels[String(island.id)] || 0;
+        var card = document.createElement("div");
+        card.className = "island-card" + (unlocked ? "" : " locked");
+        var title = document.createElement("h3");
+        title.textContent = island.name + (unlocked ? "" : " 🔒");
+        card.appendChild(title);
+        var dots = document.createElement("div");
+        dots.className = "level-dots";
+        for (var l = 1; l <= island.levels; l++) {
+          var dot = document.createElement("div");
+          if (l <= completed) {
+            dot.className = "level-dot done";
+            (function(lvl) {
+              dot.addEventListener("click", function(ev) {
+                ev.stopPropagation();
+                startGameLevel(island.id, lvl);
+              });
+            })(l);
+          } else if (l === completed + 1 && unlocked) {
+            dot.className = "level-dot current";
+          } else {
+            dot.className = "level-dot";
+          }
+          dots.appendChild(dot);
+        }
+        card.appendChild(dots);
+        var sub = document.createElement("p");
+        sub.className = "island-sub";
+        sub.textContent = unlocked
+          ? (completed >= island.levels ? "\u00a1Completada!" : "Nivel " + (completed + 1) + " de " + island.levels)
+          : "Completa la isla anterior";
+        card.appendChild(sub);
+        if (unlocked) {
+          (function(isl, comp) {
+            card.addEventListener("click", function() {
+              var bossAlive = BOSS_CONFIGS[isl.id] && !state.progress.bossDefeated.includes(isl.id);
+              if (comp >= isl.levels && bossAlive) {
+                startBossFight(isl.id);
+              } else if (comp >= isl.levels) {
+                startGameLevel(isl.id, 1);
+              } else {
+                startGameLevel(isl.id, Math.min(comp + 1, isl.levels));
+              }
+            });
+          })(island, completed);
+        }
+        grid.appendChild(card);
+      });
+    }
+
+    function showLevelComplete(isIslandComplete, islandIdx, level, stats, callback) {
+      var island = ISLANDS[islandIdx];
+      var totalEarned = stats.fromEnemies + stats.fromChests + stats.bonus;
+      var trophy  = isIslandComplete ? "🌟" : "🏆";
+      var title   = isIslandComplete ? "\u00a1Isla completada! 🎉" : "\u00a1Nivel " + level + " completado!";
+      var sub     = island.name + (isIslandComplete ? " \u2014 \u00a1Todos los niveles!" : " \u00b7 Nivel " + level + "/" + island.levels);
+      var html = '<span class="lo-trophy">' + trophy + '</span>';
+      html += '<h2 class="lo-title">' + title + '</h2>';
+      html += '<p class="lo-subtitle">' + sub + '</p>';
+      html += '<div class="lo-section">';
+      html += '<div class="lo-row"><span class="lo-ico">\u2694\ufe0f</span><span class="lo-name">Villanos eliminados</span><span class="lo-detail">' + stats.enemiesKilled + ' \u00d7 1\uD83E\uDE99</span><span class="lo-amount">+' + stats.fromEnemies + '</span></div>';
+      html += '<div class="lo-row"><span class="lo-ico">\uD83D\uDCE6</span><span class="lo-name">Cofres recogidos</span><span class="lo-detail">' + stats.chestsCollected + ' \u00d7 5\uD83E\uDE99</span><span class="lo-amount">+' + stats.fromChests + '</span></div>';
+      html += '<div class="lo-row lo-bonus-row"><span class="lo-ico">\u2B50</span><span class="lo-name">Bonus de nivel</span><span class="lo-detail"></span><span class="lo-amount">+' + stats.bonus + '</span></div>';
+      html += '</div>';
+      html += '<div class="lo-divider"></div>';
+      html += '<div class="lo-totals">';
+      html += '<div class="lo-total-row"><span>Total ganado:</span><span class="lo-coins-big">+' + totalEarned + ' \uD83E\uDE99</span></div>';
+      html += '<div class="lo-total-row"><span>\uD83D\uDCB0 Bolsa total:</span><span class="lo-coins-big lo-bag-total">' + stats.totalCoins + ' \uD83E\uDE99</span></div>';
+      html += '</div>';
+      document.getElementById("lo-stats").innerHTML = html;
+      var btn = document.getElementById("btn-next-level");
+      btn.textContent = isIslandComplete ? "Volver a las islas" : "Siguiente nivel";
+      btn._nextCallback = callback;
+      document.getElementById("level-overlay").classList.remove("hidden");
+    }
+
+    function hideLevelComplete() {
+      document.getElementById("level-overlay").classList.add("hidden");
+    }
+
+    function drawSkinPreview(canvas, skinId) {
+      var skin = SKINS[skinId] || SKINS.default;
+      var ctx2 = canvas.getContext("2d");
+      var cx = canvas.width / 2, cy = canvas.height / 2, r = 26;
+      ctx2.clearRect(0, 0, canvas.width, canvas.height);
+      ctx2.fillStyle = "#2d6a4f";
+      ctx2.fillRect(0, 0, canvas.width, canvas.height);
+      ctx2.fillStyle = "rgba(0,0,0,0.25)";
+      ctx2.beginPath(); ctx2.ellipse(cx, cy + r * 0.8, r * 0.65, r * 0.25, 0, 0, Math.PI * 2); ctx2.fill();
+      ctx2.fillStyle = skin.color;
+      ctx2.beginPath(); ctx2.arc(cx, cy, r, 0, Math.PI * 2); ctx2.fill();
+      if (skin.border) { ctx2.strokeStyle = skin.border; ctx2.lineWidth = 3; ctx2.stroke(); }
+      ctx2.fillStyle = "#102a43";
+      ctx2.beginPath(); ctx2.arc(cx + 9, cy - 5, 4.5, 0, Math.PI * 2); ctx2.fill();
+    }
+
+    function buildSkinCard(skinId, skin, state) {
+      var owned     = skinId === "default" || state.unlockedSkins.includes(skinId);
+      var equipped  = state.selectedSkin === skinId;
+      var canAfford = state.coins >= skin.price;
+      var card = document.createElement("div");
+      card.className = "skin-card";
+      var cv = document.createElement("canvas");
+      cv.className = "skin-preview";
+      cv.dataset.skin = skinId;
+      cv.width = 80; cv.height = 80;
+      card.appendChild(cv);
+      if (!owned) {
+        var priceEl = document.createElement("p");
+        priceEl.className = "skin-price";
+        priceEl.textContent = skin.price + " \uD83E\uDE99";
+        card.appendChild(priceEl);
+      }
+      var btn = document.createElement("button");
+      btn.dataset.skin = skinId;
+      if (equipped) {
+        btn.className = "skin-btn equipped";
+        btn.textContent = "Equipada \u2713";
+      } else if (owned) {
+        btn.className = "skin-btn owned";
+        btn.textContent = "Usar";
+      } else {
+        btn.className = "skin-btn";
+        btn.textContent = "Comprar";
+        btn.disabled = !canAfford;
+      }
+      btn.addEventListener("click", function() {
+        var result = buyOrEquipSkin(state, skinId);
+        setStoreMessage(result.message);
+        if (result.ok) { saveState(state); syncUI(); }
+      });
+      card.appendChild(btn);
+      return { card: card, canvas: cv };
+    }
+
+    function renderSkinButtons(state) {
+      var skinOrder = Object.keys(SKINS).sort(function(a, b) { return SKINS[a].price - SKINS[b].price; });
+      var lockerGrid = document.getElementById("locker-grid");
+      var shopGrid   = document.getElementById("shop-grid");
+      lockerGrid.innerHTML = "";
+      shopGrid.innerHTML   = "";
+      skinOrder.forEach(function(skinId) {
+        var skin  = SKINS[skinId];
+        var owned = skinId === "default" || state.unlockedSkins.includes(skinId);
+        var built = buildSkinCard(skinId, skin, state);
+        if (owned) lockerGrid.appendChild(built.card);
+        else       shopGrid.appendChild(built.card);
+        drawSkinPreview(built.canvas, skinId);
+      });
+      if (shopGrid.children.length === 0) {
+        var msg = document.createElement("p");
+        msg.className = "empty-msg";
+        msg.textContent = "\u00a1Ya tienes todas las skins!";
+        shopGrid.appendChild(msg);
+      }
+    }
+
+    // ── GAME ───────────────────────────────────────────────
+    function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+    function rand(mn, mx)     { return mn + Math.random() * (mx - mn); }
+
+    function Game(canvas, options) {
+      this.canvas  = canvas;
+      this.ctx     = canvas.getContext("2d");
+      this.getSkinId       = options.getSkinId;
+      this.getBombs        = options.getBombs || function() { return 0; };
+      this.onBombsChanged  = options.onBombsChanged || function() {};
+      this.onHealthChange  = options.onHealthChange;
+      this.onCoinsEarned   = options.onCoinsEarned;
+      this.onDamage        = options.onDamage;
+      this.onGameOver      = options.onGameOver;
+      this.onLevelComplete      = options.onLevelComplete      || function() {};
+      this.onAllChestsCollected = options.onAllChestsCollected || function() {};
+      this.onBossHealthChange   = function() {};
+      this.onBossDefeated       = function() {};
+
+      this.allChestsCollected       = false;
+      this.chestsCollectedThisLevel = 0;
+      this.enemiesKilledThisLevel   = 0;
+      this.bossMode   = false;
+      this.boss       = null;
+      this.bossConfig = null;
+      this.replayMode = false;
+
+      this.running          = false;
+      this.paused           = false;
+      this.levelSpawnMs     = GAMEPLAY.enemySpawnMs;
+      this.levelEnemyDamage = GAMEPLAY.enemyDamage;
+      this.levelTreeCount   = 4;
+      this.lastTime         = 0;
+      this.lastEnemySpawnMs = 0;
+      this.lastShotAt      = 0;
+      this.lastBombAt      = 0;
+      this.keys            = new Set();
+
+      this.player = {
+        x: PLAYER_START.x, y: PLAYER_START.y,
+        radius: PLAYER_START.radius, speed: PLAYER_START.speed,
+        health: PLAYER_START.maxHealth, maxHealth: PLAYER_START.maxHealth,
+        dir: -Math.PI / 2
+      };
+
+      this.chests      = [];
+      this.enemies     = [];
+      this.bullets     = [];
+      this.particles   = [];
+      this.damageTexts = [];
+      this.trees       = [];
+      this.enemyBullets = [];
+      this.tentacles   = [];
+
+      this.boundLoop    = this.loop.bind(this);
+      this.boundKeyDown = this.handleKeyDown.bind(this);
+      this.boundKeyUp   = this.handleKeyUp.bind(this);
+    }
+
+    Game.prototype.start = function() {
+      this.reset();
+      this.paused = false;
+      this.running = true;
+      this.lastTime = performance.now();
+      this.lastEnemySpawnMs = Date.now();
+      window.addEventListener("keydown", this.boundKeyDown);
+      window.addEventListener("keyup",   this.boundKeyUp);
+      requestAnimationFrame(this.boundLoop);
+    };
+
+    Game.prototype.stop = function() {
+      this.running = false;
+      this.keys.clear();
+      window.removeEventListener("keydown", this.boundKeyDown);
+      window.removeEventListener("keyup",   this.boundKeyUp);
+    };
+
+    Game.prototype.pause = function() {
+      this.paused = true;
+    };
+
+    Game.prototype.resume = function() {
+      this.paused = false;
+      this.lastTime = performance.now();
+      this.lastEnemySpawnMs = Date.now();
+    };
+
+    Game.prototype.reset = function() {
+      this.player.x   = this.canvas.width  / 2;
+      this.player.y   = this.canvas.height / 2;
+      this.player.dir = -Math.PI / 2;
+      this.chests.length = this.enemies.length = this.bullets.length =
+        this.particles.length = this.damageTexts.length = this.enemyBullets.length = this.tentacles.length = 0;
+      this.trees.length = 0;
+      this.bossMode = false;
+      this.boss     = null;
+      this.allChestsCollected       = false;
+      this.chestsCollectedThisLevel = 0;
+      this.enemiesKilledThisLevel   = 0;
+      this.spawnTrees();
+      for (var i = 0; i < GAMEPLAY.chestCount; i++) this.chests.push(this.spawnChest());
+      this.onHealthChange(this.player.health, this.player.maxHealth);
+    };
+
+    Game.prototype.spawnChest = function() {
+      var margin = 60;
+      return {
+        x: rand(margin, this.canvas.width  - margin),
+        y: rand(margin, this.canvas.height - margin),
+        radius: 15, active: true, respawnAt: 0,
+        bobOffset: Math.random() * Math.PI * 2
+      };
+    };
+
+    Game.prototype.spawnTrees = function() {
+      var r = 22, margin = r + 32;
+      var cx = this.canvas.width / 2, cy = this.canvas.height / 2;
+      var count = this.levelTreeCount, attempts = 0;
+      while (this.trees.length < count && attempts < 600) {
+        attempts++;
+        var x = rand(margin, this.canvas.width  - margin);
+        var y = rand(margin, this.canvas.height - margin);
+        if (Math.hypot(x - cx, y - cy) < 90) continue;
+        var ok = true;
+        for (var i = 0; i < this.trees.length; i++) {
+          if (Math.hypot(x - this.trees[i].x, y - this.trees[i].y) < r * 2.6) { ok = false; break; }
+        }
+        if (ok) this.trees.push({ x: x, y: y, radius: r });
+      }
+    };
+
+    Game.prototype.spawnEnemy = function() {
+      var angle = Math.random() * Math.PI * 2;
+      var dist  = 180;
+      this.enemies.push({
+        x: clamp(this.player.x + Math.cos(angle) * dist, 24, this.canvas.width  - 24),
+        y: clamp(this.player.y + Math.sin(angle) * dist, 24, this.canvas.height - 24),
+        radius: 12, health: GAMEPLAY.enemyHealth, maxHealth: GAMEPLAY.enemyHealth,
+        speed: 48, damage: this.levelEnemyDamage, lastDamageAt: 0,
+        color: ENEMY_COLORS[Math.floor(Math.random() * ENEMY_COLORS.length)]
+      });
+    };
+
+    Game.prototype.handleKeyDown = function(e) {
+      this.keys.add(e.code);
+      if (e.code === "Space") { e.preventDefault(); this.tryShoot(); }
+      if (e.code === "KeyB") { e.preventDefault(); this.tryThrowBomb(); }
+    };
+
+    Game.prototype.handleKeyUp = function(e) { this.keys.delete(e.code); };
+
+    Game.prototype.tryShoot = function() {
+      if (!this.running || this.paused) return;
+      var now = Date.now();
+      if (now - this.lastShotAt < GAMEPLAY.fireCooldownMs) return;
+      this.lastShotAt = now;
+      this.bullets.push({ x: this.player.x, y: this.player.y,
+        dir: this.player.dir, speed: GAMEPLAY.bulletSpeed, radius: 4, type: "bullet" });
+    };
+
+    Game.prototype.tryThrowBomb = function() {
+      if (!this.running || this.paused) return;
+      var now = Date.now();
+      if (now - this.lastBombAt < GAMEPLAY.bombCooldownMs) return;
+      var bombs = this.getBombs();
+      if (bombs <= 0) return;
+      this.lastBombAt = now;
+      this.onBombsChanged(bombs - 1);
+      this.bullets.push({
+        x: this.player.x,
+        y: this.player.y,
+        dir: this.player.dir,
+        speed: GAMEPLAY.bombSpeed,
+        radius: GAMEPLAY.bombRadius,
+        type: "bomb"
+      });
+    };
+
+    Game.prototype.loop = function(now) {
+      if (!this.running) return;
+      var dt = Math.min((now - this.lastTime) / 1000, 0.05);
+      this.lastTime = now;
+      if (!this.paused) this.update(dt);
+      this.render(now);
+      requestAnimationFrame(this.boundLoop);
+    };
+
+    Game.prototype.update = function(dt) {
+      this.updatePlayer(dt);
+      if (this.bossMode) {
+        this.updateBoss(dt);
+        this.updateEnemyBullets(dt);
+      } else {
+        this.updateEnemySpawns();
+        this.updateChests();
+      }
+      this.updateBullets(dt);
+      this.updateEnemies(dt);
+      this.updateParticles();
+      this.updateDamageTexts();
+    };
+
+    Game.prototype.updatePlayer = function(dt) {
+      var dx = 0, dy = 0;
+      if (this.keys.has("KeyW")) dy -= 1;
+      if (this.keys.has("KeyS")) dy += 1;
+      if (this.keys.has("KeyA")) dx -= 1;
+      if (this.keys.has("KeyD")) dx += 1;
+      if (dx !== 0 || dy !== 0) {
+        var len = Math.hypot(dx, dy);
+        var vel = this.player.speed * dt;
+        this.player.x += (dx / len) * vel;
+        this.player.y += (dy / len) * vel;
+        this.player.dir = Math.atan2(dy, dx);
+      }
+      this.player.x = clamp(this.player.x, this.player.radius, this.canvas.width  - this.player.radius);
+      this.player.y = clamp(this.player.y, this.player.radius, this.canvas.height - this.player.radius);
+      for (var ti = 0; ti < this.trees.length; ti++) {
+        var tr = this.trees[ti];
+        var tdx = this.player.x - tr.x, tdy = this.player.y - tr.y;
+        var td  = Math.hypot(tdx, tdy);
+        var mnD = this.player.radius + tr.radius;
+        if (td < mnD && td > 0) {
+          this.player.x = tr.x + (tdx / td) * mnD;
+          this.player.y = tr.y + (tdy / td) * mnD;
+        }
+      }
+    };
+
+    Game.prototype.updateEnemySpawns = function() {
+      if (this.allChestsCollected) return;
+      var now = Date.now();
+      if (now - this.lastEnemySpawnMs < this.levelSpawnMs) return;
+      this.lastEnemySpawnMs = now;
+      for (var i = 0; i < GAMEPLAY.enemySpawnPerWave; i++) {
+        if (this.enemies.length >= GAMEPLAY.maxEnemies) break;
+        this.spawnEnemy();
+      }
+    };
+
+    Game.prototype.updateBullets = function(dt) {
+      for (var i = this.bullets.length - 1; i >= 0; i--) {
+        var b = this.bullets[i];
+        b.x += Math.cos(b.dir) * b.speed * dt;
+        b.y += Math.sin(b.dir) * b.speed * dt;
+        var removed = false;
+        var isBomb = b.type === "bomb";
+        for (var e = this.enemies.length - 1; e >= 0; e--) {
+          var enemy = this.enemies[e];
+          if (Math.hypot(b.x - enemy.x, b.y - enemy.y) <= b.radius + enemy.radius) {
+            if (isBomb) {
+              this.enemies.splice(e, 1);
+              this.onCoinsEarned(GAMEPLAY.enemyKillReward, 'enemy');
+              this.addParticles(enemy.x, enemy.y, "#f97316");
+              this.enemiesKilledThisLevel += 1;
+              this.checkLevelComplete();
+            } else {
+              enemy.health -= GAMEPLAY.bulletDamage;
+              if (enemy.health <= 0) {
+                this.enemies.splice(e, 1);
+                this.onCoinsEarned(GAMEPLAY.enemyKillReward, 'enemy');
+                this.addParticles(enemy.x, enemy.y, "#fbbf24");
+                this.enemiesKilledThisLevel += 1;
+                this.checkLevelComplete();
+              }
+            }
+            this.bullets.splice(i, 1);
+            this.addParticles(b.x, b.y, isBomb ? "#f97316" : "#ff6b6b");
+            removed = true;
+            break;
+          }
+        }
+        if (!removed && this.bossMode && this.boss && this.boss.alive &&
+            Math.hypot(b.x - this.boss.x, b.y - this.boss.y) <= b.radius + this.boss.radius) {
+          this.bullets.splice(i, 1);
+          removed = true;
+          this.boss.health -= isBomb ? GAMEPLAY.bombBossDamage : GAMEPLAY.bulletDamage;
+          this.addParticles(this.boss.x + (Math.random()-0.5)*40, this.boss.y + (Math.random()-0.5)*40, "#f97316");
+          this.onBossHealthChange(this.boss.health, this.boss.maxHealth);
+          if (this.boss.health <= 0) {
+            this.boss.alive = false;
+            for (var p = 0; p < 5; p++) this.addParticles(this.boss.x+(Math.random()-0.5)*90, this.boss.y+(Math.random()-0.5)*90, "#fbbf24");
+            this.stop();
+            this.onBossDefeated();
+          }
+        }
+        if (!removed && (b.x < 0 || b.y < 0 || b.x > this.canvas.width || b.y > this.canvas.height)) {
+          this.bullets.splice(i, 1);
+        }
+      }
+    };
+
+    Game.prototype.updateEnemies = function(dt) {
+      var now = Date.now();
+      for (var i = 0; i < this.enemies.length; i++) {
+        var e = this.enemies[i];
+        var dx = this.player.x - e.x, dy = this.player.y - e.y;
+        var dist = Math.hypot(dx, dy);
+        if (dist > 0) { e.x += (dx / dist) * e.speed * dt; e.y += (dy / dist) * e.speed * dt; }
+        for (var ti = 0; ti < this.trees.length; ti++) {
+          var tr = this.trees[ti];
+          var tdx = e.x - tr.x, tdy = e.y - tr.y;
+          var td  = Math.hypot(tdx, tdy);
+          var mnD = e.radius + tr.radius;
+          if (td < mnD && td > 0) { e.x = tr.x + (tdx / td) * mnD; e.y = tr.y + (tdy / td) * mnD; }
+        }
+        if (e.isShooter && this.bossConfig && now - e.lastShotAt >= (e.shotCooldownMs || this.bossConfig.miniShotCooldownMs)) {
+          e.lastShotAt = now;
+          var sdx = this.player.x - e.x, sdy = this.player.y - e.y;
+          this.enemyBullets.push({
+            x: e.x,
+            y: e.y,
+            dir: Math.atan2(sdy, sdx),
+            speed: e.bulletSpeed || this.bossConfig.miniBulletSpeed,
+            radius: 5,
+            damage: e.bulletDamage || this.bossConfig.miniBulletDamage,
+            color: e.bulletColor || "#fb923c"
+          });
+        }
+        if (Math.hypot(this.player.x - e.x, this.player.y - e.y) <= this.player.radius + e.radius) {
+          if (now - e.lastDamageAt >= GAMEPLAY.enemyDamageCooldownMs) {
+            e.lastDamageAt = now;
+            this.player.health = Math.max(0, this.player.health - e.damage);
+            this.onHealthChange(this.player.health, this.player.maxHealth);
+            this.onDamage(e.damage);
+            this.addParticles(this.player.x, this.player.y, "#ef4444");
+            if (this.player.health <= 0) { this.stop(); this.onGameOver(); return; }
+          }
+        }
+      }
+    };
+
+    Game.prototype.updateChests = function() {
+      for (var i = 0; i < this.chests.length; i++) {
+        var c = this.chests[i];
+        if (!c.active) continue;
+        if (Math.hypot(this.player.x - c.x, this.player.y - c.y) <= this.player.radius + c.radius) {
+          c.active = false;
+          this.onCoinsEarned(GAMEPLAY.chestReward, 'chest');
+          this.addParticles(c.x, c.y, "#fde047");
+          this.chestsCollectedThisLevel += 1;
+          var allGone = true;
+          for (var j = 0; j < this.chests.length; j++) {
+            if (this.chests[j].active) { allGone = false; break; }
+          }
+          if (allGone) {
+            this.allChestsCollected = true;
+            this.onAllChestsCollected();
+            this.checkLevelComplete();
+          }
+        }
+      }
+    };
+
+    Game.prototype.checkLevelComplete = function() {
+      if (this.allChestsCollected && this.enemies.length === 0 && this.running) {
+        this.stop();
+        this.onLevelComplete({ enemiesKilled: this.enemiesKilledThisLevel, chestsCollected: this.chestsCollectedThisLevel });
+      }
+    };
+
+    Game.prototype.addParticles = function(x, y, color) {
+      for (var i = 0; i < 8; i++) {
+        this.particles.push({ x: x, y: y,
+          vx: (Math.random() - 0.5) * 3.6, vy: (Math.random() - 0.5) * 3.6,
+          life: 30, color: color });
+      }
+    };
+
+    Game.prototype.addDamageText = function(x, y, text) {
+      this.damageTexts.push({ x: x, y: y, text: text, life: 60, vy: -0.85 });
+    };
+
+    Game.prototype.updateParticles = function() {
+      for (var i = this.particles.length - 1; i >= 0; i--) {
+        var p = this.particles[i];
+        p.x += p.vx; p.y += p.vy; p.life--;
+        if (p.life <= 0) this.particles.splice(i, 1);
+      }
+    };
+
+    Game.prototype.updateDamageTexts = function() {
+      for (var i = this.damageTexts.length - 1; i >= 0; i--) {
+        var t = this.damageTexts[i];
+        t.y += t.vy; t.life--;
+        if (t.life <= 0) this.damageTexts.splice(i, 1);
+      }
+    };
+
+    Game.prototype.render = function(now) {
+      this.drawBackground();
+      this.drawTrees();
+      if (this.bossMode) this.drawTentacles(now);
+      if (this.bossMode && this.boss) this.drawBoss();
+      this.drawChests(now);
+      this.drawEnemies();
+      this.drawBullets();
+      if (this.bossMode) this.drawEnemyBullets();
+      this.drawPlayer();
+      this.drawParticles();
+      this.drawDamageTexts();
+    };
+
+    Game.prototype.drawBackground = function() {
+      var ctx = this.ctx;
+      ctx.fillStyle = "#2d6a4f";
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1;
+      for (var x = 0; x <= this.canvas.width; x += GAMEPLAY.worldGrid) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); ctx.stroke();
+      }
+      for (var y = 0; y <= this.canvas.height; y += GAMEPLAY.worldGrid) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); ctx.stroke();
+      }
+    };
+
+    Game.prototype.drawTrees = function() {
+      var ctx = this.ctx;
+      for (var i = 0; i < this.trees.length; i++) {
+        var t = this.trees[i], x = t.x, y = t.y, r = t.radius;
+        ctx.fillStyle = "rgba(0,0,0,0.28)";
+        ctx.beginPath(); ctx.ellipse(x + 7, y + r * 0.55, r * 0.85, r * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#14451e";
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#1e7a32";
+        ctx.beginPath(); ctx.arc(x, y - 2, r * 0.86, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#2da845";
+        ctx.beginPath(); ctx.arc(x - r * 0.22, y - r * 0.3, r * 0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#4fc864";
+        ctx.beginPath(); ctx.arc(x - r * 0.1, y - r * 0.42, r * 0.17, 0, Math.PI * 2); ctx.fill();
+      }
+    };
+
+    Game.prototype.drawPlayer = function() {
+      var ctx = this.ctx;
+      var skin = SKINS[this.getSkinId()] || SKINS.default;
+      ctx.fillStyle = "rgba(0,0,0,0.24)";
+      ctx.beginPath();
+      ctx.ellipse(this.player.x, this.player.y + 10, 10, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = skin.color;
+      ctx.beginPath();
+      ctx.arc(this.player.x, this.player.y, this.player.radius, 0, Math.PI * 2);
+      ctx.fill();
+      if (skin.border) {
+        ctx.strokeStyle = skin.border; ctx.lineWidth = 3; ctx.stroke();
+      }
+      var eyeX = this.player.x + Math.cos(this.player.dir) * 6;
+      var eyeY = this.player.y + Math.sin(this.player.dir) * 6;
+      ctx.fillStyle = "#102a43";
+      ctx.beginPath(); ctx.arc(eyeX, eyeY, 2.4, 0, Math.PI * 2); ctx.fill();
+    };
+
+    Game.prototype.drawChests = function(now) {
+      var ctx = this.ctx, t = now * 0.003;
+      for (var i = 0; i < this.chests.length; i++) {
+        var chest = this.chests[i];
+        if (!chest.active) continue;
+        var bob = Math.sin(t + chest.bobOffset) * 3;
+        var x = chest.x, y = chest.y + bob;
+        ctx.fillStyle = "rgba(0,0,0,0.22)";
+        ctx.beginPath(); ctx.ellipse(x, chest.y + 14, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#d4a017";
+        ctx.fillRect(x - 12, y - 6, 24, 16);
+        ctx.fillStyle = "#b8860b";
+        ctx.fillRect(x - 13, y - 12, 26, 8);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x - 3, y - 2, 6, 6);
+      }
+    };
+
+    Game.prototype.drawEnemies = function() {
+      var ctx = this.ctx;
+      for (var i = 0; i < this.enemies.length; i++) {
+        var e = this.enemies[i];
+        if (e.isMiniFish) {
+          this.drawMiniFish(ctx, e);
+        } else if (e.isMiniPirate || e.isMiniBoat) {
+          this.drawMiniPirate(ctx, e);
+        } else if (e.isMiniTank) {
+          this.drawMiniTank(ctx, e);
+        } else {
+          ctx.fillStyle = "rgba(0,0,0,0.22)";
+          ctx.beginPath(); ctx.ellipse(e.x, e.y + 11, 10, 4, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = e.color;
+          ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(e.x - 4, e.y - 2, 2.3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(e.x + 4, e.y - 2, 2.3, 0, Math.PI * 2); ctx.fill();
+        }
+        var barW = e.isMiniTank ? 30 : 24;
+        ctx.fillStyle = "#2d2d2d";
+        ctx.fillRect(e.x - barW / 2, e.y - 22, barW, 3);
+        ctx.fillStyle = "#22c55e";
+        ctx.fillRect(e.x - barW / 2, e.y - 22, barW * (e.health / e.maxHealth), 3);
+      }
+    };
+
+    Game.prototype.drawBullets = function() {
+      var ctx = this.ctx;
+      for (var i = 0; i < this.bullets.length; i++) {
+        var b = this.bullets[i];
+        if (b.type === "bomb") {
+          ctx.fillStyle = "#1f2937";
+          ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(b.x, b.y, b.radius + 1.5, 0, Math.PI * 2); ctx.stroke();
+          continue;
+        }
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
+      }
+    };
+
+    Game.prototype.drawParticles = function() {
+      var ctx = this.ctx;
+      for (var i = 0; i < this.particles.length; i++) {
+        var p = this.particles[i];
+        ctx.globalAlpha = p.life / 30;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    };
+
+    Game.prototype.drawDamageTexts = function() {
+      var ctx = this.ctx;
+      ctx.font = "bold 14px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (var i = 0; i < this.damageTexts.length; i++) {
+        var t = this.damageTexts[i];
+        ctx.globalAlpha = t.life / 60;
+        ctx.fillStyle = "#ef4444";
+        ctx.fillText(t.text, t.x, t.y);
+      }
+      ctx.globalAlpha = 1;
+    };
+
+    Game.prototype.startBoss = function(config) {
+      this.bossMode   = true;
+      this.bossConfig = config;
+      this.chests.length = this.trees.length = this.enemies.length =
+        this.bullets.length = this.enemyBullets.length = this.tentacles.length = 0;
+      this.player.x = this.canvas.width * 0.72;
+      this.player.y = this.canvas.height / 2;
+      this.onHealthChange(this.player.health, this.player.maxHealth);
+      var bossType = config.type || "tank";
+      var spawnInterval = config.spawnIntervalMs || config.fishSpawnIntervalMs || 4000;
+      this.boss = {
+        x: bossType === "pirate" ? this.canvas.width / 2 : config.bodyRadius + 20,
+        y: this.canvas.height / 2,
+        radius: config.bodyRadius,
+        health: config.health,
+        maxHealth: config.health,
+        speed: config.bossSpeed || 20,
+        lastSpawnAt: Date.now() - spawnInterval + 3000,
+        lastCannonAt: Date.now() - (config.cannonCooldownMs || 2500) + 1200,
+        lastTentacleAt: Date.now() - (config.tentacleSpawnMs || 2000),
+        patrolDir: Math.random() > 0.5 ? 1 : -1,
+        alive: true
+      };
+    };
+
+    Game.prototype.updateBoss = function(dt) {
+      if (!this.boss || !this.boss.alive) return;
+      var now = Date.now();
+      var type = this.bossConfig.type || "tank";
+      if (type === "pirate") this.updateBossPirate(dt, now);
+      else if (type === "kraken") this.updateBossKraken(dt, now);
+      else this.updateBossTank(dt, now);
+      this.updateTentacles(dt, now);
+    };
+
+    Game.prototype.updateBossTank = function(dt, now) {
+      var bdx = this.player.x - this.boss.x;
+      var bdy = this.player.y - this.boss.y;
+      var bdist = Math.hypot(bdx, bdy);
+      if (bdist > 0) {
+        this.boss.x += (bdx / bdist) * this.boss.speed * dt;
+        this.boss.y += (bdy / bdist) * this.boss.speed * dt;
+      }
+      this.boss.x = clamp(this.boss.x, this.boss.radius, this.canvas.width - this.boss.radius);
+      this.boss.y = clamp(this.boss.y, this.boss.radius, this.canvas.height - this.boss.radius);
+      if (now - this.boss.lastSpawnAt < this.bossConfig.spawnIntervalMs) return;
+      if (this.enemies.length >= 12) return;
+      this.boss.lastSpawnAt = now;
+      var angles = [-Math.PI / 4, 0, Math.PI / 4];
+      for (var i = 0; i < this.bossConfig.spawnCount; i++) {
+        this.spawnMiniTank(angles[i]);
+      }
+    };
+
+    Game.prototype.updateBossPirate = function(dt, now) {
+      var minX = this.boss.radius + 20;
+      var maxX = this.canvas.width - this.boss.radius - 20;
+      var patrolSpeed = this.bossConfig.patrolSpeed || 95;
+      this.boss.x += this.boss.patrolDir * patrolSpeed * dt;
+      if (this.boss.x <= minX) { this.boss.x = minX; this.boss.patrolDir = 1; }
+      if (this.boss.x >= maxX) { this.boss.x = maxX; this.boss.patrolDir = -1; }
+      var targetY = this.canvas.height * 0.33 + Math.sin(now * 0.0022) * 28;
+      this.boss.y += (targetY - this.boss.y) * Math.min(1, dt * 2.2);
+
+      if (now - this.boss.lastCannonAt >= this.bossConfig.cannonCooldownMs) {
+        this.boss.lastCannonAt = now;
+        var cannonOffsets = [-24, 24];
+        for (var ci = 0; ci < cannonOffsets.length; ci++) {
+          var ox = cannonOffsets[ci];
+          var sx = this.boss.x + ox;
+          var sy = this.boss.y + this.boss.radius * 0.15;
+          var px = this.player.x + (Math.random() - 0.5) * 45;
+          var py = this.player.y;
+          var dx = px - sx;
+          var dy = py - sy;
+          var d = Math.hypot(dx, dy) || 1;
+          var cannonSpeed = this.bossConfig.cannonSpeed || 145;
+          var vx = (dx / d) * cannonSpeed;
+          var vy = (dy / d) * cannonSpeed - 90;
+          this.enemyBullets.push({
+            x: sx,
+            y: sy,
+            vx: vx,
+            vy: vy,
+            gravity: this.bossConfig.cannonGravity,
+            radius: 7,
+            damage: this.bossConfig.cannonDamage,
+            color: "#fb923c"
+          });
+        }
+      }
+
+      if (now - this.boss.lastSpawnAt < this.bossConfig.spawnIntervalMs) return;
+      if (this.enemies.length >= 12) return;
+      this.boss.lastSpawnAt = now;
+      for (var i = 0; i < this.bossConfig.spawnCount; i++) {
+        this.spawnMiniTank((Math.random() - 0.5) * 0.9, {
+          color: "#7c3aed",
+          speed: this.bossConfig.miniSpeed,
+          radius: this.bossConfig.miniRadius,
+          health: this.bossConfig.miniHealth,
+          damage: this.bossConfig.miniDamage,
+          shotCooldownMs: this.bossConfig.miniShotCooldownMs,
+          bulletSpeed: this.bossConfig.miniBulletSpeed,
+          isMiniPirate: true
+        });
+      }
+    };
+
+    Game.prototype.updateBossKraken = function(dt, now) {
+      var bdx = this.player.x - this.boss.x;
+      var bdy = this.player.y - this.boss.y;
+      var bdist = Math.hypot(bdx, bdy);
+      var keepDist = 260;
+      var moveDir = bdist < keepDist ? -1 : 1;
+      if (bdist > 0) {
+        this.boss.x += (bdx / bdist) * this.boss.speed * dt * moveDir;
+        this.boss.y += (bdy / bdist) * this.boss.speed * dt * 0.8;
+      }
+      this.boss.x = clamp(this.boss.x, this.boss.radius, this.canvas.width - this.boss.radius);
+      this.boss.y = clamp(this.boss.y, this.boss.radius, this.canvas.height - this.boss.radius);
+
+      if (now - this.boss.lastTentacleAt >= this.bossConfig.tentacleSpawnMs) {
+        this.boss.lastTentacleAt = now;
+        if (this.tentacles.length < this.bossConfig.maxTentacles) {
+          var angleToPlayer = Math.atan2(this.player.y - this.boss.y, this.player.x - this.boss.x);
+          var spread = (Math.random() - 0.5) * 0.7;
+          var targetLength = Math.hypot(this.player.x - this.boss.x, this.player.y - this.boss.y);
+          this.tentacles.push({
+            angle: angleToPlayer + spread,
+            length: 20,
+            targetLength: targetLength,
+            speed: this.bossConfig.tentacleSpeed,
+            width: this.bossConfig.tentacleWidth,
+            state: "extend",
+            hasDamaged: false
+          });
+        }
+      }
+
+      if (now - this.boss.lastSpawnAt < this.bossConfig.fishSpawnIntervalMs) return;
+      if (this.enemies.length >= 12) return;
+      this.boss.lastSpawnAt = now;
+      for (var i = 0; i < this.bossConfig.fishSpawnCount; i++) {
+        this.spawnKrakenFish();
+      }
+    };
+
+    Game.prototype.updateTentacles = function(dt) {
+      if (!this.tentacles.length || !this.boss || !this.boss.alive) return;
+      for (var i = this.tentacles.length - 1; i >= 0; i--) {
+        var t = this.tentacles[i];
+        var delta = (t.speed || this.bossConfig.tentacleSpeed) * dt;
+        if (t.state === "extend") {
+          t.length += delta;
+          if (t.length >= t.targetLength) {
+            t.length = t.targetLength;
+            t.state = "retract";
+          }
+        } else {
+          t.length -= delta * 1.1;
+          if (t.length <= 16) {
+            this.tentacles.splice(i, 1);
+            continue;
+          }
+        }
+      }
+
+      for (var j = 0; j < this.tentacles.length; j++) {
+        var tent = this.tentacles[j];
+        if (tent.hasDamaged || tent.state !== "extend") continue;
+        var tipX = this.boss.x + Math.cos(tent.angle) * tent.length;
+        var tipY = this.boss.y + Math.sin(tent.angle) * tent.length;
+        if (Math.hypot(this.player.x - tipX, this.player.y - tipY) <= this.player.radius + (tent.width || 12) * 0.45) {
+          tent.hasDamaged = true;
+          this.player.health = Math.max(0, this.player.health - this.bossConfig.tentacleDamage);
+          this.onHealthChange(this.player.health, this.player.maxHealth);
+          this.addParticles(this.player.x, this.player.y, "#ef4444");
+          if (this.player.health <= 0) {
+            this.stop();
+            this.onGameOver();
+            return;
+          }
+        }
+      }
+    };
+
+    Game.prototype.spawnKrakenFish = function() {
+      var margin = 30;
+      var radius = this.bossConfig.fishRadius;
+      var health = this.bossConfig.fishHealth;
+      this.enemies.push({
+        x: rand(margin, this.canvas.width - margin),
+        y: rand(margin, this.canvas.height - margin),
+        radius: radius,
+        health: health,
+        maxHealth: health,
+        speed: this.bossConfig.fishSpeed,
+        damage: this.bossConfig.fishDamage,
+        lastDamageAt: 0,
+        isMiniFish: true,
+        isShooter: false,
+        color: "#0ea5e9"
+      });
+    };
+
+    Game.prototype.spawnMiniTank = function(angle, opts) {
+      var now = Date.now();
+      var options = opts || {};
+      var radius = options.radius || this.bossConfig.miniRadius;
+      var health = options.health || this.bossConfig.miniHealth;
+      var sr = this.boss.radius + radius + 28;
+      this.enemies.push({
+        x: this.boss.x + Math.cos(angle) * sr,
+        y: this.boss.y + Math.sin(angle) * sr,
+        radius: radius,
+        health: health,
+        maxHealth: health,
+        speed: options.speed || this.bossConfig.miniSpeed,
+        damage: options.damage || this.bossConfig.miniDamage,
+        lastDamageAt: 0,
+        lastShotAt: now + Math.floor(Math.random() * 2000),
+        shotCooldownMs: options.shotCooldownMs || this.bossConfig.miniShotCooldownMs,
+        bulletSpeed: options.bulletSpeed || this.bossConfig.miniBulletSpeed,
+        bulletDamage: options.bulletDamage || this.bossConfig.miniBulletDamage,
+        bulletColor: options.bulletColor || "#fb923c",
+        isMiniTank: true,
+        isMiniPirate: !!options.isMiniPirate,
+        isMiniBoat: !!options.isMiniBoat,
+        isShooter: true,
+        color: options.color || "#475569"
+      });
+    };
+
+    Game.prototype.updateEnemyBullets = function(dt) {
+      for (var i = this.enemyBullets.length - 1; i >= 0; i--) {
+        var b = this.enemyBullets[i];
+        if (typeof b.vx === "number" && typeof b.vy === "number") {
+          b.vy += (b.gravity || 0) * dt;
+          b.x += b.vx * dt;
+          b.y += b.vy * dt;
+        } else {
+          b.x += Math.cos(b.dir) * b.speed * dt;
+          b.y += Math.sin(b.dir) * b.speed * dt;
+        }
+        if (b.x < -20 || b.y < -20 || b.x > this.canvas.width + 20 || b.y > this.canvas.height + 20) {
+          this.enemyBullets.splice(i, 1); continue;
+        }
+        if (Math.hypot(this.player.x - b.x, this.player.y - b.y) <= this.player.radius + b.radius) {
+          this.enemyBullets.splice(i, 1);
+          this.player.health = Math.max(0, this.player.health - (b.damage || this.bossConfig.miniBulletDamage));
+          this.onHealthChange(this.player.health, this.player.maxHealth);
+          this.addParticles(this.player.x, this.player.y, "#ef4444");
+          if (this.player.health <= 0) { this.stop(); this.onGameOver(); return; }
+        }
+      }
+    };
+
+    Game.prototype.drawBoss = function() {
+      if (!this.boss || !this.boss.alive) return;
+      var type = this.bossConfig.type || "tank";
+      if (type === "pirate") this.drawBossPirate();
+      else if (type === "kraken") this.drawBossKraken();
+      else this.drawBossTank();
+    };
+
+    Game.prototype.drawBossTank = function() {
+      var ctx = this.ctx, b = this.boss, r = b.radius;
+      var angle = Math.atan2(this.player.y - b.y, this.player.x - b.x);
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.rotate(angle);
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.beginPath(); ctx.ellipse(14, r*0.5, r*0.9, r*0.38, 0, 0, Math.PI*2); ctx.fill();
+      // Tracks
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(-r, -r*0.82, r*2, r*0.3);
+      ctx.fillRect(-r,  r*0.52, r*2, r*0.3);
+      ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 2;
+      for (var lx = -r; lx < r; lx += 9) {
+        ctx.beginPath(); ctx.moveTo(lx, -r*0.82); ctx.lineTo(lx, -r*0.52); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(lx,  r*0.52); ctx.lineTo(lx,  r*0.82); ctx.stroke();
+      }
+      // Body
+      ctx.fillStyle = "#1e3a5f"; ctx.fillRect(-r*0.85, -r*0.5, r*1.7, r);
+      ctx.fillStyle = "#2d5282"; ctx.fillRect(-r*0.75, -r*0.38, r*1.5, r*0.35);
+      // Turret
+      ctx.fillStyle = "#1e3a5f"; ctx.beginPath(); ctx.arc(0, 0, r*0.38, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#2d5282"; ctx.beginPath(); ctx.arc(-4, -4, r*0.24, 0, Math.PI*2); ctx.fill();
+      // Barrel pointing right (= toward player after rotation)
+      ctx.strokeStyle = "#475569"; ctx.lineWidth = r*0.2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r+20, 0); ctx.stroke();
+      ctx.fillStyle = "#64748b";
+      ctx.beginPath(); ctx.arc(r+20, 0, r*0.1, 0, Math.PI*2); ctx.fill();
+      // Low health flicker
+      if (b.health / b.maxHealth < 0.35) {
+        var al = 0.25 + Math.abs(Math.sin(Date.now()*0.006))*0.4;
+        ctx.strokeStyle = "rgba(239,68,68,"+al+")";
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(0, 0, r+8, 0, Math.PI*2); ctx.stroke();
+      }
+      ctx.restore();
+    };
+
+    Game.prototype.drawBossPirate = function() {
+      var ctx = this.ctx;
+      var b = this.boss;
+      var r = b.radius;
+      var sway = Math.sin(Date.now() * 0.004) * 3;
+      ctx.save();
+      ctx.translate(b.x, b.y + sway);
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(0, r * 0.7, r * 1.2, r * 0.36, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#7c2d12";
+      ctx.beginPath();
+      ctx.moveTo(-r * 1.1, r * 0.25);
+      ctx.lineTo(-r * 0.6, -r * 0.2);
+      ctx.lineTo(r * 0.6, -r * 0.2);
+      ctx.lineTo(r * 1.1, r * 0.25);
+      ctx.lineTo(r * 0.55, r * 0.72);
+      ctx.lineTo(-r * 0.55, r * 0.72);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(-r * 0.45, -r * 0.35, r * 0.9, r * 0.45);
+      ctx.strokeStyle = "#451a03";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(-r * 0.45, -r * 0.35, r * 0.9, r * 0.45);
+      ctx.strokeStyle = "#d6d3d1";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, -r * 0.38);
+      ctx.lineTo(0, -r * 1.18);
+      ctx.stroke();
+      ctx.fillStyle = "#fef3c7";
+      ctx.beginPath();
+      ctx.moveTo(2, -r * 1.15);
+      ctx.lineTo(r * 0.62, -r * 0.92);
+      ctx.lineTo(2, -r * 0.64);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.moveTo(2, -r * 1.15);
+      ctx.lineTo(r * 0.58, -r * 0.94);
+      ctx.lineTo(2, -r * 0.68);
+      ctx.closePath();
+      ctx.fill();
+      var fx = r * 0.25;
+      var fy = -r * 0.9;
+      ctx.fillStyle = "#f8fafc";
+      ctx.beginPath();
+      ctx.arc(fx, fy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#111827";
+      ctx.beginPath(); ctx.arc(fx - 1.4, fy - 0.7, 0.9, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(fx + 1.4, fy - 0.7, 0.9, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#f8fafc";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(fx - 6, fy + 4);
+      ctx.lineTo(fx + 6, fy + 8);
+      ctx.moveTo(fx + 6, fy + 4);
+      ctx.lineTo(fx - 6, fy + 8);
+      ctx.stroke();
+      ctx.fillStyle = "#1f2937";
+      ctx.fillRect(-r * 0.88, -r * 0.04, 12, 12);
+      ctx.fillRect(r * 0.72, -r * 0.04, 12, 12);
+      if (b.health / b.maxHealth < 0.35) {
+        ctx.strokeStyle = "rgba(239,68,68,0.8)";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(-r * 0.5, -r * 0.4, r, r * 1.1);
+      }
+      ctx.restore();
+    };
+
+    Game.prototype.drawBossKraken = function() {
+      var ctx = this.ctx;
+      var b = this.boss;
+      var r = b.radius;
+      var pulse = 0.9 + Math.sin(Date.now() * 0.006) * 0.08;
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(0, r * 0.72, r * 0.9, r * 0.34, 0, 0, Math.PI * 2);
+      ctx.fill();
+      for (var i = 0; i < 6; i++) {
+        var ang = (-Math.PI / 1.3) + (i * Math.PI / 5);
+        var wave = Math.sin(Date.now() * 0.004 + i) * 12;
+        ctx.strokeStyle = "#7c3aed";
+        ctx.lineWidth = 8;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(ang) * (r * 0.3), Math.sin(ang) * (r * 0.3));
+        ctx.quadraticCurveTo(Math.cos(ang) * (r * 0.8), Math.sin(ang) * (r * 0.8) + wave, Math.cos(ang) * (r * 1.25), Math.sin(ang) * (r * 1.25) + wave * 0.3);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#4c1d95";
+      ctx.beginPath();
+      ctx.arc(0, 0, r * pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ddd6fe";
+      ctx.beginPath();
+      ctx.arc(-r * 0.25, -r * 0.1, 5, 0, Math.PI * 2);
+      ctx.arc(r * 0.25, -r * 0.1, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#be123c";
+      ctx.beginPath();
+      ctx.arc(0, r * 0.2, 7, 0, Math.PI);
+      ctx.strokeStyle = "#7f1d1d";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    Game.prototype.drawTentacles = function(now) {
+      if (!this.tentacles.length) return;
+      var ctx = this.ctx;
+      for (var i = 0; i < this.tentacles.length; i++) {
+        var t = this.tentacles[i];
+        var tipX = this.boss.x + Math.cos(t.angle) * t.length;
+        var tipY = this.boss.y + Math.sin(t.angle) * t.length;
+        var ctrlX = this.boss.x + Math.cos(t.angle + Math.sin(now * 0.01 + i) * 0.25) * (t.length * 0.58);
+        var ctrlY = this.boss.y + Math.sin(t.angle + Math.sin(now * 0.01 + i) * 0.25) * (t.length * 0.58);
+
+        ctx.strokeStyle = "rgba(109,40,217,0.95)";
+        ctx.lineWidth = t.width || 14;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(this.boss.x, this.boss.y);
+        ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(196,181,253,0.95)";
+        ctx.beginPath();
+        ctx.arc(tipX, tipY, (t.width || 14) * 0.34, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    Game.prototype.drawMiniFish = function(ctx, e) {
+      var r = e.radius;
+      var dir = Math.atan2(this.player.y - e.y, this.player.x - e.x);
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate(dir);
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.beginPath();
+      ctx.ellipse(0, r * 0.9, r * 0.8, r * 0.32, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#0ea5e9";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r * 0.9, r * 0.58, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#0284c7";
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.95, 0);
+      ctx.lineTo(-r * 1.45, -r * 0.55);
+      ctx.lineTo(-r * 1.45, r * 0.55);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#e0f2fe";
+      ctx.beginPath();
+      ctx.arc(r * 0.4, -r * 0.12, r * 0.13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+
+    Game.prototype.drawMiniTank = function(ctx, e) {
+      var r = e.radius;
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath(); ctx.ellipse(e.x+4, e.y+r*0.6, r*0.9, r*0.4, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(e.x-r, e.y-r*0.7, r*2, r*0.26);
+      ctx.fillRect(e.x-r, e.y+r*0.44, r*2, r*0.26);
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(e.x-r*0.78, e.y-r*0.52, r*1.56, r*1.04);
+      ctx.fillStyle = "#475569";
+      ctx.beginPath(); ctx.arc(e.x, e.y, r*0.36, 0, Math.PI*2); ctx.fill();
+      var bdir = Math.atan2(this.player.y - e.y, this.player.x - e.x);
+      ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = r*0.2; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(e.x+Math.cos(bdir)*r*0.3, e.y+Math.sin(bdir)*r*0.3);
+      ctx.lineTo(e.x+Math.cos(bdir)*(r+6), e.y+Math.sin(bdir)*(r+6));
+      ctx.stroke();
+    };
+
+    Game.prototype.drawMiniPirate = function(ctx, e) {
+      var r = e.radius;
+      var dir = Math.atan2(this.player.y - e.y, this.player.x - e.x);
+      var gunX = e.x + Math.cos(dir) * (r * 0.55);
+      var gunY = e.y + Math.sin(dir) * (r * 0.55);
+      ctx.fillStyle = "rgba(0,0,0,0.23)";
+      ctx.beginPath();
+      ctx.ellipse(e.x, e.y + r * 0.95, r * 0.78, r * 0.32, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1f2937";
+      ctx.beginPath();
+      ctx.moveTo(e.x - r * 0.58, e.y + r * 0.95);
+      ctx.lineTo(e.x + r * 0.58, e.y + r * 0.95);
+      ctx.lineTo(e.x + r * 0.4, e.y + r * 0.5);
+      ctx.lineTo(e.x - r * 0.4, e.y + r * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#7c2d12";
+      ctx.fillRect(e.x - r * 0.42, e.y - r * 0.05, r * 0.84, r * 0.66);
+      ctx.fillStyle = "#f8d7b6";
+      ctx.beginPath();
+      ctx.arc(e.x, e.y - r * 0.42, r * 0.36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.arc(e.x - r * 0.12, e.y - r * 0.46, r * 0.05, 0, Math.PI * 2);
+      ctx.arc(e.x + r * 0.12, e.y - r * 0.46, r * 0.05, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#7f1d1d";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y - r * 0.35, r * 0.12, 0.1, Math.PI - 0.1);
+      ctx.stroke();
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.moveTo(e.x - r * 0.42, e.y - r * 0.6);
+      ctx.lineTo(e.x + r * 0.42, e.y - r * 0.6);
+      ctx.lineTo(e.x + r * 0.28, e.y - r * 0.85);
+      ctx.lineTo(e.x - r * 0.28, e.y - r * 0.85);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 2.1;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(gunX, gunY);
+      ctx.lineTo(gunX + Math.cos(dir) * (r * 0.72), gunY + Math.sin(dir) * (r * 0.72));
+      ctx.stroke();
+    };
+
+    // Compatibilidad temporal con nombre antiguo
+    Game.prototype.drawMiniBoat = function(ctx, e) {
+      this.drawMiniPirate(ctx, e);
+    };
+
+    Game.prototype.drawEnemyBullets = function() {
+      var ctx = this.ctx;
+      for (var i = 0; i < this.enemyBullets.length; i++) {
+        var b = this.enemyBullets[i];
+        ctx.fillStyle = b.color || "#fb923c";
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
+      }
+    };
+
+    // ── MAIN ───────────────────────────────────────────────
+    applyGlobalResetIfNeeded();
+    var state  = loadState();
+    var debugBossIsland = null;
+    if (DEBUG_START_TANK_TEST) debugBossIsland = 0;
+    else if (DEBUG_START_PIRATE_TEST) debugBossIsland = 1;
+    else if (DEBUG_START_KRAKEN_TEST) debugBossIsland = 2;
+    if (debugBossIsland !== null) {
+      applyBossTestProgress(state, debugBossIsland);
+      saveState(state);
+    }
+    var canvas = document.getElementById("game-canvas");
+    var currentIsland = 0;
+    var currentLevel  = 1;
+
+    var game = new Game(canvas, {
+      getSkinId: function() { return state.selectedSkin; },
+      getBombs: function() { return state.progress.bombs || 0; },
+      onBombsChanged: function(newBombs) {
+        state.progress.bombs = Math.max(0, newBombs);
+        saveState(state);
+        syncUI();
+      },
+      onHealthChange: function(health, maxHealth) { updateHud({ health: health, maxHealth: maxHealth }); },
+      onCoinsEarned: function(amount, source) {
+        if (source === 'chest' && game.replayMode) return;
+        state.coins += amount;
+        saveState(state);
+        syncUI();
+      },
+      onDamage: function(damage) { },
+      onAllChestsCollected: function() {
+        setGameMessage("¡Cofres recogidos! Mata a los enemigos restantes");
+      },
+      onGameOver: function() {
+        state.progress.lives = Math.max(0, state.progress.lives - 1);
+        saveState(state);
+        syncUI();
+        document.getElementById("boss-hud").classList.add("hidden");
+        if (state.progress.lives > 0) {
+          game.player.health = game.player.maxHealth;
+          setGameMessage("\u00a1Perdiste una vida! Quedan " + state.progress.lives + " \u2665. Reintentando...");
+          setTimeout(function() {
+            if (game.bossMode) { startBossFight(currentIsland); }
+            else               { startGameLevel(currentIsland, currentLevel); }
+          }, 1800);
+        } else {
+          setGameMessage("\uD83D\uDC80 \u00a1Game Over! Sin vidas restantes. Ve a la tienda.");
+          setTimeout(function() { showScreen("screen-menu"); }, 2200);
+        }
+      },
+      onLevelComplete: function(gameStats) {
+        var island   = ISLANDS[currentIsland];
+        var isReplay = game.replayMode;
+        var bonus    = isReplay ? 0 : GAMEPLAY.levelCompleteBonus;
+        state.coins += bonus;
+        var stats = {
+          enemiesKilled:   gameStats.enemiesKilled,
+          chestsCollected: gameStats.chestsCollected,
+          fromEnemies:     gameStats.enemiesKilled * GAMEPLAY.enemyKillReward,
+          fromChests:      isReplay ? 0 : gameStats.chestsCollected * GAMEPLAY.chestReward,
+          bonus:           bonus,
+          totalCoins:      state.coins
+        };
+        var prev = state.progress.islandLevels[String(currentIsland)] || 0;
+        if (currentLevel > prev) {
+          state.progress.islandLevels[String(currentIsland)] = currentLevel;
+        }
+        var isLastLevel = currentLevel >= island.levels;
+        if (isLastLevel && BOSS_CONFIGS[currentIsland]) {
+          saveState(state);
+          syncUI();
+          showLevelComplete(false, currentIsland, currentLevel, stats, function() {
+            startBossFight(currentIsland);
+          });
+          document.getElementById("btn-next-level").textContent = "\u26a0\ufe0f \u00a1A por el jefe!";
+        } else if (isLastLevel) {
+          var nextId = currentIsland + 1;
+          if (nextId < ISLANDS.length && !state.progress.unlockedIslands.includes(nextId)) {
+            state.progress.unlockedIslands.push(nextId);
+          }
+          saveState(state);
+          syncUI();
+          showLevelComplete(true, currentIsland, currentLevel, stats, function() {
+            hideLevelComplete();
+            showScreen("screen-islands");
+            renderIslands(state);
+          });
+        } else {
+          saveState(state);
+          syncUI();
+          showLevelComplete(false, currentIsland, currentLevel, stats, function() {
+            startGameLevel(currentIsland, currentLevel + 1);
+          });
+        }
+      }
+    });
+
+    function startGameLevel(islandIdx, levelNum) {
+      currentIsland = islandIdx;
+      currentLevel  = levelNum;
+      game.levelSpawnMs     = Math.max(800, GAMEPLAY.enemySpawnMs - (levelNum - 1) * 200);
+      game.levelEnemyDamage = GAMEPLAY.enemyDamage + islandIdx;
+      game.levelTreeCount   = 4 + (levelNum - 1) * 2;
+      game.replayMode = levelNum <= (state.progress.islandLevels[String(islandIdx)] || 0);
+      hideLevelComplete();
+      setGameMessage("");
+      showScreen("screen-game");
+      updateHudIsland(ISLANDS[islandIdx].name, levelNum, ISLANDS[islandIdx].levels);
+      syncUI();
+      game.start();
+      game.pause();
+      document.getElementById("ready-title").textContent =
+        ISLANDS[islandIdx].name + " \u00b7 Nivel " + levelNum;
+      document.getElementById("level-ready").classList.remove("hidden");
+    }
+
+    function startBossFight(islandIdx) {
+      var config = BOSS_CONFIGS[islandIdx];
+      if (!config) return;
+      hideLevelComplete();
+      setGameMessage("");
+      showScreen("screen-game");
+      updateHudIsland(ISLANDS[islandIdx].name, "JEFE", ISLANDS[islandIdx].levels);
+      syncUI();
+      document.getElementById("boss-hud").classList.remove("hidden");
+      var bossNameEl = document.querySelector("#boss-hud .boss-name");
+      if (bossNameEl) bossNameEl.textContent = config.hudName || "👹 Jefe";
+      updateBossHud(config.health, config.health);
+      game.onBossHealthChange = updateBossHud;
+      game.onBossDefeated = function() {
+        document.getElementById("boss-hud").classList.add("hidden");
+        if (!state.progress.bossDefeated.includes(islandIdx)) {
+          state.progress.bossDefeated.push(islandIdx);
+        }
+        var nextId = islandIdx + 1;
+        if (nextId < ISLANDS.length && !state.progress.unlockedIslands.includes(nextId)) {
+          state.progress.unlockedIslands.push(nextId);
+        }
+        saveState(state);
+        syncUI();
+        showLevelComplete(true, islandIdx, ISLANDS[islandIdx].levels, {
+          enemiesKilled: 0, chestsCollected: 0, fromEnemies: 0, fromChests: 0,
+          bonus: 0, totalCoins: state.coins
+        }, function() {
+          hideLevelComplete();
+          showScreen("screen-islands");
+          renderIslands(state);
+        });
+      };
+      game.levelTreeCount = 0;
+      game.start();
+      game.startBoss(config);
+      game.pause();
+      document.getElementById("ready-title").textContent = "\u26a0\ufe0f " + (config.hudName || "Jefe") + " \u00b7 " + ISLANDS[islandIdx].name;
+      document.getElementById("level-ready").classList.remove("hidden");
+    }
+
+    function updateBossHud(health, maxHealth) {
+      var pct = Math.max(0, Math.min(1, health / maxHealth));
+      document.getElementById("boss-hp-bar").style.width = (pct * 100) + "%";
+      document.getElementById("boss-hp-text").textContent = Math.ceil(Math.max(0, health)) + "/" + maxHealth;
+    }
+
+    function syncUI() {
+      updateHud({
+        health: game.player ? game.player.health : PLAYER_START.maxHealth,
+        maxHealth: PLAYER_START.maxHealth,
+        coins: state.coins,
+        skin: (SKINS[state.selectedSkin] || SKINS.default).label,
+        lives: state.progress.lives,
+        bombs: state.progress.bombs
+      });
+      updateStoreCoins(state.coins);
+      renderSkinButtons(state);
+      var livesEl = document.getElementById("store-lives");
+      if (livesEl) livesEl.textContent = state.progress.lives;
+      var bombsEl = document.getElementById("store-bombs");
+      if (bombsEl) bombsEl.textContent = state.progress.bombs;
+      var livesBtn = document.getElementById("btn-buy-lives");
+      if (livesBtn) livesBtn.disabled = state.coins < GAMEPLAY.livesCost;
+      var bombsBtn = document.getElementById("btn-buy-bombs");
+      if (bombsBtn) bombsBtn.disabled = state.coins < GAMEPLAY.bombPackCost;
+    }
+
+    document.getElementById("btn-play").addEventListener("click", function() {
+      setStoreMessage(""); setGameMessage("");
+      var targetIsland = 0, targetLevel = 1, pendingBoss = false;
+      for (var i = 0; i < ISLANDS.length; i++) {
+        if (!state.progress.unlockedIslands.includes(i)) break;
+        targetIsland = i;
+        var done = state.progress.islandLevels[String(i)] || 0;
+        if (done >= ISLANDS[i].levels && BOSS_CONFIGS[i] && !state.progress.bossDefeated.includes(i)) {
+          pendingBoss = true; break;
+        }
+        targetLevel = Math.min(done + 1, ISLANDS[i].levels);
+        if (done < ISLANDS[i].levels) break;
+      }
+      if (pendingBoss) startBossFight(targetIsland);
+      else startGameLevel(targetIsland, targetLevel);
+    });
+
+    document.getElementById("btn-progress").addEventListener("click", function() {
+      showScreen("screen-islands");
+      renderIslands(state);
+    });
+
+    document.getElementById("btn-islands-back").addEventListener("click", function() {
+      showScreen("screen-menu");
+    });
+
+    document.getElementById("btn-next-level").addEventListener("click", function() {
+      if (this._nextCallback) this._nextCallback();
+    });
+
+    document.getElementById("btn-buy-lives").addEventListener("click", function() {
+      if (state.coins < GAMEPLAY.livesCost) {
+        setStoreMessage("Te faltan " + (GAMEPLAY.livesCost - state.coins) + " monedas.");
+        return;
+      }
+      state.coins -= GAMEPLAY.livesCost;
+      state.progress.lives += GAMEPLAY.livesPerPack;
+      saveState(state);
+      syncUI();
+      setStoreMessage("\u00a1Compraste " + GAMEPLAY.livesPerPack + " vidas! Total: " + state.progress.lives + " \u2665");
+    });
+
+    document.getElementById("btn-buy-bombs").addEventListener("click", function() {
+      if (state.coins < GAMEPLAY.bombPackCost) {
+        setStoreMessage("Te faltan " + (GAMEPLAY.bombPackCost - state.coins) + " monedas.");
+        return;
+      }
+      state.coins -= GAMEPLAY.bombPackCost;
+      state.progress.bombs += GAMEPLAY.bombsPerPack;
+      saveState(state);
+      syncUI();
+      setStoreMessage("\u00a1Compraste " + GAMEPLAY.bombsPerPack + " bombas! Total: " + state.progress.bombs + " \ud83d\udca3");
+    });
+
+    document.getElementById("btn-store").addEventListener("click", function() {
+      game.stop();
+      showScreen("screen-store");
+      setStoreMessage("");
+      syncUI();
+    });
+
+    document.getElementById("btn-store-back").addEventListener("click", function() {
+      setStoreMessage("");
+      showScreen("screen-menu");
+      syncUI();
+    });
+
+    document.getElementById("btn-back-menu").addEventListener("click", function() {
+      game.stop();
+      hideLevelComplete();
+      document.getElementById("boss-hud").classList.add("hidden");
+      showScreen("screen-menu");
+      setGameMessage("");
+      saveState(state);
+      syncUI();
+    });
+
+    document.getElementById("btn-start-level").addEventListener("click", function() {
+      document.getElementById("level-ready").classList.add("hidden");
+      game.resume();
+    });
+
+    document.getElementById("btn-reset").addEventListener("click", function() {
+      document.getElementById("confirm-modal").classList.remove("hidden");
+    });
+
+    document.getElementById("btn-confirm-cancel").addEventListener("click", function() {
+      document.getElementById("confirm-modal").classList.add("hidden");
+    });
+
+    document.getElementById("btn-confirm-ok").addEventListener("click", function() {
+      document.getElementById("confirm-modal").classList.add("hidden");
+      Object.keys(STORAGE_KEYS).forEach(function(k) { localStorage.removeItem(STORAGE_KEYS[k]); });
+      state = loadState();
+      game.player.health = game.player.maxHealth;
+      syncUI();
+      setStoreMessage("");
+    });
+
+    window.addEventListener("keydown", function(e) {
+      if (!e.ctrlKey || e.code !== "KeyI") return;
+      if (e.repeat) return;
+      e.preventDefault();
+      state.coins += 10;
+      saveState(state);
+      syncUI();
+    });
+
+    syncUI();
+    showScreen("screen-menu");
+  </script>
+</body>
+</html>
