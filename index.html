@@ -23,7 +23,7 @@
         var(--bg);
       min-height: 100vh;
     }
-    .app { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    .app { max-width: 1400px; margin: 0 auto; padding: 1rem; }
     .screen {
       display: none;
       background: rgba(255, 244, 194, 0.9);
@@ -47,6 +47,45 @@
     }
     h1, h2 { margin-top: 0; }
     .subtitle { margin-top: -0.5rem; opacity: 0.85; }
+    .daily-challenge-banner {
+      margin: 0.5rem auto 0.95rem;
+      max-width: 720px;
+      padding: 0.65rem 0.8rem;
+      border: 2px solid #b91c1c;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(254, 226, 226, 0.92), rgba(254, 202, 202, 0.9));
+      box-shadow: 0 8px 18px rgba(127, 29, 29, 0.2);
+    }
+    .daily-challenge-text {
+      margin: 0;
+      color: #7f1d1d;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .daily-challenge-status {
+      margin: 0.25rem 0 0;
+      color: #991b1b;
+      font-size: 0.8rem;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+    .daily-challenge-status.claimed {
+      color: #166534;
+    }
+    .online-actions { display: flex; justify-content: center; gap: 0.7rem; margin: 0 auto 1rem; flex-wrap: wrap; }
+    .online-panel { max-width: 620px; margin: 0 auto; }
+    .online-form { display: grid; gap: 0.65rem; margin: 1rem 0; text-align: left; }
+    .online-form.hidden, .online-actions .hidden { display: none; }
+    .online-form label { display: grid; gap: 0.25rem; font-size: 0.88rem; font-weight: 700; }
+    .online-form input { width: 100%; padding: 0.65rem 0.75rem; border: 1px solid #9a8444; border-radius: 6px; font: inherit; }
+    .online-status { min-height: 1.4rem; font-weight: 700; }
+    .online-status.error { color: #a12622; }
+    .online-status.success { color: #166534; }
+    .leaderboard-wrap { overflow-x: auto; margin: 1rem 0; }
+    .leaderboard-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .leaderboard-table th, .leaderboard-table td { padding: 0.55rem 0.65rem; border-bottom: 1px solid rgba(90,62,0,0.2); }
+    .leaderboard-table th { color: #5a3e00; font-size: 0.82rem; }
+    .leaderboard-table td:first-child { font-weight: 700; width: 3rem; }
     .menu-actions, .game-actions { display: flex; gap: 0.75rem; }
     #screen-menu h1,
     #screen-menu .subtitle {
@@ -102,17 +141,84 @@
     .status { min-height: 1.2rem; font-weight: 700; }
     .hud { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.6rem; align-items: center; }
     .hud-hp-wrap { display:flex; align-items:center; gap:0.4rem; }
-    .hud-hp-bar-outer { width:90px; height:10px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; }
-    .hud-hp-bar-inner { height:100%; width:100%; background:#22c55e; border-radius:4px; transition:width 0.18s, background 0.18s; }
+    .hud-hp-bar-outer { display:inline-block; width:90px; height:10px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; vertical-align:middle; }
+    .hud-hp-bar-inner { display:block; height:100%; width:100%; background:#22c55e; border-radius:4px; transition:width 0.18s, background 0.18s; }
     #game-message { color: #8e1c1c; margin: 0.2rem 0 0.6rem; }
     #game-canvas {
       width: 100%;
-      max-width: 960px;
+      max-width: 1280px;
       aspect-ratio: 16 / 9;
       background: #1f693e;
       border: 2px solid #114025;
       border-radius: 8px;
       display: block;
+      touch-action: none;
+    }
+    .mobile-controls {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0.7rem;
+      display: none;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 0.7rem;
+      pointer-events: none;
+      z-index: 35;
+    }
+    .mobile-left, .mobile-right {
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-end;
+      pointer-events: none;
+    }
+    .joystick-base {
+      width: 106px;
+      height: 106px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.45);
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(15,23,42,0.36));
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12), 0 8px 18px rgba(0,0,0,0.26);
+      position: relative;
+      pointer-events: auto;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .joystick-knob {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fde68a, #f59e0b 70%);
+      border: 2px solid #78350f;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+    .mobile-action-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      padding: 0;
+      border: 2px solid rgba(255,255,255,0.45);
+      color: #fff;
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1;
+      pointer-events: auto;
+      touch-action: manipulation;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.28);
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .mobile-action-btn.shoot { background: linear-gradient(180deg, #0ea5e9, #0369a1); }
+    .mobile-action-btn.bomb { background: linear-gradient(180deg, #f97316, #c2410c); }
+    @media (hover: none), (max-width: 900px) {
+      .mobile-controls { display: flex; }
+      .game-actions { padding-bottom: 5.4rem; }
     }
     .skin-btn.owned   { background: #2d8a57; }
     .skin-btn.equipped { background: #0f5132; }
@@ -161,8 +267,61 @@
     }
     .level-dot.done    { background: #22c55e; border-color: #16a34a; }
     .level-dot.current { background: #f59e0b; border-color: #d97706; }
+    .boss-nav-btn {
+      width: 28px;
+      height: 28px;
+      margin-left: 0.35rem;
+      border-radius: 50%;
+      border: 2px solid #7f1d1d;
+      background: radial-gradient(circle at 30% 28%, #fb7185 0, #dc2626 45%, #7f1d1d 100%);
+      color: #fff7ed;
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.45), 0 8px 14px rgba(127, 29, 29, 0.38);
+      transform: translateY(-1px);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+      animation: boss-dot-pulse 1.8s ease-in-out infinite;
+    }
+    .boss-nav-btn:hover {
+      transform: translateY(-2px) scale(1.08);
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 12px 18px rgba(127, 29, 29, 0.5);
+      filter: saturate(1.15);
+    }
+    .boss-nav-btn.defeated {
+      border-color: #78350f;
+      background: radial-gradient(circle at 30% 28%, #fde68a 0, #f59e0b 45%, #78350f 100%);
+      color: #2d2410;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 8px 14px rgba(146, 64, 14, 0.33);
+    }
+    @keyframes boss-dot-pulse {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(255,255,255,0.45), 0 8px 14px rgba(127, 29, 29, 0.38); }
+      50%      { box-shadow: 0 0 0 2px rgba(255,255,255,0.62), 0 12px 20px rgba(127, 29, 29, 0.5); }
+    }
     /* ── Level overlay ── */
-    #screen-game { position: relative; }
+    #screen-game { position: relative; overflow: hidden; }
+    .damage-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 12;
+      opacity: 0;
+      background:
+        radial-gradient(circle at center, rgba(239, 68, 68, 0.08) 0, rgba(239, 68, 68, 0) 55%),
+        rgba(160, 20, 20, 0.18);
+    }
+    .damage-flash.active {
+      animation: damage-flash-pulse 220ms ease-out;
+    }
+    @keyframes damage-flash-pulse {
+      0%   { opacity: 0; }
+      35%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
     .level-overlay {
       position: absolute;
       inset: 0;
@@ -176,7 +335,7 @@
     .level-overlay.hidden { display: none; }
     .level-overlay-box {
       background: #fff4c2;
-      border: 2px solid #c
+      border: 2px solid #c5a53f;
       border-radius: 12px;
       padding: 1.5rem 2rem;
       text-align: center;
@@ -277,12 +436,60 @@
       </svg>
       <h1>The Adventure</h1>
       <p class="subtitle">⚓ Donde termina el mapa, comienza la aventura</p>
+      <div class="daily-challenge-banner">
+        <p class="daily-challenge-text">🎯 Consigue 100 monedas extra al matar a 50 enemigos en un mismo nivel</p>
+        <p id="daily-challenge-status" class="daily-challenge-status">Disponible hoy</p>
+      </div>
       <div class="menu-actions">
         <button id="btn-play">Play</button>
         <button id="btn-progress">Mapa de progreso</button>
         <button id="btn-store">Tienda</button>
       </div>
+      <div class="online-actions">
+        <button id="btn-account">Cuenta online</button>
+        <button id="btn-leaderboard">Clasificación</button>
+      </div>
       <button id="btn-reset" class="btn-reset-icon" title="Reiniciar progreso">🗑️</button>
+    </section>
+
+    <section id="screen-account" class="screen">
+      <div class="online-panel">
+        <h2>Cuenta online</h2>
+        <p id="account-session-label">No has iniciado sesión.</p>
+        <form id="account-form" class="online-form">
+          <label id="account-username-wrap">Nombre público
+            <input id="account-username" name="username" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="CapitanMar" />
+          </label>
+          <label>Correo electrónico
+            <input id="account-email" name="email" type="email" autocomplete="email" required />
+          </label>
+          <label>Contraseña
+            <input id="account-password" name="password" type="password" minlength="6" autocomplete="current-password" required />
+          </label>
+          <div class="online-actions">
+            <button id="btn-sign-in" type="button">Iniciar sesión</button>
+            <button id="btn-sign-up" type="button">Crear cuenta</button>
+          </div>
+        </form>
+        <p id="account-status" class="online-status" role="status" aria-live="polite"></p>
+        <div class="online-actions">
+          <button id="btn-sign-out" type="button" class="hidden">Cerrar sesión</button>
+          <button id="btn-account-back" type="button">Volver al menú</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-leaderboard" class="screen">
+      <h2>Clasificación de capitanes</h2>
+      <p>Ranking por la suma de tus mejores puntuaciones de nivel.</p>
+      <div class="leaderboard-wrap">
+        <table class="leaderboard-table">
+          <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th><th>Niveles</th></tr></thead>
+          <tbody id="leaderboard-body"><tr><td colspan="4">Cargando clasificación…</td></tr></tbody>
+        </table>
+      </div>
+      <p id="leaderboard-status" class="online-status" role="status" aria-live="polite"></p>
+      <button id="btn-leaderboard-back" type="button">Volver al menú</button>
     </section>
 
     <section id="screen-store" class="screen">
@@ -327,12 +534,12 @@
 
     <section id="screen-game" class="screen">
       <div class="hud">
-        <span class="hud-hp-wrap">❤️ <span class="hud-hp-bar-outer"><span id="hud-hp-bar" class="hud-hp-bar-inner"></span></span> <strong id="hud-health">25</strong><strong id="hud-health-max" style="display:none">25</strong></span>
+        <span class="hud-hp-wrap">❤️ <span class="hud-hp-bar-outer"><span id="hud-hp-bar" class="hud-hp-bar-inner"></span></span> <strong id="hud-health">25/25</strong><strong id="hud-health-max" style="display:none">25</strong></span>
         <span>🪙 <strong id="hud-coins">0</strong></span>
         <span>❤️ Vidas: <strong id="hud-lives">3</strong></span>
         <span>💣 Bombas: <strong id="hud-bombs">0</strong> (B)</span>
+        <span>💀 Muertos: <strong id="hud-kills">0</strong></span>
         <span>Isla: <strong id="hud-island">—</strong> · Nivel: <strong id="hud-level">—</strong></span>
-        <span>Skin: <strong id="hud-skin">default</strong></span>
       </div>
       <p id="game-message" class="status"></p>
       <div id="boss-hud" class="boss-hud hidden">
@@ -342,7 +549,19 @@
           <span id="boss-hp-text">100/100</span>
         </div>
       </div>
-      <canvas id="game-canvas" width="960" height="540"></canvas>
+      <canvas id="game-canvas" width="1280" height="720"></canvas>
+      <div id="damage-flash" class="damage-flash"></div>
+      <div id="mobile-controls" class="mobile-controls">
+        <div class="mobile-left">
+          <div id="touch-joystick" class="joystick-base" aria-label="Mover">
+            <div id="touch-joystick-knob" class="joystick-knob"></div>
+          </div>
+        </div>
+        <div class="mobile-right">
+          <button id="touch-shoot" type="button" class="mobile-action-btn shoot" aria-label="Disparar">🔥</button>
+          <button id="touch-bomb" type="button" class="mobile-action-btn bomb" aria-label="Bomba">💣</button>
+        </div>
+      </div>
       <div class="game-actions">
         <button id="btn-back-menu">Salir al menú</button>
       </div>
@@ -375,8 +594,16 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // ── CONFIG ─────────────────────────────────────────────
+    const SUPABASE_URL = "https://gcesjryufkfkomqvggqy.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_lhvCrS0pnIEjcRL-kZ4vog_DiaqSPjP";
+    var supabaseClient = window.supabase && window.supabase.createClient
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+      : null;
+    var onlineSession = null;
+    var onlineUsername = "";
     const STORAGE_KEYS = {
       coins: "lahistoria_coins",
       selectedSkin: "lahistoria_selected_skin",
@@ -410,7 +637,7 @@
       red:     { label: "rojo",    color: "#e63030", price: 100 }
     };
 
-    const PLAYER_START = { x: 480, y: 270, radius: 14, speed: 220, maxHealth: 25 };
+    const PLAYER_START = { x: 640, y: 360, radius: 14, speed: 220, maxHealth: 25 };
 
     const GAMEPLAY = {
       chestCount: 6,
@@ -439,7 +666,39 @@
       bombsPerPack: 10
     };
 
+    const DAILY_CHALLENGE = {
+      killsTarget: 50,
+      rewardCoins: 100
+    };
+
     const ENEMY_COLORS = ["#8b5cf6", "#ec4899", "#06b6d4", "#f59e0b"];
+
+    const ENEMY_PROFILES = {
+      0: {
+        movementType: "chase",
+        speed: 48,
+        health: GAMEPLAY.enemyHealth,
+        radius: 12,
+        colors: ENEMY_COLORS
+      },
+      1: {
+        movementType: "zigzag",
+        speed: 64,
+        health: GAMEPLAY.enemyHealth,
+        radius: 12,
+        zigzagAmp: 0.75,
+        zigzagFreq: 0.012,
+        colors: ["#0ea5e9", "#22d3ee", "#06b6d4"]
+      },
+      2: {
+        movementType: "chase",
+        speed: 40,
+        health: GAMEPLAY.enemyHealth + 8,
+        radius: 14,
+        packSpawnChance: 0.4,
+        colors: ["#7c3aed", "#8b5cf6", "#6366f1"]
+      }
+    };
 
     const BOSS_ISLAND_1 = {
       // Isla 1 — Gran Tanque
@@ -519,8 +778,13 @@
       const progressRaw = localStorage.getItem(STORAGE_KEYS.progress);
       const progress = progressRaw ? JSON.parse(progressRaw) : { unlockedIslands: [0], islandLevels: {}, bossDefeated: [] };
       if (!progress.bossDefeated) progress.bossDefeated = [];
-      if (typeof progress.lives !== 'number') progress.lives = GAMEPLAY.startingLives;
-      if (typeof progress.bombs !== 'number') progress.bombs = 0;
+      progress.lives = toInt(progress.lives, GAMEPLAY.startingLives);
+      progress.bombs = toInt(progress.bombs, 0);
+      progress.playerHealth = toInt(progress.playerHealth, PLAYER_START.maxHealth);
+      progress.playerHealth = clamp(progress.playerHealth, 0, PLAYER_START.maxHealth);
+      progress.daily50BonusLastClaim = typeof progress.daily50BonusLastClaim === "string"
+        ? progress.daily50BonusLastClaim
+        : "";
       return {
         coins,
         selectedSkin: SKINS[selectedSkin] ? selectedSkin : "default",
@@ -597,20 +861,21 @@
     }
 
     function updateHud(opts) {
+      var maxH = typeof opts.maxHealth === "number" ? opts.maxHealth
+                 : (parseInt(document.getElementById("hud-health-max").textContent, 10) || PLAYER_START.maxHealth);
+      if (typeof opts.maxHealth === "number") document.getElementById("hud-health-max").textContent = opts.maxHealth;
       if (typeof opts.health === "number") {
-        document.getElementById("hud-health").textContent = opts.health;
-        var maxH = typeof opts.maxHealth === "number" ? opts.maxHealth
-                   : (parseInt(document.getElementById("hud-health-max").textContent) || 25);
-        var pct  = Math.max(0, Math.min(1, opts.health / maxH));
+        var hp = clamp(opts.health, 0, maxH);
+        document.getElementById("hud-health").textContent = Math.ceil(hp) + "/" + maxH;
+        var pct  = maxH > 0 ? Math.max(0, Math.min(1, hp / maxH)) : 0;
         var bar  = document.getElementById("hud-hp-bar");
         bar.style.width = (pct * 100) + "%";
         bar.style.background = pct > 0.5 ? "#22c55e" : pct > 0.25 ? "#f59e0b" : "#ef4444";
       }
       if (typeof opts.lives === "number") document.getElementById("hud-lives").textContent = opts.lives;
       if (typeof opts.bombs === "number") document.getElementById("hud-bombs").textContent = opts.bombs;
-      if (typeof opts.maxHealth === "number") document.getElementById("hud-health-max").textContent = opts.maxHealth;
+      if (typeof opts.kills === "number") document.getElementById("hud-kills").textContent = Math.max(0, Math.floor(opts.kills));
       if (typeof opts.coins === "number")     document.getElementById("hud-coins").textContent = opts.coins;
-      if (typeof opts.skin === "string")      document.getElementById("hud-skin").textContent = opts.skin;
     }
 
     function updateStoreCoins(coins) {
@@ -623,6 +888,227 @@
 
     function setGameMessage(msg) {
       document.getElementById("game-message").textContent = msg;
+    }
+
+    function getTodayKey() {
+      var now = new Date();
+      var mm = String(now.getMonth() + 1).padStart(2, "0");
+      var dd = String(now.getDate()).padStart(2, "0");
+      return now.getFullYear() + "-" + mm + "-" + dd;
+    }
+
+    function updateDailyChallengeStatus() {
+      var statusEl = document.getElementById("daily-challenge-status");
+      if (!statusEl) return;
+      var claimedToday = state.progress.daily50BonusLastClaim === getTodayKey();
+      if (claimedToday) {
+        statusEl.textContent = "✅ Reto diario completado hoy (+" + DAILY_CHALLENGE.rewardCoins + " 🪙)";
+        statusEl.classList.add("claimed");
+      } else {
+        statusEl.textContent = "Disponible hoy";
+        statusEl.classList.remove("claimed");
+      }
+    }
+
+    function setAccountStatus(message, type) {
+      var status = document.getElementById("account-status");
+      status.textContent = message || "";
+      status.classList.toggle("error", type === "error");
+      status.classList.toggle("success", type === "success");
+    }
+
+    function renderAccountSession(session) {
+      onlineSession = session || null;
+      onlineUsername = "";
+      var form = document.getElementById("account-form");
+      var signOutButton = document.getElementById("btn-sign-out");
+      var sessionLabel = document.getElementById("account-session-label");
+      var accountButton = document.getElementById("btn-account");
+      if (!onlineSession) {
+        form.classList.remove("hidden");
+        signOutButton.classList.add("hidden");
+        sessionLabel.textContent = "No has iniciado sesión.";
+        accountButton.textContent = "Cuenta online";
+        return;
+      }
+
+      form.classList.add("hidden");
+      signOutButton.classList.remove("hidden");
+      sessionLabel.textContent = "Cuenta conectada. Cargando perfil…";
+      supabaseClient.from("profiles").select("username").eq("id", onlineSession.user.id).single()
+        .then(function(result) {
+          if (!onlineSession || onlineSession.user.id !== session.user.id) return;
+          if (result.error) {
+            sessionLabel.textContent = "Sesión iniciada: " + session.user.email;
+            setAccountStatus("No se pudo cargar el perfil. Comprueba que ejecutaste supabase_setup.sql.", "error");
+            return;
+          }
+          onlineUsername = result.data.username;
+          sessionLabel.textContent = "Sesión iniciada como " + onlineUsername;
+          accountButton.textContent = onlineUsername;
+        });
+    }
+
+    function loadLeaderboard() {
+      var body = document.getElementById("leaderboard-body");
+      var status = document.getElementById("leaderboard-status");
+      body.innerHTML = "<tr><td colspan=\"4\">Cargando clasificación…</td></tr>";
+      status.textContent = "";
+      if (!supabaseClient) {
+        body.innerHTML = "<tr><td colspan=\"4\">No se pudo cargar el cliente online.</td></tr>";
+        status.textContent = "Comprueba tu conexión a internet.";
+        return;
+      }
+      supabaseClient.from("leaderboard")
+        .select("username,total_score,levels_completed,best_level_score")
+        .order("total_score", { ascending: false })
+        .order("best_level_score", { ascending: false })
+        .limit(50)
+        .then(function(result) {
+          body.innerHTML = "";
+          if (result.error) {
+            body.innerHTML = "<tr><td colspan=\"4\">Clasificación todavía no disponible.</td></tr>";
+            status.textContent = "Error de Supabase " + (result.error.code || "") + ": " + result.error.message;
+            return;
+          }
+          if (!result.data.length) {
+            body.innerHTML = "<tr><td colspan=\"4\">Aún no hay puntuaciones. ¡Sé el primero!</td></tr>";
+            return;
+          }
+          result.data.forEach(function(entry, index) {
+            var row = document.createElement("tr");
+            [index + 1, entry.username, entry.total_score, entry.levels_completed].forEach(function(value) {
+              var cell = document.createElement("td");
+              cell.textContent = value;
+              row.appendChild(cell);
+            });
+            body.appendChild(row);
+          });
+        });
+    }
+
+    function saveOnlineLevelScore(gameStats, islandIdx, levelNum) {
+      if (!supabaseClient || !onlineSession) return;
+      var score = gameStats.enemiesKilled * 10 + gameStats.chestsCollected * 25;
+      supabaseClient.rpc("submit_level_score", {
+        p_island_id: islandIdx,
+        p_level_num: levelNum,
+        p_score: score,
+        p_enemies_killed: gameStats.enemiesKilled,
+        p_chests_collected: gameStats.chestsCollected
+      }).then(function(result) {
+        if (result.error) {
+          setAccountStatus("No se pudo guardar la puntuación online.", "error");
+        }
+      });
+    }
+
+    function setupOnlineFeatures() {
+      if (!supabaseClient) {
+        setAccountStatus("No se pudo cargar Supabase. Revisa la conexión a internet.", "error");
+      } else {
+        supabaseClient.auth.onAuthStateChange(function(event, session) {
+          window.setTimeout(function() { renderAccountSession(session); }, 0);
+        });
+        supabaseClient.auth.getSession().then(function(result) {
+          renderAccountSession(result.data.session);
+        });
+      }
+
+      document.getElementById("account-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+      });
+      document.getElementById("btn-account").addEventListener("click", function() {
+        setAccountStatus("", "");
+        showScreen("screen-account");
+        if (!supabaseClient) setAccountStatus("No se pudo cargar Supabase. Revisa la conexión.", "error");
+        else renderAccountSession(onlineSession);
+      });
+      document.getElementById("btn-sign-in").addEventListener("click", function() {
+        if (!supabaseClient) return;
+        var email = document.getElementById("account-email").value.trim();
+        var password = document.getElementById("account-password").value;
+        if (!email || !password) {
+          setAccountStatus("Escribe tu correo y contraseña.", "error");
+          return;
+        }
+        setAccountStatus("Iniciando sesión…", "");
+        supabaseClient.auth.signInWithPassword({ email: email, password: password }).then(function(result) {
+          if (result.error) {
+            setAccountStatus(result.error.message, "error");
+            return;
+          }
+          setAccountStatus("Sesión iniciada.", "success");
+          renderAccountSession(result.data.session);
+        });
+      });
+      document.getElementById("btn-sign-up").addEventListener("click", function() {
+        if (!supabaseClient) return;
+        var username = document.getElementById("account-username").value.trim();
+        var email = document.getElementById("account-email").value.trim();
+        var password = document.getElementById("account-password").value;
+        if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
+          setAccountStatus("El nombre público debe tener 3-24 caracteres: letras, números o _.", "error");
+          return;
+        }
+        if (!email || password.length < 6) {
+          setAccountStatus("Escribe un correo válido y una contraseña de al menos 6 caracteres.", "error");
+          return;
+        }
+        setAccountStatus("Creando cuenta…", "");
+        supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { username: username },
+            emailRedirectTo: window.location.origin + window.location.pathname
+          }
+        }).then(function(result) {
+          if (result.error) {
+            setAccountStatus(result.error.message, "error");
+            return;
+          }
+          if (result.data.session) {
+            setAccountStatus("Cuenta creada y sesión iniciada.", "success");
+            renderAccountSession(result.data.session);
+          } else {
+            setAccountStatus("Cuenta creada. Confirma el correo y después inicia sesión.", "success");
+          }
+        });
+      });
+      document.getElementById("btn-sign-out").addEventListener("click", function() {
+        supabaseClient.auth.signOut().then(function(result) {
+          if (result.error) {
+            setAccountStatus(result.error.message, "error");
+            return;
+          }
+          setAccountStatus("Sesión cerrada.", "success");
+          renderAccountSession(null);
+        });
+      });
+      document.getElementById("btn-account-back").addEventListener("click", function() {
+        showScreen("screen-menu");
+      });
+      document.getElementById("btn-leaderboard").addEventListener("click", function() {
+        showScreen("screen-leaderboard");
+        loadLeaderboard();
+      });
+      document.getElementById("btn-leaderboard-back").addEventListener("click", function() {
+        showScreen("screen-menu");
+      });
+    }
+
+    var damageFlashTimeout = null;
+    function triggerDamageFlash() {
+      var flash = document.getElementById("damage-flash");
+      if (!flash) return;
+      flash.classList.remove("active");
+      void flash.offsetWidth;
+      flash.classList.add("active");
+      if (damageFlashTimeout) clearTimeout(damageFlashTimeout);
+      damageFlashTimeout = setTimeout(function() {
+        flash.classList.remove("active");
+      }, 240);
     }
 
     function updateHudIsland(islandName, level, totalLevels) {
@@ -667,6 +1153,23 @@
           ? (completed >= island.levels ? "\u00a1Completada!" : "Nivel " + (completed + 1) + " de " + island.levels)
           : "Completa la isla anterior";
         card.appendChild(sub);
+
+        var canOpenBoss = unlocked && completed >= island.levels && !!BOSS_CONFIGS[island.id];
+        if (canOpenBoss) {
+          var bossBtn = document.createElement("button");
+          var defeatedBoss = state.progress.bossDefeated.includes(island.id);
+          bossBtn.type = "button";
+          bossBtn.className = "boss-nav-btn" + (defeatedBoss ? " defeated" : "");
+          bossBtn.textContent = defeatedBoss ? "★" : "⚠";
+          bossBtn.title = defeatedBoss ? "Rejugar jefe" : "Ir al jefe";
+          bossBtn.setAttribute("aria-label", bossBtn.title);
+          bossBtn.addEventListener("click", function(ev) {
+            ev.stopPropagation();
+            startBossFight(island.id);
+          });
+          dots.appendChild(bossBtn);
+        }
+
         if (unlocked) {
           (function(isl, comp) {
             card.addEventListener("click", function() {
@@ -687,7 +1190,7 @@
 
     function showLevelComplete(isIslandComplete, islandIdx, level, stats, callback) {
       var island = ISLANDS[islandIdx];
-      var totalEarned = stats.fromEnemies + stats.fromChests + stats.bonus;
+      var totalEarned = stats.fromEnemies + stats.fromChests + stats.bonus + (stats.dailyBonus || 0);
       var trophy  = isIslandComplete ? "🌟" : "🏆";
       var title   = isIslandComplete ? "\u00a1Isla completada! 🎉" : "\u00a1Nivel " + level + " completado!";
       var sub     = island.name + (isIslandComplete ? " \u2014 \u00a1Todos los niveles!" : " \u00b7 Nivel " + level + "/" + island.levels);
@@ -698,6 +1201,9 @@
       html += '<div class="lo-row"><span class="lo-ico">\u2694\ufe0f</span><span class="lo-name">Villanos eliminados</span><span class="lo-detail">' + stats.enemiesKilled + ' \u00d7 1\uD83E\uDE99</span><span class="lo-amount">+' + stats.fromEnemies + '</span></div>';
       html += '<div class="lo-row"><span class="lo-ico">\uD83D\uDCE6</span><span class="lo-name">Cofres recogidos</span><span class="lo-detail">' + stats.chestsCollected + ' \u00d7 5\uD83E\uDE99</span><span class="lo-amount">+' + stats.fromChests + '</span></div>';
       html += '<div class="lo-row lo-bonus-row"><span class="lo-ico">\u2B50</span><span class="lo-name">Bonus de nivel</span><span class="lo-detail"></span><span class="lo-amount">+' + stats.bonus + '</span></div>';
+      if (stats.dailyBonus > 0) {
+        html += '<div class="lo-row lo-bonus-row"><span class="lo-ico">\uD83C\uDFAF</span><span class="lo-name">Reto diario (50 bajas)</span><span class="lo-detail">Solo 1 vez por dia</span><span class="lo-amount">+' + stats.dailyBonus + '</span></div>';
+      }
       html += '</div>';
       html += '<div class="lo-divider"></div>';
       html += '<div class="lo-totals">';
@@ -808,6 +1314,7 @@
       this.onGameOver      = options.onGameOver;
       this.onLevelComplete      = options.onLevelComplete      || function() {};
       this.onAllChestsCollected = options.onAllChestsCollected || function() {};
+      this.onKillsChange        = options.onKillsChange        || function() {};
       this.onBossHealthChange   = function() {};
       this.onBossDefeated       = function() {};
 
@@ -829,6 +1336,10 @@
       this.lastShotAt      = 0;
       this.lastBombAt      = 0;
       this.keys            = new Set();
+      this.touchMoveX      = 0;
+      this.touchMoveY      = 0;
+      this.currentIsland   = 0;
+      this.currentLevel    = 1;
 
       this.player = {
         x: PLAYER_START.x, y: PLAYER_START.y,
@@ -891,17 +1402,66 @@
       this.allChestsCollected       = false;
       this.chestsCollectedThisLevel = 0;
       this.enemiesKilledThisLevel   = 0;
+      this.onKillsChange(this.enemiesKilledThisLevel);
       this.spawnTrees();
       for (var i = 0; i < GAMEPLAY.chestCount; i++) this.chests.push(this.spawnChest());
       this.onHealthChange(this.player.health, this.player.maxHealth);
     };
 
+    Game.prototype.isCirclePositionFree = function(x, y, radius, list, extraGap) {
+      var gap = extraGap || 0;
+      for (var i = 0; i < list.length; i++) {
+        var item = list[i];
+        if (Math.hypot(x - item.x, y - item.y) < radius + item.radius + gap) {
+          return false;
+        }
+      }
+      return true;
+    };
+
     Game.prototype.spawnChest = function() {
       var margin = 60;
+      var radius = 15;
+      var attempts = 0;
+      while (attempts < 500) {
+        attempts++;
+        var x = rand(margin, this.canvas.width - margin);
+        var y = rand(margin, this.canvas.height - margin);
+        // Mantiene despejada la zona de inicio del jugador para evitar cofres bloqueados.
+        if (Math.hypot(x - this.canvas.width / 2, y - this.canvas.height / 2) < 95) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.trees, 10)) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.chests, 16)) continue;
+        return {
+          x: x,
+          y: y,
+          radius: radius,
+          active: true,
+          respawnAt: 0,
+          bobOffset: Math.random() * Math.PI * 2
+        };
+      }
+
+      for (var gy = margin; gy <= this.canvas.height - margin; gy += 28) {
+        for (var gx = margin; gx <= this.canvas.width - margin; gx += 28) {
+          if (Math.hypot(gx - this.canvas.width / 2, gy - this.canvas.height / 2) < 95) continue;
+          if (!this.isCirclePositionFree(gx, gy, radius, this.trees, 10)) continue;
+          if (!this.isCirclePositionFree(gx, gy, radius, this.chests, 16)) continue;
+          return {
+            x: gx,
+            y: gy,
+            radius: radius,
+            active: true,
+            respawnAt: 0,
+            bobOffset: Math.random() * Math.PI * 2
+          };
+        }
+      }
+
+      // Fallback extremo para no romper el nivel, aunque normalmente nunca se alcanza.
       return {
         x: rand(margin, this.canvas.width  - margin),
         y: rand(margin, this.canvas.height - margin),
-        radius: 15, active: true, respawnAt: 0,
+        radius: radius, active: true, respawnAt: 0,
         bobOffset: Math.random() * Math.PI * 2
       };
     };
@@ -924,15 +1484,81 @@
     };
 
     Game.prototype.spawnEnemy = function() {
-      var angle = Math.random() * Math.PI * 2;
-      var dist  = 180;
-      this.enemies.push({
-        x: clamp(this.player.x + Math.cos(angle) * dist, 24, this.canvas.width  - 24),
-        y: clamp(this.player.y + Math.sin(angle) * dist, 24, this.canvas.height - 24),
-        radius: 12, health: GAMEPLAY.enemyHealth, maxHealth: GAMEPLAY.enemyHealth,
-        speed: 48, damage: this.levelEnemyDamage, lastDamageAt: 0,
-        color: ENEMY_COLORS[Math.floor(Math.random() * ENEMY_COLORS.length)]
-      });
+      if (this.enemies.length >= GAMEPLAY.maxEnemies) return;
+      var profile = this.getEnemyProfile();
+      var spawnPos = this.findEnemySpawnPosition(profile.radius);
+      if (!spawnPos) return;
+      var enemy = {
+        x: spawnPos.x,
+        y: spawnPos.y,
+        radius: profile.radius,
+        health: profile.health,
+        maxHealth: profile.health,
+        speed: profile.speed,
+        damage: this.levelEnemyDamage,
+        lastDamageAt: 0,
+        movementType: profile.movementType,
+        zigzagAmp: profile.zigzagAmp || 0,
+        zigzagFreq: profile.zigzagFreq || 0,
+        zigzagPhase: Math.random() * Math.PI * 2,
+        spawnedAt: Date.now(),
+        color: profile.colors[Math.floor(Math.random() * profile.colors.length)]
+      };
+      this.enemies.push(enemy);
+
+      if (profile.packSpawnChance && Math.random() < profile.packSpawnChance && this.enemies.length < GAMEPLAY.maxEnemies) {
+        var buddyPos = this.findEnemySpawnPosition(profile.radius);
+        if (!buddyPos) return;
+        var buddyHealth = Math.max(GAMEPLAY.enemyHealth + 4, profile.health - 3);
+        this.enemies.push({
+          x: buddyPos.x,
+          y: buddyPos.y,
+          radius: profile.radius,
+          health: buddyHealth,
+          maxHealth: buddyHealth,
+          speed: profile.speed + rand(-4, 4),
+          damage: this.levelEnemyDamage,
+          lastDamageAt: 0,
+          movementType: profile.movementType,
+          zigzagAmp: profile.zigzagAmp || 0,
+          zigzagFreq: profile.zigzagFreq || 0,
+          zigzagPhase: Math.random() * Math.PI * 2,
+          spawnedAt: Date.now(),
+          color: profile.colors[Math.floor(Math.random() * profile.colors.length)]
+        });
+      }
+    };
+
+    Game.prototype.findEnemySpawnPosition = function(radius) {
+      var attempts = 0;
+      var minDistPlayer = 130;
+      while (attempts < 220) {
+        attempts++;
+        var angle = Math.random() * Math.PI * 2;
+        var dist = rand(170, 290);
+        var x = clamp(this.player.x + Math.cos(angle) * dist, radius + 8, this.canvas.width - radius - 8);
+        var y = clamp(this.player.y + Math.sin(angle) * dist, radius + 8, this.canvas.height - radius - 8);
+        if (Math.hypot(x - this.player.x, y - this.player.y) < minDistPlayer) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.trees, 8)) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.chests, 24)) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.enemies, 10)) continue;
+        return { x: x, y: y };
+      }
+
+      for (var gy = radius + 10; gy <= this.canvas.height - radius - 10; gy += 24) {
+        for (var gx = radius + 10; gx <= this.canvas.width - radius - 10; gx += 24) {
+          if (Math.hypot(gx - this.player.x, gy - this.player.y) < minDistPlayer) continue;
+          if (!this.isCirclePositionFree(gx, gy, radius, this.trees, 8)) continue;
+          if (!this.isCirclePositionFree(gx, gy, radius, this.chests, 24)) continue;
+          if (!this.isCirclePositionFree(gx, gy, radius, this.enemies, 10)) continue;
+          return { x: gx, y: gy };
+        }
+      }
+      return null;
+    };
+
+    Game.prototype.getEnemyProfile = function() {
+      return ENEMY_PROFILES[this.currentIsland] || ENEMY_PROFILES[0];
     };
 
     Game.prototype.handleKeyDown = function(e) {
@@ -1000,6 +1626,8 @@
       if (this.keys.has("KeyS")) dy += 1;
       if (this.keys.has("KeyA")) dx -= 1;
       if (this.keys.has("KeyD")) dx += 1;
+      dx += this.touchMoveX;
+      dy += this.touchMoveY;
       if (dx !== 0 || dy !== 0) {
         var len = Math.hypot(dx, dy);
         var vel = this.player.speed * dt;
@@ -1047,6 +1675,7 @@
               this.onCoinsEarned(GAMEPLAY.enemyKillReward, 'enemy');
               this.addParticles(enemy.x, enemy.y, "#f97316");
               this.enemiesKilledThisLevel += 1;
+              this.onKillsChange(this.enemiesKilledThisLevel);
               this.checkLevelComplete();
             } else {
               enemy.health -= GAMEPLAY.bulletDamage;
@@ -1055,6 +1684,7 @@
                 this.onCoinsEarned(GAMEPLAY.enemyKillReward, 'enemy');
                 this.addParticles(enemy.x, enemy.y, "#fbbf24");
                 this.enemiesKilledThisLevel += 1;
+                this.onKillsChange(this.enemiesKilledThisLevel);
                 this.checkLevelComplete();
               }
             }
@@ -1090,7 +1720,22 @@
         var e = this.enemies[i];
         var dx = this.player.x - e.x, dy = this.player.y - e.y;
         var dist = Math.hypot(dx, dy);
-        if (dist > 0) { e.x += (dx / dist) * e.speed * dt; e.y += (dy / dist) * e.speed * dt; }
+        if (dist > 0) {
+          var mvx = dx / dist;
+          var mvy = dy / dist;
+          if (e.movementType === "zigzag") {
+            var px = -mvy;
+            var py = mvx;
+            var wave = Math.sin((now - e.spawnedAt) * e.zigzagFreq + e.zigzagPhase) * e.zigzagAmp;
+            mvx += px * wave;
+            mvy += py * wave;
+            var mlen = Math.hypot(mvx, mvy) || 1;
+            mvx /= mlen;
+            mvy /= mlen;
+          }
+          e.x += mvx * e.speed * dt;
+          e.y += mvy * e.speed * dt;
+        }
         for (var ti = 0; ti < this.trees.length; ti++) {
           var tr = this.trees[ti];
           var tdx = e.x - tr.x, tdy = e.y - tr.y;
@@ -1888,6 +2533,96 @@
       }
     };
 
+    function setupTouchControls(game) {
+      var joystick = document.getElementById("touch-joystick");
+      var knob = document.getElementById("touch-joystick-knob");
+      var shootBtn = document.getElementById("touch-shoot");
+      var bombBtn = document.getElementById("touch-bomb");
+      if (!joystick || !knob || !shootBtn || !bombBtn) return;
+
+      var activePointerId = null;
+      var maxRadius = 32;
+      var shootIntervalId = null;
+
+      function resetJoystick() {
+        game.touchMoveX = 0;
+        game.touchMoveY = 0;
+        knob.style.transform = "translate(-50%, -50%)";
+      }
+
+      function setJoystickFromPointer(clientX, clientY) {
+        var rect = joystick.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        var dx = clientX - cx;
+        var dy = clientY - cy;
+        var dist = Math.hypot(dx, dy);
+        if (dist > maxRadius && dist > 0) {
+          dx = (dx / dist) * maxRadius;
+          dy = (dy / dist) * maxRadius;
+          dist = maxRadius;
+        }
+        knob.style.transform = "translate(calc(-50% + " + dx + "px), calc(-50% + " + dy + "px))";
+        game.touchMoveX = dist > 4 ? dx / maxRadius : 0;
+        game.touchMoveY = dist > 4 ? dy / maxRadius : 0;
+      }
+
+      joystick.addEventListener("pointerdown", function(e) {
+        e.preventDefault();
+        activePointerId = e.pointerId;
+        joystick.setPointerCapture(e.pointerId);
+        setJoystickFromPointer(e.clientX, e.clientY);
+      });
+
+      joystick.addEventListener("pointermove", function(e) {
+        if (activePointerId !== e.pointerId) return;
+        e.preventDefault();
+        setJoystickFromPointer(e.clientX, e.clientY);
+      });
+
+      function releaseJoystick(e) {
+        if (activePointerId !== e.pointerId) return;
+        activePointerId = null;
+        resetJoystick();
+      }
+
+      joystick.addEventListener("pointerup", releaseJoystick);
+      joystick.addEventListener("pointercancel", releaseJoystick);
+      joystick.addEventListener("pointerleave", function(e) {
+        if (activePointerId !== e.pointerId) return;
+        releaseJoystick(e);
+      });
+
+      function stopShootLoop() {
+        if (shootIntervalId) {
+          clearInterval(shootIntervalId);
+          shootIntervalId = null;
+        }
+      }
+
+      shootBtn.addEventListener("pointerdown", function(e) {
+        e.preventDefault();
+        game.tryShoot();
+        stopShootLoop();
+        shootIntervalId = setInterval(function() {
+          game.tryShoot();
+        }, 130);
+      });
+      shootBtn.addEventListener("pointerup", stopShootLoop);
+      shootBtn.addEventListener("pointercancel", stopShootLoop);
+      shootBtn.addEventListener("pointerleave", stopShootLoop);
+
+      bombBtn.addEventListener("pointerdown", function(e) {
+        e.preventDefault();
+        game.tryThrowBomb();
+      });
+
+      window.addEventListener("blur", function() {
+        resetJoystick();
+        stopShootLoop();
+      });
+    }
+
     // ── MAIN ───────────────────────────────────────────────
     applyGlobalResetIfNeeded();
     var state  = loadState();
@@ -1902,6 +2637,7 @@
     var canvas = document.getElementById("game-canvas");
     var currentIsland = 0;
     var currentLevel  = 1;
+    var lastHudHealth = clamp(toInt(state.progress.playerHealth, PLAYER_START.maxHealth), 0, PLAYER_START.maxHealth);
 
     var game = new Game(canvas, {
       getSkinId: function() { return state.selectedSkin; },
@@ -1911,7 +2647,18 @@
         saveState(state);
         syncUI();
       },
-      onHealthChange: function(health, maxHealth) { updateHud({ health: health, maxHealth: maxHealth }); },
+      onKillsChange: function(kills) {
+        updateHud({ kills: kills });
+      },
+      onHealthChange: function(health, maxHealth) {
+        var safeMaxHealth = maxHealth || PLAYER_START.maxHealth;
+        var safeHealth = clamp(health, 0, safeMaxHealth);
+        if (safeHealth < lastHudHealth) triggerDamageFlash();
+        lastHudHealth = safeHealth;
+        state.progress.playerHealth = safeHealth;
+        saveState(state);
+        updateHud({ health: safeHealth, maxHealth: safeMaxHealth });
+      },
       onCoinsEarned: function(amount, source) {
         if (source === 'chest' && game.replayMode) return;
         state.coins += amount;
@@ -1924,6 +2671,7 @@
       },
       onGameOver: function() {
         state.progress.lives = Math.max(0, state.progress.lives - 1);
+        state.progress.playerHealth = PLAYER_START.maxHealth;
         saveState(state);
         syncUI();
         document.getElementById("boss-hud").classList.add("hidden");
@@ -1943,13 +2691,24 @@
         var island   = ISLANDS[currentIsland];
         var isReplay = game.replayMode;
         var bonus    = isReplay ? 0 : GAMEPLAY.levelCompleteBonus;
+        saveOnlineLevelScore(gameStats, currentIsland, currentLevel);
         state.coins += bonus;
+        var dailyBonus = 0;
+        var todayKey = getTodayKey();
+        var canClaimDailyBonus = gameStats.enemiesKilled >= DAILY_CHALLENGE.killsTarget
+          && state.progress.daily50BonusLastClaim !== todayKey;
+        if (canClaimDailyBonus) {
+          dailyBonus = DAILY_CHALLENGE.rewardCoins;
+          state.coins += dailyBonus;
+          state.progress.daily50BonusLastClaim = todayKey;
+        }
         var stats = {
           enemiesKilled:   gameStats.enemiesKilled,
           chestsCollected: gameStats.chestsCollected,
           fromEnemies:     gameStats.enemiesKilled * GAMEPLAY.enemyKillReward,
           fromChests:      isReplay ? 0 : gameStats.chestsCollected * GAMEPLAY.chestReward,
           bonus:           bonus,
+          dailyBonus:      dailyBonus,
           totalCoins:      state.coins
         };
         var prev = state.progress.islandLevels[String(currentIsland)] || 0;
@@ -1985,10 +2744,13 @@
         }
       }
     });
+    setupTouchControls(game);
 
     function startGameLevel(islandIdx, levelNum) {
       currentIsland = islandIdx;
       currentLevel  = levelNum;
+      game.currentIsland = islandIdx;
+      game.currentLevel  = levelNum;
       game.levelSpawnMs     = Math.max(800, GAMEPLAY.enemySpawnMs - (levelNum - 1) * 200);
       game.levelEnemyDamage = GAMEPLAY.enemyDamage + islandIdx;
       game.levelTreeCount   = 4 + (levelNum - 1) * 2;
@@ -2008,6 +2770,10 @@
     function startBossFight(islandIdx) {
       var config = BOSS_CONFIGS[islandIdx];
       if (!config) return;
+      currentIsland = islandIdx;
+      currentLevel = ISLANDS[islandIdx].levels;
+      game.currentIsland = islandIdx;
+      game.currentLevel = currentLevel;
       hideLevelComplete();
       setGameMessage("");
       showScreen("screen-game");
@@ -2057,9 +2823,9 @@
         health: game.player ? game.player.health : PLAYER_START.maxHealth,
         maxHealth: PLAYER_START.maxHealth,
         coins: state.coins,
-        skin: (SKINS[state.selectedSkin] || SKINS.default).label,
         lives: state.progress.lives,
-        bombs: state.progress.bombs
+        bombs: state.progress.bombs,
+        kills: game.enemiesKilledThisLevel || 0
       });
       updateStoreCoins(state.coins);
       renderSkinButtons(state);
@@ -2071,7 +2837,13 @@
       if (livesBtn) livesBtn.disabled = state.coins < GAMEPLAY.livesCost;
       var bombsBtn = document.getElementById("btn-buy-bombs");
       if (bombsBtn) bombsBtn.disabled = state.coins < GAMEPLAY.bombPackCost;
+      updateDailyChallengeStatus();
     }
+
+    // Restaura la vida persistida al recargar el navegador.
+    game.player.health = clamp(toInt(state.progress.playerHealth, PLAYER_START.maxHealth), 0, PLAYER_START.maxHealth);
+    state.progress.playerHealth = game.player.health;
+    saveState(state);
 
     document.getElementById("btn-play").addEventListener("click", function() {
       setStoreMessage(""); setGameMessage("");
@@ -2181,6 +2953,7 @@
       syncUI();
     });
 
+    setupOnlineFeatures();
     syncUI();
     showScreen("screen-menu");
   </script>

@@ -8,22 +8,25 @@ Abrir directamente en el navegador haciendo doble clic.
 
 ## Arquitectura técnica
 
-- **Canvas HTML5**: 960×540 px, vista top-down
+- **Canvas HTML5**: 1280×720 px, vista top-down; se adapta al ancho disponible
 - **Vanilla JS ES5**: prototype-based OOP (`Game.prototype.method = function(){}`), sin arrow functions en métodos de prototipo, sin imports
 - **Bucle de juego**: `requestAnimationFrame` + delta time (`dt`) para independencia de framerate
 - **Persistencia**: `localStorage` con prefijo `lahistoria_*`
 - **Un único `<script>`** sin `type="module"`
+- **Controles**: teclado en escritorio y controles táctiles en móvil (joystick, disparo y bomba)
 
 ---
 
 ## Estado actual — Lo implementado ✅
 
 ### Juego base
-- Movimiento jugador: W/A/S/D · Disparar: SPACE
-- Canvas 960×540, top-down, fondo con rejilla
+- Movimiento jugador: W/A/S/D · Disparar: SPACE · Bomba: B
+- En móvil: joystick táctil para moverse y botones para disparar y lanzar bombas
+- Canvas 1280×720, top-down, fondo con rejilla; escala para adaptarse a pantalla
 - Colisión con árboles (obstáculos)
 - Partículas y textos de daño flotantes
 - Overlay "Inicia la aventura" antes de cada nivel (pausa el juego)
+- Flash rojo breve al recibir daño
 
 ### Progresión
 - **3 islas × 10 niveles** cada una
@@ -37,6 +40,15 @@ Abrir directamente en el navegador haciendo doble clic.
 - 🪙 Monedas: 1 por enemigo eliminado, 5 por cofre, 10 de bonus al completar nivel
 - **Modo replay** (niveles ya completados): solo monedas de enemigos, NO de cofres ni bonus
 - Persistencia de monedas en localStorage
+- **Reto diario**: eliminar 50 enemigos en un mismo nivel para ganar 100 monedas extra; se puede cobrar una vez al día
+- El premio del reto diario aparece en el resumen al completar el nivel
+
+### Cuentas online y clasificación 🔧
+- Integración frontend preparada con Supabase Auth: registro con correo/contraseña, alias público, inicio y cierre de sesión
+- Clasificación pública con los mejores resultados por jugador
+- Puntuación por nivel: 10 puntos por enemigo y 25 por cofre; el servidor conserva la mejor puntuación de cada nivel
+- Esquema y políticas de acceso en `supabase_setup.sql`
+- Para activar el servicio: ejecutar ese SQL en Supabase y añadir `https://theadventure.neocities.org` a las URLs permitidas de Auth
 
 ### Tienda
 - **Mi taquilla**: skins ya desbloqueadas (cambiar skin)
@@ -52,43 +64,35 @@ Abrir directamente en el navegador haciendo doble clic.
 - Compra de vidas en la tienda (100 🪙 = +3 vidas)
 - Vidas mostradas en HUD: `❤️ Vidas: N`
 
-### Jefe — Isla 1 (Gran Tanque) ✅
-- Aparece tras completar nivel 10
-- **1000 HP**, fijo en el lado izquierdo de la pantalla
-- Barra de vida visible en HUD superior (roja)
-- Cada 10 segundos lanza 3 minitanques (hasta 12 en pantalla)
-- **Minitanques**: 5 HP, se mueven hacia el jugador, disparan cada 1.8s, balas naranja
-- Sin árboles ni cofres en la pantalla del jefe
-- Al derrotar al jefe: desbloquea Isla 2, popup de isla completada
+### Jefes de las tres islas ✅
+- Cada jefe aparece al completar el nivel 10 de su isla y tiene barra de vida propia en el HUD
+- **Isla 1 — Gran Tanque**: 500 HP; persigue al jugador y genera minitanques que disparan
+- **Isla 2 — Barco Pirata**: 500 HP; patrulla horizontalmente, dispara cañonazos en arco y genera piratas menores
+- **Isla 3 — Kraken Abisal**: 500 HP; se desplaza por el mapa, ataca con tentáculos y genera peces enemigos
+- Los combates de jefe no tienen árboles ni cofres
+- Al derrotar a un jefe se desbloquea la siguiente isla; derrotar al jefe final marca la última isla como completada
+
+### Enemigos diferenciados por isla ✅
+- **Isla 1**: enemigos estándar circulares
+- **Isla 2**: enemigos más rápidos con movimiento en zigzag
+- **Isla 3**: enemigos más resistentes con apariciones en grupos
 
 ### Mapa de progreso / Islas
 - Pantalla con las 3 islas y dots de niveles
 - Click en dot completado → rejugar ese nivel (modo replay)
 - Click en isla completada (jefe derrotado) → rejugar desde nivel 1
 - Click en isla con jefe pendiente → ir directamente al jefe
+- Botón circular al final de los niveles de la isla → entrar o rejugar su jefe
 - Bloqueo de islas no desbloqueadas
 
 ### HUD en juego
 - Barra de vida (verde → naranja → roja según HP)
-- 🪙 Monedas, ❤️ Vidas, Isla/Nivel actual, Skin activa
+- 🪙 Monedas, ❤️ Vidas, 💣 Bombas, 💀 enemigos derrotados en el nivel e Isla/Nivel actual
 - Barra de vida del jefe (separada, roja, solo visible en boss fight)
 
 ---
 
 ## Pendiente de implementar 🔲
-
-### Islas 2 y 3 — Jefes
-Añadir entradas a `BOSS_CONFIGS[1]` e `BOSS_CONFIGS[2]`.
-
-**Ideas para jefes:**
-- **Isla 2**: Barco pirata (se mueve horizontalmente, cañones que disparan proyectiles en arco)
-- **Isla 3**: Kraken (tentáculos que aparecen en puntos aleatorios del mapa)
-
-### Isla 2 y 3 — Enemigos diferenciados
-Actualmente todas las islas usan el mismo tipo de enemigo circular.  
-Ideas:
-- Isla 2: enemigos más rápidos, en zigzag
-- Isla 3: enemigos con más HP, en grupos
 
 ### Mejoras de gameplay
 - [ ] Arma secundaria o power-ups recogibles en el mapa
@@ -108,9 +112,13 @@ Ideas:
 - [ ] Estrellas por nivel (1-3) según rendimiento (daño recibido, tiempo, cofres)
 - [ ] Logros desbloqueables
 
+### Puesta en marcha online
+- [ ] Ejecutar `supabase_setup.sql` en el SQL Editor del proyecto Supabase
+- [ ] Configurar la URL del sitio y la URL de redirección de Auth para Neocities
+- [ ] Probar registro, confirmación de correo, inicio de sesión y publicación en la clasificación
+
 ### Pulido visual
 - [ ] Transición de pantalla entre niveles (fade)
-- [ ] Efecto de impacto al jugador más visible (flash rojo en canvas)
 - [ ] Animación de apertura de cofre
 - [ ] Pantalla de victoria final al terminar las 3 islas + jefes
 
@@ -119,7 +127,7 @@ Ideas:
 ## Constantes clave (CONFIG en index.html)
 
 ```javascript
-PLAYER_START = { x:480, y:270, radius:14, speed:220, maxHealth:25 }
+PLAYER_START = { x:640, y:360, radius:14, speed:220, maxHealth:25 }
 
 GAMEPLAY = {
   chestCount: 6, chestReward: 5,
@@ -131,12 +139,11 @@ GAMEPLAY = {
   startingLives: 3, livesCost: 100, livesPerPack: 3
 }
 
-BOSS_CONFIGS[0] = {
-  bodyRadius:44, health:1000, spawnIntervalMs:10000, spawnCount:3,
-  miniRadius:16, miniHealth:5, miniDamage:1, miniSpeed:55,
-  miniShotCooldownMs:1800, miniBulletDamage:2, miniBulletSpeed:300
-}
-// BOSS_CONFIGS[1] y [2] → pendientes
+DAILY_CHALLENGE = { killsTarget: 50, rewardCoins: 100 }
+
+BOSS_CONFIGS[0] = { type:"tank", health:500, spawnIntervalMs:10000, spawnCount:3, ... }
+BOSS_CONFIGS[1] = { type:"pirate", health:500, patrolSpeed:82, cannonCooldownMs:3300, ... }
+BOSS_CONFIGS[2] = { type:"kraken", health:500, fishSpawnIntervalMs:6200, tentacleSpawnMs:1800, ... }
 ```
 
 ---
@@ -148,7 +155,10 @@ BOSS_CONFIGS[0] = {
   unlockedIslands: [0],        // array de IDs desbloqueadas
   islandLevels: { "0": 5 },   // nivel máximo completado por isla
   bossDefeated: [],            // IDs de islas cuyo jefe está derrotado
-  lives: 3                     // vidas globales restantes
+  lives: 3,                    // vidas globales restantes
+  bombs: 0,                    // bombas disponibles
+  playerHealth: 25,            // salud persistida entre recargas/niveles
+  daily50BonusLastClaim: ""    // fecha del último cobro del reto diario (AAAA-MM-DD)
 }
 ```
 
