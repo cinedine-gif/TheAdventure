@@ -52,7 +52,8 @@ for (const [width, height] of [[390, 844], [844, 390], [320, 568], [568, 320]]) 
         game.player = { x: playerX, y: playerY };
         const camera = game.getMobileCamera();
         assert.ok(Math.abs(width / camera.width - height / camera.height) < 1e-10);
-        assert.ok(28 * camera.scale >= 30);
+        assert.ok(28 * camera.scale >= 29);
+        assert.ok(camera.scale < 1.1);
         const screenX = (playerX - camera.x) * camera.scale;
         const screenY = (playerY - camera.y) * camera.scale;
         assert.ok(screenX > 20 && screenX < width - 20);

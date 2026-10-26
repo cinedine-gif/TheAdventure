@@ -2500,7 +2500,7 @@
       if (!window.matchMedia("(hover: none), (max-width: 900px)").matches) return null;
       var bounds = this.canvas.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return null;
-      var scale = Math.max(1.1, Math.min(1.45, Math.min(bounds.width, bounds.height) / 340));
+      var scale = Math.max(1.05, Math.min(1.45, Math.min(bounds.width, bounds.height) / 360));
       var width = bounds.width / scale;
       var height = bounds.height / scale;
       return {
