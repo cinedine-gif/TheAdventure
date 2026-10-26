@@ -2114,11 +2114,33 @@
     Game.prototype.updateBullets = function(dt) {
       for (var i = this.bullets.length - 1; i >= 0; i--) {
         var b = this.bullets[i];
-        b.x += Math.cos(b.dir) * b.speed * dt;
-        b.y += Math.sin(b.dir) * b.speed * dt;
+        var startX = b.x, startY = b.y;
+        var moveX = Math.cos(b.dir) * b.speed * dt;
+        var moveY = Math.sin(b.dir) * b.speed * dt;
+        b.x += moveX;
+        b.y += moveY;
         var removed = false;
         var isBomb = b.type === "bomb";
-        for (var e = this.enemies.length - 1; e >= 0; e--) {
+        var moveLengthSquared = moveX * moveX + moveY * moveY;
+        for (var ti = 0; ti < this.trees.length; ti++) {
+          var tree = this.trees[ti];
+          var radius = b.radius + tree.radius;
+          var offsetX = startX - tree.x, offsetY = startY - tree.y;
+          var closestT = moveLengthSquared > 0
+            ? clamp(-(offsetX * moveX + offsetY * moveY) / moveLengthSquared, 0, 1)
+            : 0;
+          var closestX = startX + moveX * closestT;
+          var closestY = startY + moveY * closestT;
+          if (Math.hypot(closestX - tree.x, closestY - tree.y) <= radius) {
+            b.x = closestX;
+            b.y = closestY;
+            this.bullets.splice(i, 1);
+            this.addParticles(b.x, b.y, isBomb ? "#f97316" : "#ff6b6b");
+            removed = true;
+            break;
+          }
+        }
+        for (var e = this.enemies.length - 1; !removed && e >= 0; e--) {
           var enemy = this.enemies[e];
           if (Math.hypot(b.x - enemy.x, b.y - enemy.y) <= b.radius + enemy.radius) {
             if (isBomb) {
