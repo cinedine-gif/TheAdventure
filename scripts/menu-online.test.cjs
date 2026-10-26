@@ -121,15 +121,20 @@ test("menu exit and online player presence work", async function() {
 
   const rows = [];
   const body = { innerHTML: "", appendChild: function(row) { rows.push(row); } };
+  const leaderboardOrders = [];
+  let leaderboardColumns = "";
   const leaderboardQuery = {
-    select: function() { return this; },
-    order: function() { return this; },
+    select: function(columns) { leaderboardColumns = columns; return this; },
+    order: function(column, options) {
+      leaderboardOrders.push([column, options.ascending]);
+      return this;
+    },
     limit: function() {
       return Promise.resolve({ data: [
-        { username: "Capitan1", total_score: 100, max_level: 8 },
-        { username: "Capitan2", total_score: 90, max_level: 7 },
-        { username: "Capitan3", total_score: 80, max_level: 6 },
-        { username: "Capitan4", total_score: 70, max_level: 5 }
+        { username: "Capitan2", total_score: 90, max_level: 8, coins: 45 },
+        { username: "Capitan3", total_score: 80, max_level: 8, coins: 30 },
+        { username: "Capitan1", total_score: 100, max_level: 7, coins: 100 },
+        { username: "Capitan4", total_score: 70, max_level: 5, coins: 5 }
       ], error: null });
     }
   };
@@ -155,6 +160,12 @@ test("menu exit and online player presence work", async function() {
   leaderboardContext.loadLeaderboard();
   await new Promise(function(resolve) { setTimeout(resolve, 0); });
 
+  assert.equal(leaderboardColumns, "username,total_score,max_level,best_level_score,coins");
+  assert.deepEqual(leaderboardOrders, [["max_level", false], ["total_score", false], ["best_level_score", false]]);
+  assert.deepEqual(rows.map(function(row) { return String(row.children[1].textContent); }), [
+    "Capitan2", "Capitan3", "Capitan1", "Capitan4"
+  ]);
+  assert.deepEqual(rows.map(function(row) { return String(row.children[4].textContent); }), ["45", "30", "100", "5"]);
   assert.deepEqual(rows.slice(0, 3).map(function(row) { return row.children[0].children[0].className; }), [
     "leaderboard-medal leaderboard-medal-gold",
     "leaderboard-medal leaderboard-medal-silver",
@@ -162,7 +173,7 @@ test("menu exit and online player presence work", async function() {
   ]);
   assert.deepEqual(rows.slice(0, 3).map(function(row) { return String(row.children[0].children[0].textContent); }), ["1", "2", "3"]);
   assert.match(html, /\.leaderboard-medal \{[\s\S]*?width: 3\.4rem;[\s\S]*?data:image\/svg\+xml/);
-  assert.match(html, /\.leaderboard-table th:nth-child\(3\),[\s\S]*?\.leaderboard-table td:nth-child\(4\) \{ text-align: center; \}/);
+  assert.match(html, /\.leaderboard-table th:nth-child\(3\),[\s\S]*?\.leaderboard-table td:nth-child\(5\) \{ text-align: center; \}/);
   assert.deepEqual(rows.slice(0, 3).map(function(row) { return row.children[0].children[0].attributes["aria-label"]; }), [
     "Medalla de oro, puesto 1", "Medalla de plata, puesto 2", "Medalla de bronce, puesto 3"
   ]);

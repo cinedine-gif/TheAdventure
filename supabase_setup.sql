@@ -144,21 +144,9 @@ begin
 end;
 $$;
 
-create or replace view public.leaderboard as
-select
-  p.username,
-  coalesce(sum(s.score), 0)::bigint as total_score,
-  count(s.id)::integer as levels_completed,
-  coalesce(max(s.best_score), 0)::integer as best_level_score,
-  coalesce(max(s.island_id * 10 + s.level_num), 0)::integer as max_level
-from public.profiles p
-left join public.level_scores s on s.user_id = p.id
-group by p.id, p.username;
-
 grant select on public.profiles to anon, authenticated;
 grant select on public.level_scores to authenticated;
 grant select on public.level_scores to anon;
-grant select on public.leaderboard to anon, authenticated;
 revoke all on function public.submit_level_score(integer, integer, integer, integer, integer, uuid) from public, anon;
 grant execute on function public.submit_level_score(integer, integer, integer, integer, integer, uuid) to authenticated;
 
@@ -166,6 +154,21 @@ create table if not exists public.player_wallets (
   user_id uuid primary key references public.profiles(id) on delete cascade,
   coins bigint not null default 0 check (coins between 0 and 9007199254740991)
 );
+
+create or replace view public.leaderboard as
+select
+  p.username,
+  coalesce(sum(s.score), 0)::bigint as total_score,
+  count(s.id)::integer as levels_completed,
+  coalesce(max(s.best_score), 0)::integer as best_level_score,
+  coalesce(max(s.island_id * 10 + s.level_num), 0)::integer as max_level,
+  coalesce(w.coins, 0)::bigint as coins
+from public.profiles p
+left join public.level_scores s on s.user_id = p.id
+left join public.player_wallets w on w.user_id = p.id
+group by p.id, p.username, w.coins;
+
+grant select on public.leaderboard to anon, authenticated;
 
 create table if not exists public.coin_transactions (
   user_id uuid not null references public.profiles(id) on delete cascade,

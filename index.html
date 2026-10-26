@@ -97,7 +97,9 @@
     .leaderboard-table th:nth-child(3),
     .leaderboard-table td:nth-child(3),
     .leaderboard-table th:nth-child(4),
-    .leaderboard-table td:nth-child(4) { text-align: center; }
+    .leaderboard-table td:nth-child(4),
+    .leaderboard-table th:nth-child(5),
+    .leaderboard-table td:nth-child(5) { text-align: center; }
     .leaderboard-medal {
       display: inline-grid;
       width: 3.4rem;
@@ -732,8 +734,8 @@
       <p>Ranking por la suma de tus mejores puntuaciones de nivel.</p>
       <div class="leaderboard-wrap">
         <table class="leaderboard-table">
-          <thead><tr><th>Puesto</th><th>Jugador</th><th>Puntos</th><th>Nivel m&aacute;ximo</th></tr></thead>
-          <tbody id="leaderboard-body"><tr><td colspan="4">Cargando clasificación…</td></tr></tbody>
+          <thead><tr><th>Puesto</th><th>Jugador</th><th>Puntos</th><th>Nivel m&aacute;ximo</th><th>Monedas</th></tr></thead>
+          <tbody id="leaderboard-body"><tr><td colspan="5">Cargando clasificación…</td></tr></tbody>
         </table>
       </div>
       <p id="leaderboard-status" class="online-status" role="status" aria-live="polite"></p>
@@ -1252,16 +1254,17 @@
     function loadLeaderboard() {
       var body = document.getElementById("leaderboard-body");
       var status = document.getElementById("leaderboard-status");
-      body.innerHTML = "<tr><td colspan=\"4\">Cargando clasificación…</td></tr>";
+      body.innerHTML = "<tr><td colspan=\"5\">Cargando clasificación…</td></tr>";
       status.textContent = "";
       if (!supabaseClient) {
-        body.innerHTML = "<tr><td colspan=\"4\">No se pudo cargar el cliente online.</td></tr>";
+        body.innerHTML = "<tr><td colspan=\"5\">No se pudo cargar el cliente online.</td></tr>";
         status.textContent = "Comprueba tu conexión a internet.";
         return;
       }
       flushOnlineScores().then(function() {
         return supabaseClient.from("leaderboard")
-        .select("username,total_score,max_level,best_level_score")
+        .select("username,total_score,max_level,best_level_score,coins")
+        .order("max_level", { ascending: false })
         .order("total_score", { ascending: false })
         .order("best_level_score", { ascending: false })
         .limit(50);
@@ -1269,12 +1272,12 @@
         .then(function(result) {
           body.innerHTML = "";
           if (result.error) {
-            body.innerHTML = "<tr><td colspan=\"4\">Clasificación todavía no disponible.</td></tr>";
+            body.innerHTML = "<tr><td colspan=\"5\">Clasificación todavía no disponible.</td></tr>";
             status.textContent = "Error de Supabase " + (result.error.code || "") + ": " + result.error.message;
             return;
           }
           if (!result.data.length) {
-            body.innerHTML = "<tr><td colspan=\"4\">Aún no hay puntuaciones. ¡Sé el primero!</td></tr>";
+            body.innerHTML = "<tr><td colspan=\"5\">Aún no hay puntuaciones. ¡Sé el primero!</td></tr>";
             return;
           }
           var medalNames = ["oro", "plata", "bronce"];
@@ -1294,7 +1297,7 @@
               rankCell.textContent = index + 1;
             }
             row.appendChild(rankCell);
-            [entry.username, entry.total_score, entry.max_level].forEach(function(value) {
+            [entry.username, entry.total_score, entry.max_level, entry.coins].forEach(function(value) {
               var cell = document.createElement("td");
               cell.textContent = value;
               row.appendChild(cell);
