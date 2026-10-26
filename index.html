@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>The Adventure</title>
   <script>
     if (window.location.hostname === "theadventure.neocities.org") {
@@ -446,6 +446,108 @@
     .boss-hp-outer { width: 220px; height: 14px; background: rgba(255,255,255,0.15); border-radius: 6px; overflow: hidden; }
     .boss-hp-inner { height: 100%; width: 100%; background: linear-gradient(90deg,#ef4444,#b91c1c); border-radius: 6px; transition: width 0.2s; }
     #boss-hp-text { font-size: 0.8rem; opacity: 0.82; white-space: nowrap; }
+    .game-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    #btn-fullscreen { display: none; }
+    @media (hover: none), (max-width: 900px) {
+      body.mobile-game-active { overflow: hidden; overscroll-behavior: none; }
+      #screen-game.screen-visible {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: #174c48;
+      }
+      #screen-game #game-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        aspect-ratio: auto;
+        border: 0;
+        border-radius: 0;
+      }
+      #screen-game .hud {
+        position: absolute;
+        z-index: 20;
+        top: max(0.35rem, env(safe-area-inset-top));
+        left: max(0.4rem, env(safe-area-inset-left));
+        right: calc(104px + env(safe-area-inset-right));
+        gap: 0.3rem 0.6rem;
+        margin: 0;
+        padding: 0.4rem 0.5rem;
+        border-radius: 6px;
+        background: rgba(12, 45, 34, 0.88);
+        color: #fff;
+        font-size: 0.75rem;
+        line-height: 1.25;
+        pointer-events: none;
+      }
+      #screen-game .hud > span { white-space: nowrap; }
+      #screen-game .hud-hp-bar-outer { width: 52px; }
+      #screen-game .hud-label,
+      #screen-game .keyboard-hint,
+      #screen-game #hud-island { display: none; }
+      #screen-game #game-message {
+        position: absolute;
+        z-index: 21;
+        top: calc(116px + env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100% - 2rem);
+        min-height: 0;
+        margin: 0;
+        padding: 0.35rem 0.6rem;
+        border-radius: 6px;
+        background: rgba(12, 45, 34, 0.9);
+        color: #fff;
+        text-align: center;
+        font-size: 0.75rem;
+        pointer-events: none;
+      }
+      #screen-game #game-message:empty { display: none; }
+      #screen-game .boss-hud {
+        position: absolute;
+        z-index: 20;
+        top: calc(78px + env(safe-area-inset-top));
+        left: max(0.5rem, env(safe-area-inset-left));
+        right: max(0.5rem, env(safe-area-inset-right));
+        margin: 0;
+        padding: 0.35rem 0.5rem;
+        pointer-events: none;
+      }
+      #screen-game .boss-hud-inner { gap: 0.5rem; }
+      #screen-game .boss-name, #screen-game #boss-hp-text { font-size: 0.7rem; }
+      #screen-game .boss-hp-outer { flex: 1; width: auto; min-width: 36px; height: 10px; }
+      #screen-game .game-actions {
+        position: absolute;
+        z-index: 35;
+        top: max(0.35rem, env(safe-area-inset-top));
+        right: max(0.4rem, env(safe-area-inset-right));
+        gap: 0.35rem;
+        padding: 0;
+      }
+      #screen-game .game-actions button { width: 44px; height: 44px; padding: 0; background: rgba(12, 45, 34, 0.9); }
+      #screen-game .game-menu-label { display: none; }
+      #screen-game #btn-fullscreen { display: inline-flex; }
+      #screen-game .game-actions img { filter: invert(1); }
+      #screen-game .mobile-controls {
+        bottom: max(0.75rem, env(safe-area-inset-bottom));
+        padding-left: max(0.75rem, env(safe-area-inset-left));
+        padding-right: max(0.75rem, env(safe-area-inset-right));
+      }
+      #screen-game .joystick-base { width: 96px; height: 96px; }
+      #screen-game .mobile-action-btn.shoot { width: 72px; height: 72px; }
+      #screen-game .mobile-action-btn.bomb { width: 56px; height: 56px; }
+      #screen-game .level-overlay { z-index: 50; padding: 1rem; overflow-y: auto; }
+      #screen-game .level-overlay-box { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+    }
   </style>
 </head>
 <body>
@@ -586,10 +688,10 @@
       <div class="hud">
         <span class="hud-hp-wrap">❤️ <span class="hud-hp-bar-outer"><span id="hud-hp-bar" class="hud-hp-bar-inner"></span></span> <strong id="hud-health">25/25</strong><strong id="hud-health-max" style="display:none">25</strong></span>
         <span>🪙 <strong id="hud-coins">0</strong></span>
-        <span>❤️ Vidas: <strong id="hud-lives">3</strong></span>
-        <span>💣 Bombas: <strong id="hud-bombs">0</strong> (B)</span>
-        <span>💀 Muertos: <strong id="hud-kills">0</strong></span>
-        <span>Isla: <strong id="hud-island">—</strong> · Nivel: <strong id="hud-level">—</strong></span>
+        <span>❤️ <span class="hud-label">Vidas: </span><strong id="hud-lives">3</strong></span>
+        <span>💣 <span class="hud-label">Bombas: </span><strong id="hud-bombs">0</strong><span class="keyboard-hint"> (B)</span></span>
+        <span>💀 <span class="hud-label">Muertos: </span><strong id="hud-kills">0</strong></span>
+        <span><span class="hud-label">Isla: </span><strong id="hud-island">—</strong><span class="hud-label"> · </span>Nivel: <strong id="hud-level">—</strong></span>
       </div>
       <p id="game-message" class="status"></p>
       <div id="boss-hud" class="boss-hud hidden">
@@ -613,7 +715,13 @@
         </div>
       </div>
       <div class="game-actions">
-        <button id="btn-back-menu">Salir al menú</button>
+        <button id="btn-back-menu" type="button" title="Salir al men&uacute;" aria-label="Salir al men&uacute;">
+          <img src="https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/log-out.svg" alt="" width="20" height="20" aria-hidden="true" />
+          <span class="game-menu-label">Salir al men&uacute;</span>
+        </button>
+        <button id="btn-fullscreen" type="button" title="Pantalla completa" aria-label="Pantalla completa">
+          <img src="https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/maximize.svg" alt="" width="20" height="20" aria-hidden="true" />
+        </button>
       </div>
       <div id="level-overlay" class="level-overlay hidden">
         <div class="level-overlay-box">
@@ -908,9 +1016,42 @@
       document.querySelectorAll(".screen").forEach(function(s) {
         s.classList.toggle("screen-visible", s.id === screenId);
       });
+      syncGameViewport();
+      if (screenId !== "screen-game" && document.fullscreenElement === document.getElementById("screen-game")) {
+        document.exitFullscreen().catch(function() {});
+      }
       // Evita mantener el scroll previo entre pantallas (menu -> juego).
       window.scrollTo(0, 0);
     }
+
+    function syncGameViewport() {
+      var active = document.getElementById("screen-game").classList.contains("screen-visible");
+      document.body.classList.toggle("mobile-game-active", active && window.matchMedia("(hover: none), (max-width: 900px)").matches);
+      if (active && game) game.render(performance.now());
+    }
+
+    function enterMobileFullscreen() {
+      var gameScreen = document.getElementById("screen-game");
+      if (!window.matchMedia("(hover: none), (max-width: 900px)").matches || !gameScreen.requestFullscreen || document.fullscreenElement) return;
+      return gameScreen.requestFullscreen({ navigationUI: "hide" }).then(function() {
+        if (document.fullscreenElement !== gameScreen) return;
+        if (screen.orientation && screen.orientation.lock) {
+          return screen.orientation.lock("landscape").catch(function() {});
+        }
+      }).catch(function() {});
+    }
+
+    window.addEventListener("resize", syncGameViewport);
+    document.addEventListener("fullscreenchange", function() {
+      var active = document.fullscreenElement === document.getElementById("screen-game");
+      var button = document.getElementById("btn-fullscreen");
+      var label = active ? "Salir de pantalla completa" : "Pantalla completa";
+      button.title = label;
+      button.setAttribute("aria-label", label);
+      button.querySelector("img").src = "https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/" + (active ? "minimize" : "maximize") + ".svg";
+      if (!active && screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+      syncGameViewport();
+    });
 
     function updateHud(opts) {
       var maxH = typeof opts.maxHealth === "number" ? opts.maxHealth
@@ -2136,7 +2277,30 @@
       }
     };
 
+    Game.prototype.getMobileCamera = function() {
+      if (!window.matchMedia("(hover: none), (max-width: 900px)").matches) return null;
+      var bounds = this.canvas.getBoundingClientRect();
+      if (!bounds.width || !bounds.height) return null;
+      var scale = Math.max(1.1, Math.min(1.45, Math.min(bounds.width, bounds.height) / 340));
+      var width = bounds.width / scale;
+      var height = bounds.height / scale;
+      return {
+        x: clamp(this.player.x - width / 2, -60 / scale, Math.max(-60 / scale, this.canvas.width - width + 60 / scale)),
+        y: clamp(this.player.y - height * 0.45, -(this.bossMode ? 130 : 92) / scale, Math.max(-(this.bossMode ? 130 : 92) / scale, this.canvas.height - height + 156 / scale)),
+        width: width, height: height, scale: scale,
+        screenWidth: bounds.width, screenHeight: bounds.height
+      };
+    };
+
     Game.prototype.render = function(now) {
+      var camera = this.getMobileCamera();
+      this.ctx.save();
+      this.ctx.fillStyle = "#174c48";
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      if (camera) {
+        this.ctx.scale(this.canvas.width / camera.width, this.canvas.height / camera.height);
+        this.ctx.translate(-camera.x, -camera.y);
+      }
       this.drawBackground();
       this.drawTrees();
       if (this.bossMode) this.drawTentacles(now);
@@ -2148,6 +2312,78 @@
       this.drawPlayer();
       this.drawParticles();
       this.drawDamageTexts();
+      this.ctx.restore();
+      if (camera) this.drawOffscreenIndicators(camera);
+    };
+
+    Game.prototype.drawOffscreenIndicators = function(camera) {
+      var ctx = this.ctx;
+      var nearestChest = null;
+      var nearestEnemy = null;
+      var player = this.player;
+      function distance(target) { return Math.hypot(target.x - player.x, target.y - player.y); }
+      for (var chestIndex = 0; chestIndex < this.chests.length; chestIndex++) {
+        var chest = this.chests[chestIndex];
+        if (chest.active && (!nearestChest || distance(chest) < distance(nearestChest))) nearestChest = chest;
+      }
+      for (var enemyIndex = 0; enemyIndex < this.enemies.length; enemyIndex++) {
+        var enemy = this.enemies[enemyIndex];
+        if (!nearestEnemy || distance(enemy) < distance(nearestEnemy)) nearestEnemy = enemy;
+      }
+      var targets = [];
+      if (nearestChest) targets.push({ target: nearestChest, color: "#fde047", label: "Cofre" });
+      if (nearestEnemy) targets.push({ target: nearestEnemy, color: "#fb7185", label: "Enemigo" });
+      if (this.bossMode && this.boss && this.boss.alive) targets.push({ target: this.boss, color: "#fb7185", label: "Jefe" });
+      var left = 28;
+      var right = camera.screenWidth - 28;
+      var top = this.bossMode ? 144 : 100;
+      var bottom = Math.max(top + 36, camera.screenHeight - 154);
+      var originX = clamp((player.x - camera.x) * camera.scale, left + 12, right - 12);
+      var originY = clamp((player.y - camera.y) * camera.scale, top + 12, bottom - 12);
+      var markers = [];
+      ctx.save();
+      ctx.scale(this.canvas.width / camera.screenWidth, this.canvas.height / camera.screenHeight);
+      for (var targetIndex = 0; targetIndex < targets.length; targetIndex++) {
+        var entry = targets[targetIndex];
+        var targetX = (entry.target.x - camera.x) * camera.scale;
+        var targetY = (entry.target.y - camera.y) * camera.scale;
+        if (targetX >= 0 && targetX <= camera.screenWidth && targetY >= 0 && targetY <= camera.screenHeight) continue;
+        var dx = targetX - originX;
+        var dy = targetY - originY;
+        var edgeX = dx === 0 ? Infinity : (dx > 0 ? right - originX : left - originX) / dx;
+        var edgeY = dy === 0 ? Infinity : (dy > 0 ? bottom - originY : top - originY) / dy;
+        var fraction = Math.min(edgeX, edgeY);
+        var markerX = originX + dx * fraction;
+        var markerY = originY + dy * fraction;
+        for (var markerIndex = 0; markerIndex < markers.length; markerIndex++) {
+          if (Math.hypot(markerX - markers[markerIndex].x, markerY - markers[markerIndex].y) < 48) {
+            if (Math.abs(dx) > Math.abs(dy) && bottom - top >= 52) {
+              markerY = markerY + 52 <= bottom ? markerY + 52 : markerY - 52;
+            } else {
+              markerX = markerX + 60 <= right ? markerX + 60 : markerX - 60;
+            }
+          }
+        }
+        markers.push({ x: markerX, y: markerY });
+        ctx.save();
+        ctx.translate(markerX, markerY);
+        ctx.fillStyle = "rgba(7, 30, 24, 0.92)";
+        ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        ctx.rotate(Math.atan2(dy, dx));
+        ctx.fillStyle = entry.color;
+        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-6, -7); ctx.lineTo(-3, 0); ctx.lineTo(-6, 7); ctx.closePath(); ctx.fill();
+        ctx.restore();
+        ctx.font = "bold 10px Verdana";
+        ctx.textAlign = markerX < 55 ? "left" : markerX > right - 27 ? "right" : "center";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#071e18";
+        ctx.strokeText(entry.label, 0, 29);
+        ctx.fillStyle = entry.color;
+        ctx.fillText(entry.label, 0, 29);
+        ctx.restore();
+      }
+      ctx.restore();
     };
 
     Game.prototype.drawBackground = function() {
@@ -3222,7 +3458,14 @@
       document.getElementById("level-ready").classList.add("hidden");
       beginOnlineScoreAttempt();
       game.resume();
+      enterMobileFullscreen();
     });
+
+    document.getElementById("btn-fullscreen").addEventListener("click", function() {
+      if (document.fullscreenElement) document.exitFullscreen().catch(function() {});
+      else enterMobileFullscreen();
+    });
+    if (!document.getElementById("screen-game").requestFullscreen) document.getElementById("btn-fullscreen").style.display = "none";
 
     document.getElementById("btn-reset").addEventListener("click", function() {
       document.getElementById("confirm-modal").classList.remove("hidden");

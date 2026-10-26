@@ -8,7 +8,7 @@ Abrir directamente en el navegador haciendo doble clic.
 
 ## Arquitectura técnica
 
-- **Canvas HTML5**: 1280×720 px, vista top-down; se adapta al ancho disponible
+- **Canvas HTML5**: mundo de 1280×720 px, vista top-down; escritorio muestra el mapa completo y móvil usa una cámara con zoom sin cambiar las coordenadas del juego
 - **Vanilla JS ES5**: prototype-based OOP (`Game.prototype.method = function(){}`), sin arrow functions en métodos de prototipo, sin imports
 - **Bucle de juego**: `requestAnimationFrame` + delta time (`dt`) para independencia de framerate
 - **Persistencia**: `localStorage` con prefijo `lahistoria_*`
@@ -22,6 +22,9 @@ Abrir directamente en el navegador haciendo doble clic.
 ### Juego base
 - Movimiento jugador: W/A/S/D · Disparar: SPACE · Bomba: B
 - En móvil: joystick táctil para moverse y botones para disparar y lanzar bombas
+- En móvil la partida ocupa toda la ventana, con HUD compacto y controles superpuestos en las esquinas; funciona en vertical y horizontal
+- Cámara móvil que sigue al jugador, con enemigos de al menos 30 px de diámetro e indicadores de dirección para cofres, enemigos y jefes fuera de pantalla
+- Al iniciar una partida móvil se solicita pantalla completa y orientación horizontal cuando el navegador lo permite; el botón de pantalla completa permite alternarla y salir al menú la cierra
 - Canvas 1280×720, top-down, fondo con rejilla; escala para adaptarse a pantalla
 - Colisión con árboles (obstáculos)
 - Partículas y textos de daño flotantes
@@ -58,6 +61,7 @@ Abrir directamente en el navegador haciendo doble clic.
 - Para activar o actualizar el servicio: ejecutar todo `supabase_setup.sql` en Supabase (también si ya estaba instalado) y añadir `https://theadventure.neocities.org` a las URLs permitidas de Auth
 - La actualización conserva los puntos ya registrados; no puede recuperar intentos antiguos descartados por la regla anterior de guardar solo el récord
 - Pruebas locales del monedero, sin dependencias adicionales: `node --test scripts/wallet.test.cjs`
+- Pruebas de cámara móvil, indicadores y compatibilidad de pantalla completa: `node --test scripts/mobile.test.cjs`
 
 ### Tienda
 - **Mi taquilla**: skins ya desbloqueadas (cambiar skin)
