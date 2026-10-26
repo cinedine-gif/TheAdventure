@@ -98,14 +98,19 @@
       text-shadow: none;
     }
     #screen-menu .menu-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       justify-content: center;
       gap: 1rem;
       margin-top: auto;
-      margin-bottom: 3cm;
+      margin-bottom: 1rem;
+      padding-top: 2rem;
     }
     #screen-menu .menu-actions button {
+      min-width: 0;
+      min-height: 64px;
       font-size: 1.16rem;
-      padding: 0.95rem 1.6rem;
+      padding: 0.95rem 0.8rem;
       border: 2px solid rgba(255, 255, 255, 0.55);
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
     }
@@ -374,13 +379,50 @@
     .consumible-name { font-weight: 700; display: block; }
     .consumible-desc { font-size: 0.82rem; opacity: 0.7; }
     .consumible-stock { font-size: 0.9rem; white-space: nowrap; }
-    .btn-reset-icon {
-      position: absolute; top: 0.7rem; right: 0.8rem;
-      background: transparent; border: 1px solid rgba(192,57,43,0.45); color: #c0392b;
-      border-radius: 8px; padding: 0.3rem 0.55rem; font-size: 0.9rem; cursor: pointer;
-      opacity: 0.6; line-height: 1; transition: opacity 0.15s, background 0.15s;
+    .menu-tools {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 240px;
+      max-width: 100%;
     }
-    .btn-reset-icon:hover { background: rgba(192,57,43,0.1); opacity: 1; }
+    .menu-tools button {
+      height: 56px;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.95rem;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .btn-reset-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      background: transparent;
+      border: 2px solid #a12622;
+      color: #8e1c1c;
+    }
+    .btn-reset-progress img { flex-shrink: 0; }
+    .btn-reset-progress:hover { background: rgba(192,57,43,0.1); }
+    .menu-tools button:focus-visible,
+    #screen-menu .menu-actions button:focus-visible {
+      outline: 3px solid var(--text);
+      outline-offset: 3px;
+    }
+    @media (max-width: 760px) {
+      .menu-tools {
+        position: static;
+        align-self: flex-end;
+        margin-bottom: 1rem;
+      }
+      #screen-menu .menu-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+    }
     .confirm-overlay {
       position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
       background: rgba(0,0,0,0.52); z-index: 200;
@@ -409,6 +451,13 @@
 <body>
   <main class="app">
     <section id="screen-menu" class="screen screen-visible" style="text-align:center">
+      <div class="menu-tools">
+        <button id="btn-account" type="button">Cuenta online</button>
+        <button id="btn-reset" class="btn-reset-progress" type="button" title="Reiniciar progreso local">
+          <img src="https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/rotate-ccw.svg" alt="" width="24" height="24" aria-hidden="true" />
+          <span>Reiniciar progreso local</span>
+        </button>
+      </div>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 132" width="140" height="132" style="display:block;margin:0 auto 0.4rem" aria-hidden="true">
         <!-- Straw hat brim -->
         <ellipse cx="70" cy="54" rx="60" ry="15" fill="#D4A843" stroke="#9A7520" stroke-width="2"/>
@@ -448,13 +497,9 @@
       <div class="menu-actions">
         <button id="btn-play">Play</button>
         <button id="btn-progress">Mapa de progreso</button>
+        <button id="btn-leaderboard">Clasificaci&oacute;n</button>
         <button id="btn-store">Tienda</button>
       </div>
-      <div class="online-actions">
-        <button id="btn-account">Cuenta online</button>
-        <button id="btn-leaderboard">Clasificación</button>
-      </div>
-      <button id="btn-reset" class="btn-reset-icon" title="Reiniciar progreso">🗑️</button>
     </section>
 
     <section id="screen-account" class="screen">
@@ -609,6 +654,7 @@
       : null;
     var onlineSession = null;
     var onlineUsername = "";
+    var onlineWallet = null;
     const STORAGE_KEYS = {
       coins: "lahistoria_coins",
       selectedSkin: "lahistoria_selected_skin",
@@ -799,10 +845,11 @@
     }
 
     function saveState(state) {
-      localStorage.setItem(STORAGE_KEYS.coins, String(state.coins));
+      if (!onlineWallet) localStorage.setItem(STORAGE_KEYS.coins, String(state.coins));
       localStorage.setItem(STORAGE_KEYS.selectedSkin, state.selectedSkin);
       localStorage.setItem(STORAGE_KEYS.unlockedSkins, JSON.stringify(state.unlockedSkins));
       localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(state.progress));
+      if (onlineWallet) persistOnlineWallet(onlineWallet);
     }
 
     function applyGlobalResetIfNeeded() {
@@ -928,6 +975,7 @@
       }
       onlineSession = session || null;
       onlineUsername = "";
+      connectOnlineWallet(onlineSession);
       var form = document.getElementById("account-form");
       var signOutButton = document.getElementById("btn-sign-out");
       var sessionLabel = document.getElementById("account-session-label");
@@ -998,6 +1046,192 @@
         });
     }
 
+    function createOperationId() {
+      var randomBytes = new Uint8Array(16);
+      window.crypto.getRandomValues(randomBytes);
+      randomBytes[6] = (randomBytes[6] & 15) | 64;
+      randomBytes[8] = (randomBytes[8] & 63) | 128;
+      return Array.prototype.map.call(randomBytes, function(value, index) {
+        return ([4, 6, 8, 10].includes(index) ? "-" : "") + ("0" + value.toString(16)).slice(-2);
+      }).join("");
+    }
+
+    function persistOnlineWallet(wallet) {
+      try {
+        localStorage.setItem("lahistoria_wallet_" + wallet.userId, JSON.stringify({
+          balance: wallet.balance, pending: wallet.pending, migrationRecorded: wallet.migrationRecorded
+        }));
+      } catch (error) {
+        setAccountStatus("No se pueden guardar las monedas pendientes en este navegador.", "error");
+      }
+    }
+
+    function updateWalletBalance(wallet) {
+      if (onlineWallet !== wallet) return;
+      state.coins = Math.max(0, wallet.pending.reduce(function(total, operation) {
+        return total + operation.amount;
+      }, wallet.balance));
+      syncUI();
+    }
+
+    function connectOnlineWallet(session) {
+      var userId = session ? session.user.id : null;
+      if (onlineWallet && onlineWallet.userId === userId) {
+        flushOnlineWallet(true);
+        return;
+      }
+      if (!onlineWallet && !userId) return;
+      onlineWallet = null;
+      if (game && game.running) {
+        game.stop();
+        hideLevelComplete();
+        showScreen("screen-menu");
+      }
+      if (!userId) {
+        state.coins = Math.max(0, toInt(localStorage.getItem(STORAGE_KEYS.coins), 0));
+        syncUI();
+        return;
+      }
+      var cached = {};
+      try {
+        cached = JSON.parse(localStorage.getItem("lahistoria_wallet_" + userId) || "{}");
+      } catch (error) {
+        setAccountStatus("No se pudo recuperar la copia local de tus monedas.", "error");
+      }
+      var wallet = {
+        userId: userId, balance: Math.max(0, toInt(cached.balance, 0)),
+        pending: Array.isArray(cached.pending) ? cached.pending : [],
+        migrationRecorded: !!cached.migrationRecorded, ready: false, sync: null
+      };
+      onlineWallet = wallet;
+      try {
+        var migration = JSON.parse(localStorage.getItem("lahistoria_coins_migration") || "null");
+        var guestCoins = Math.max(0, toInt(localStorage.getItem(STORAGE_KEYS.coins), 0));
+        if (!migration && guestCoins > 0) {
+          migration = { userId: userId, id: createOperationId(), amount: guestCoins };
+          localStorage.setItem("lahistoria_coins_migration", JSON.stringify(migration));
+        }
+        if (migration && migration.userId === userId && !wallet.migrationRecorded) {
+          wallet.pending.push({ id: migration.id, amount: migration.amount });
+          wallet.migrationRecorded = true;
+          persistOnlineWallet(wallet);
+        }
+        if (migration && !localStorage.getItem("lahistoria_coins_migration_complete")) {
+          localStorage.setItem(STORAGE_KEYS.coins, "0");
+          localStorage.setItem("lahistoria_coins_migration_complete", "1");
+        }
+      } catch (error) {
+        setAccountStatus("No se pudieron trasladar las monedas locales a tu cuenta.", "error");
+      }
+      updateWalletBalance(wallet);
+      flushOnlineWallet(true);
+    }
+
+    function earnCoins(amount) {
+      if (!amount) return;
+      if (!onlineWallet) {
+        state.coins += amount;
+        return;
+      }
+      onlineWallet.pending.push({ id: createOperationId(), amount: amount });
+      persistOnlineWallet(onlineWallet);
+      updateWalletBalance(onlineWallet);
+      flushOnlineWallet();
+    }
+
+    function completeCoinPurchase(operation) {
+      var purchase = operation.purchase;
+      var receipts = state.progress.coinPurchaseReceipts || [];
+      if (receipts.includes(operation.id)) return;
+      if (purchase.type === "skin") {
+        if (!state.unlockedSkins.includes(purchase.skinId)) state.unlockedSkins.push(purchase.skinId);
+        state.selectedSkin = purchase.skinId;
+        setStoreMessage("Compraste " + SKINS[purchase.skinId].label);
+      } else if (purchase.type === "lives") {
+        state.progress.lives += GAMEPLAY.livesPerPack;
+        setStoreMessage("Compraste " + GAMEPLAY.livesPerPack + " vidas.");
+      } else if (purchase.type === "bombs") {
+        state.progress.bombs += GAMEPLAY.bombsPerPack;
+        setStoreMessage("Compraste " + GAMEPLAY.bombsPerPack + " bombas.");
+      }
+      receipts.push(operation.id);
+      state.progress.coinPurchaseReceipts = receipts;
+      saveState(state);
+    }
+
+    function purchaseWithCoins(cost, purchase) {
+      if (onlineWallet && onlineWallet.pending.some(function(operation) { return !!operation.purchase; })) {
+        setStoreMessage("Hay una compra pendiente. Espera a que se confirme la conexi\u00f3n.");
+        flushOnlineWallet();
+        return;
+      }
+      if (state.coins < cost) {
+        setStoreMessage("Te faltan " + (cost - state.coins) + " monedas.");
+        return;
+      }
+      var operation = { id: createOperationId(), amount: -cost, purchase: purchase };
+      if (!onlineWallet) {
+        state.coins -= cost;
+        completeCoinPurchase(operation);
+        syncUI();
+        return;
+      }
+      onlineWallet.pending.push(operation);
+      persistOnlineWallet(onlineWallet);
+      updateWalletBalance(onlineWallet);
+      setStoreMessage("Confirmando compra...");
+      flushOnlineWallet(true);
+    }
+
+    function flushOnlineWallet(refresh) {
+      var wallet = onlineWallet;
+      if (!wallet || !onlineSession || wallet.userId !== onlineSession.user.id || !supabaseClient) return Promise.resolve();
+      if (wallet.sync) return wallet.sync;
+      if (refresh === true) wallet.ready = false;
+      function isCurrent() {
+        return onlineWallet === wallet && onlineSession && onlineSession.user.id === wallet.userId;
+      }
+      function sendNext() {
+        if (!isCurrent()) return Promise.resolve();
+        var operation = wallet.ready ? wallet.pending[0] : null;
+        if (wallet.ready && !operation) return Promise.resolve();
+        return supabaseClient.rpc("apply_coin_transaction", {
+          p_amount: operation ? operation.amount : 0,
+          p_operation_id: operation ? operation.id : null,
+          p_user_id: wallet.userId
+        }).then(function(result) {
+          if (result.error) throw result.error;
+          if (!isCurrent()) return;
+          wallet.balance = Number(result.data.balance);
+          wallet.ready = true;
+          if (operation) {
+            if (operation.purchase && result.data.applied) completeCoinPurchase(operation);
+            wallet.pending = wallet.pending.filter(function(entry) { return entry.id !== operation.id; });
+            if (!result.data.applied) setStoreMessage("Compra rechazada: el saldo de tu cuenta no es suficiente.");
+          }
+          persistOnlineWallet(wallet);
+          updateWalletBalance(wallet);
+          return sendNext();
+        });
+      }
+      var failed = false;
+      wallet.sync = sendNext().catch(function() {
+        failed = true;
+        if (!isCurrent()) return;
+        setAccountStatus("Monedas pendientes de sincronizar. Revisa la conexi\u00f3n y la configuraci\u00f3n de Supabase.", "error");
+        if (wallet.pending.some(function(operation) { return !!operation.purchase; })) {
+          setStoreMessage("Compra pendiente de confirmaci\u00f3n. Se reintentar\u00e1 al conectar.");
+        }
+      }).then(function() {
+        wallet.sync = null;
+        if (!failed && isCurrent() && wallet.pending.length) return flushOnlineWallet();
+      });
+      return wallet.sync;
+    }
+
+    window.addEventListener("online", function() { flushOnlineWallet(true); });
+    window.addEventListener("focus", function() { flushOnlineWallet(true); });
+
     var onlineScoreQueue = [];
     var onlineScoreAttempt = null;
     var onlineScoreSync = null;
@@ -1018,15 +1252,8 @@
 
     function beginOnlineScoreAttempt() {
       if (!onlineSession || onlineScoreAttempt) return;
-      var randomBytes = new Uint8Array(16);
-      window.crypto.getRandomValues(randomBytes);
-      randomBytes[6] = (randomBytes[6] & 15) | 64;
-      randomBytes[8] = (randomBytes[8] & 63) | 128;
-      var attemptId = Array.prototype.map.call(randomBytes, function(value, index) {
-        return ([4, 6, 8, 10].includes(index) ? "-" : "") + ("0" + value.toString(16)).slice(-2);
-      }).join("");
       onlineScoreAttempt = {
-        id: attemptId, userId: onlineSession.user.id,
+        id: createOperationId(), userId: onlineSession.user.id,
         island: currentIsland, level: currentLevel, enemies: 0, chests: 0
       };
       onlineScoreQueue.push(onlineScoreAttempt);
@@ -1345,6 +1572,10 @@
         btn.disabled = !canAfford;
       }
       btn.addEventListener("click", function() {
+        if (skinId !== "default" && !state.unlockedSkins.includes(skinId)) {
+          purchaseWithCoins(skin.price, { type: "skin", skinId: skinId });
+          return;
+        }
         var result = buyOrEquipSkin(state, skinId);
         setStoreMessage(result.message);
         if (result.ok) { saveState(state); syncUI(); }
@@ -2741,7 +2972,7 @@
       onCoinsEarned: function(amount, source) {
         recordOnlineScore(source);
         if (source === 'chest' && game.replayMode) return;
-        state.coins += amount;
+        earnCoins(amount);
         saveState(state);
         syncUI();
       },
@@ -2772,14 +3003,14 @@
         var island   = ISLANDS[currentIsland];
         var isReplay = game.replayMode;
         var bonus    = isReplay ? 0 : GAMEPLAY.levelCompleteBonus;
-        state.coins += bonus;
+        earnCoins(bonus);
         var dailyBonus = 0;
         var todayKey = getTodayKey();
         var canClaimDailyBonus = gameStats.enemiesKilled >= DAILY_CHALLENGE.killsTarget
           && state.progress.daily50BonusLastClaim !== todayKey;
         if (canClaimDailyBonus) {
           dailyBonus = DAILY_CHALLENGE.rewardCoins;
-          state.coins += dailyBonus;
+          earnCoins(dailyBonus);
           state.progress.daily50BonusLastClaim = todayKey;
         }
         var stats = {
@@ -2956,31 +3187,16 @@
     });
 
     document.getElementById("btn-buy-lives").addEventListener("click", function() {
-      if (state.coins < GAMEPLAY.livesCost) {
-        setStoreMessage("Te faltan " + (GAMEPLAY.livesCost - state.coins) + " monedas.");
-        return;
-      }
-      state.coins -= GAMEPLAY.livesCost;
-      state.progress.lives += GAMEPLAY.livesPerPack;
-      saveState(state);
-      syncUI();
-      setStoreMessage("\u00a1Compraste " + GAMEPLAY.livesPerPack + " vidas! Total: " + state.progress.lives + " \u2665");
+      purchaseWithCoins(GAMEPLAY.livesCost, { type: "lives" });
     });
 
     document.getElementById("btn-buy-bombs").addEventListener("click", function() {
-      if (state.coins < GAMEPLAY.bombPackCost) {
-        setStoreMessage("Te faltan " + (GAMEPLAY.bombPackCost - state.coins) + " monedas.");
-        return;
-      }
-      state.coins -= GAMEPLAY.bombPackCost;
-      state.progress.bombs += GAMEPLAY.bombsPerPack;
-      saveState(state);
-      syncUI();
-      setStoreMessage("\u00a1Compraste " + GAMEPLAY.bombsPerPack + " bombas! Total: " + state.progress.bombs + " \ud83d\udca3");
+      purchaseWithCoins(GAMEPLAY.bombPackCost, { type: "bombs" });
     });
 
     document.getElementById("btn-store").addEventListener("click", function() {
       game.stop();
+      flushOnlineWallet(true);
       showScreen("screen-store");
       setStoreMessage("");
       syncUI();
@@ -3020,6 +3236,7 @@
       document.getElementById("confirm-modal").classList.add("hidden");
       Object.keys(STORAGE_KEYS).forEach(function(k) { localStorage.removeItem(STORAGE_KEYS[k]); });
       state = loadState();
+      if (onlineWallet) updateWalletBalance(onlineWallet);
       game.player.health = game.player.maxHealth;
       syncUI();
       setStoreMessage("");
@@ -3029,7 +3246,7 @@
       if (!e.ctrlKey || e.code !== "KeyI") return;
       if (e.repeat) return;
       e.preventDefault();
-      state.coins += 10;
+      earnCoins(10);
       saveState(state);
       syncUI();
     });

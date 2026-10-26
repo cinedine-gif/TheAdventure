@@ -161,3 +161,87 @@ grant select on public.level_scores to anon;
 grant select on public.leaderboard to anon, authenticated;
 revoke all on function public.submit_level_score(integer, integer, integer, integer, integer, uuid) from public, anon;
 grant execute on function public.submit_level_score(integer, integer, integer, integer, integer, uuid) to authenticated;
+
+create table if not exists public.player_wallets (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  coins bigint not null default 0 check (coins between 0 and 9007199254740991)
+);
+
+create table if not exists public.coin_transactions (
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  operation_id uuid not null,
+  amount integer not null,
+  applied boolean not null,
+  primary key (user_id, operation_id)
+);
+
+alter table public.player_wallets enable row level security;
+alter table public.coin_transactions enable row level security;
+
+drop policy if exists "Users can read their wallet" on public.player_wallets;
+create policy "Users can read their wallet"
+on public.player_wallets for select to authenticated
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can read their coin transactions" on public.coin_transactions;
+create policy "Users can read their coin transactions"
+on public.coin_transactions for select to authenticated
+using ((select auth.uid()) = user_id);
+
+drop function if exists public.apply_coin_transaction(integer, uuid);
+create or replace function public.apply_coin_transaction(
+  p_amount integer default 0,
+  p_operation_id uuid default null,
+  p_user_id uuid default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  wallet_balance bigint;
+  transaction_applied boolean;
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+  if p_user_id is not null and p_user_id <> auth.uid() then
+    raise exception 'Wallet account changed';
+  end if;
+  if p_amount is null or (p_amount <> 0 and p_operation_id is null) then
+    raise exception 'Invalid coin transaction';
+  end if;
+
+  insert into public.player_wallets (user_id) values (auth.uid())
+  on conflict (user_id) do nothing;
+
+  select coins into wallet_balance from public.player_wallets
+  where user_id = auth.uid() for update;
+
+  if p_amount = 0 and p_operation_id is null then
+    return jsonb_build_object('balance', wallet_balance, 'applied', true);
+  end if;
+
+  select applied into transaction_applied from public.coin_transactions
+  where user_id = auth.uid() and operation_id = p_operation_id;
+  if found then
+    return jsonb_build_object('balance', wallet_balance, 'applied', transaction_applied);
+  end if;
+
+  transaction_applied := wallet_balance + p_amount between 0 and 9007199254740991;
+  if transaction_applied then
+    wallet_balance := wallet_balance + p_amount;
+    update public.player_wallets set coins = wallet_balance where user_id = auth.uid();
+  end if;
+
+  insert into public.coin_transactions (user_id, operation_id, amount, applied)
+  values (auth.uid(), p_operation_id, p_amount, transaction_applied);
+
+  return jsonb_build_object('balance', wallet_balance, 'applied', transaction_applied);
+end;
+$$;
+
+grant select on public.player_wallets, public.coin_transactions to authenticated;
+revoke all on function public.apply_coin_transaction(integer, uuid, uuid) from public, anon;
+grant execute on function public.apply_coin_transaction(integer, uuid, uuid) to authenticated;

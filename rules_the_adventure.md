@@ -39,7 +39,11 @@ Abrir directamente en el navegador haciendo doble clic.
 ### Economía
 - 🪙 Monedas: 1 por enemigo eliminado, 5 por cofre, 10 de bonus al completar nivel
 - **Modo replay** (niveles ya completados): solo monedas de enemigos, NO de cofres ni bonus
-- Persistencia de monedas en localStorage
+- Sin cuenta: monedas guardadas en localStorage; con sesión iniciada: saldo privado por usuario en Supabase y copia local de las operaciones pendientes
+- El saldo local previo se traslada una sola vez a la primera cuenta que se conecte en ese navegador; no se vuelve a copiar a otras cuentas
+- Las recompensas se pueden acumular sin conexión y se reenvían al reconectar, volver a la ventana, abrir la tienda o iniciar sesión
+- Las compras online entregan skins, vidas o bombas solo cuando Supabase confirma el gasto; los reenvíos no duplican cargos ni artículos
+- Skins, consumibles y progreso siguen siendo locales; esta sincronización solo comparte las monedas entre dispositivos
 - **Reto diario**: eliminar 50 enemigos en un mismo nivel para ganar 100 monedas extra; se puede cobrar una vez al día
 - El premio del reto diario aparece en el resumen al completar el nivel
 
@@ -49,9 +53,11 @@ Abrir directamente en el navegador haciendo doble clic.
 - Cada intento con sesión iniciada suma 10 puntos por enemigo y 25 por cofre, también al repetir niveles, perder una vida, salir al menú o combatir jefes; sin bajas ni cofres no se generan puntos
 - Los puntos se guardan localmente durante el intento y se envían al detenerlo; los pendientes se recuperan tras recargar y se reintentan al iniciar sesión, recuperar conexión o abrir la clasificación
 - Cada intento tiene un identificador único para que los reenvíos no dupliquen puntos; el récord de cada nivel se conserva por separado
+- Monedero por cuenta en `player_wallets`, con transacciones atómicas en `coin_transactions`; no se permite gastar más saldo del disponible, aunque se usen varios dispositivos
 - Esquema y políticas de acceso en `supabase_setup.sql`
 - Para activar o actualizar el servicio: ejecutar todo `supabase_setup.sql` en Supabase (también si ya estaba instalado) y añadir `https://theadventure.neocities.org` a las URLs permitidas de Auth
 - La actualización conserva los puntos ya registrados; no puede recuperar intentos antiguos descartados por la regla anterior de guardar solo el récord
+- Pruebas locales del monedero, sin dependencias adicionales: `node --test scripts/wallet.test.cjs`
 
 ### Tienda
 - **Mi taquilla**: skins ya desbloqueadas (cambiar skin)
