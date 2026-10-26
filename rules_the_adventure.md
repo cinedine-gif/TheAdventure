@@ -45,10 +45,13 @@ Abrir directamente en el navegador haciendo doble clic.
 
 ### Cuentas online y clasificación 🔧
 - Integración frontend preparada con Supabase Auth: registro con correo/contraseña, alias público, inicio y cierre de sesión
-- Clasificación pública con los mejores resultados por jugador
-- Puntuación por nivel: 10 puntos por enemigo y 25 por cofre; el servidor conserva la mejor puntuación de cada nivel
+- Clasificación pública con puntos acumulados por jugador y su nivel máximo alcanzado (1-30: isla 2/nivel 1 = 11)
+- Cada intento con sesión iniciada suma 10 puntos por enemigo y 25 por cofre, también al repetir niveles, perder una vida, salir al menú o combatir jefes; sin bajas ni cofres no se generan puntos
+- Los puntos se guardan localmente durante el intento y se envían al detenerlo; los pendientes se recuperan tras recargar y se reintentan al iniciar sesión, recuperar conexión o abrir la clasificación
+- Cada intento tiene un identificador único para que los reenvíos no dupliquen puntos; el récord de cada nivel se conserva por separado
 - Esquema y políticas de acceso en `supabase_setup.sql`
-- Para activar el servicio: ejecutar ese SQL en Supabase y añadir `https://theadventure.neocities.org` a las URLs permitidas de Auth
+- Para activar o actualizar el servicio: ejecutar todo `supabase_setup.sql` en Supabase (también si ya estaba instalado) y añadir `https://theadventure.neocities.org` a las URLs permitidas de Auth
+- La actualización conserva los puntos ya registrados; no puede recuperar intentos antiguos descartados por la regla anterior de guardar solo el récord
 
 ### Tienda
 - **Mi taquilla**: skins ya desbloqueadas (cambiar skin)

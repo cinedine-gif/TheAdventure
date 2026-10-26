@@ -489,7 +489,7 @@
       <p>Ranking por la suma de tus mejores puntuaciones de nivel.</p>
       <div class="leaderboard-wrap">
         <table class="leaderboard-table">
-          <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th><th>Niveles</th></tr></thead>
+          <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th><th>Nivel m&aacute;ximo</th></tr></thead>
           <tbody id="leaderboard-body"><tr><td colspan="4">Cargando clasificación…</td></tr></tbody>
         </table>
       </div>
@@ -923,6 +923,9 @@
     }
 
     function renderAccountSession(session) {
+      if (onlineScoreAttempt && (!session || onlineScoreAttempt.userId !== session.user.id)) {
+        onlineScoreAttempt = null;
+      }
       onlineSession = session || null;
       onlineUsername = "";
       var form = document.getElementById("account-form");
@@ -939,6 +942,7 @@
 
       form.classList.add("hidden");
       signOutButton.classList.remove("hidden");
+      flushOnlineScores();
       sessionLabel.textContent = "Cuenta conectada. Cargando perfil…";
       supabaseClient.from("profiles").select("username").eq("id", onlineSession.user.id).single()
         .then(function(result) {
@@ -964,11 +968,13 @@
         status.textContent = "Comprueba tu conexión a internet.";
         return;
       }
-      supabaseClient.from("leaderboard")
-        .select("username,total_score,levels_completed,best_level_score")
+      flushOnlineScores().then(function() {
+        return supabaseClient.from("leaderboard")
+        .select("username,total_score,max_level,best_level_score")
         .order("total_score", { ascending: false })
         .order("best_level_score", { ascending: false })
-        .limit(50)
+        .limit(50);
+      })
         .then(function(result) {
           body.innerHTML = "";
           if (result.error) {
@@ -982,7 +988,7 @@
           }
           result.data.forEach(function(entry, index) {
             var row = document.createElement("tr");
-            [index + 1, entry.username, entry.total_score, entry.levels_completed].forEach(function(value) {
+            [index + 1, entry.username, entry.total_score, entry.max_level].forEach(function(value) {
               var cell = document.createElement("td");
               cell.textContent = value;
               row.appendChild(cell);
@@ -992,21 +998,87 @@
         });
     }
 
-    function saveOnlineLevelScore(gameStats, islandIdx, levelNum) {
-      if (!supabaseClient || !onlineSession) return;
-      var score = gameStats.enemiesKilled * 10 + gameStats.chestsCollected * 25;
-      supabaseClient.rpc("submit_level_score", {
-        p_island_id: islandIdx,
-        p_level_num: levelNum,
-        p_score: score,
-        p_enemies_killed: gameStats.enemiesKilled,
-        p_chests_collected: gameStats.chestsCollected
-      }).then(function(result) {
-        if (result.error) {
-          setAccountStatus("No se pudo guardar la puntuación online.", "error");
-        }
-      });
+    var onlineScoreQueue = [];
+    var onlineScoreAttempt = null;
+    var onlineScoreSync = null;
+    try {
+      onlineScoreQueue = JSON.parse(localStorage.getItem("lahistoria_score_queue") || "[]");
+      if (!Array.isArray(onlineScoreQueue)) onlineScoreQueue = [];
+    } catch (error) {
+      setAccountStatus("No se pudieron recuperar los puntos pendientes.", "error");
     }
+
+    function persistOnlineScores() {
+      try {
+        localStorage.setItem("lahistoria_score_queue", JSON.stringify(onlineScoreQueue));
+      } catch (error) {
+        setAccountStatus("No se pueden guardar los puntos pendientes en este navegador.", "error");
+      }
+    }
+
+    function beginOnlineScoreAttempt() {
+      if (!onlineSession || onlineScoreAttempt) return;
+      var randomBytes = new Uint8Array(16);
+      window.crypto.getRandomValues(randomBytes);
+      randomBytes[6] = (randomBytes[6] & 15) | 64;
+      randomBytes[8] = (randomBytes[8] & 63) | 128;
+      var attemptId = Array.prototype.map.call(randomBytes, function(value, index) {
+        return ([4, 6, 8, 10].includes(index) ? "-" : "") + ("0" + value.toString(16)).slice(-2);
+      }).join("");
+      onlineScoreAttempt = {
+        id: attemptId, userId: onlineSession.user.id,
+        island: currentIsland, level: currentLevel, enemies: 0, chests: 0
+      };
+      onlineScoreQueue.push(onlineScoreAttempt);
+      persistOnlineScores();
+    }
+
+    function recordOnlineScore(source) {
+      if (!onlineScoreAttempt) return;
+      if (source === "enemy") onlineScoreAttempt.enemies += 1;
+      else if (source === "chest") onlineScoreAttempt.chests += 1;
+      persistOnlineScores();
+    }
+
+    function finishOnlineScoreAttempt() {
+      onlineScoreAttempt = null;
+      return flushOnlineScores();
+    }
+
+    function flushOnlineScores() {
+      if (onlineScoreSync) return onlineScoreSync;
+      if (!supabaseClient || !onlineSession) return Promise.resolve();
+      function sendNext() {
+        if (!onlineSession) return Promise.resolve();
+        var attempt = onlineScoreQueue.find(function(entry) {
+          return entry !== onlineScoreAttempt && entry.userId === onlineSession.user.id;
+        });
+        if (!attempt) return Promise.resolve();
+        return supabaseClient.rpc("submit_level_score", {
+          p_island_id: attempt.island,
+          p_level_num: attempt.level,
+          p_score: attempt.enemies * 10 + attempt.chests * 25,
+          p_enemies_killed: attempt.enemies,
+          p_chests_collected: attempt.chests,
+          p_attempt_id: attempt.id
+        }).then(function(result) {
+          if (result.error) throw result.error;
+          onlineScoreQueue = onlineScoreQueue.filter(function(entry) { return entry.id !== attempt.id; });
+          persistOnlineScores();
+          return sendNext();
+        });
+      }
+      onlineScoreSync = sendNext().catch(function() {
+        setAccountStatus("Puntos pendientes de sincronizar. Se reintentar\u00e1 al conectar o abrir la clasificaci\u00f3n.", "error");
+      }).then(function() { onlineScoreSync = null; });
+      return onlineScoreSync;
+    }
+
+    window.addEventListener("online", flushOnlineScores);
+    window.addEventListener("pagehide", finishOnlineScoreAttempt);
+    window.addEventListener("pageshow", function(event) {
+      if (event.persisted && game.running && !game.paused) beginOnlineScoreAttempt();
+    });
 
     function setupOnlineFeatures() {
       if (!supabaseClient) {
@@ -1317,6 +1389,7 @@
       this.onCoinsEarned   = options.onCoinsEarned;
       this.onDamage        = options.onDamage;
       this.onGameOver      = options.onGameOver;
+      this.onAttemptEnded  = options.onAttemptEnded || function() {};
       this.onLevelComplete      = options.onLevelComplete      || function() {};
       this.onAllChestsCollected = options.onAllChestsCollected || function() {};
       this.onKillsChange        = options.onKillsChange        || function() {};
@@ -1380,6 +1453,7 @@
 
     Game.prototype.stop = function() {
       this.running = false;
+      this.onAttemptEnded();
       this.keys.clear();
       window.removeEventListener("keydown", this.boundKeyDown);
       window.removeEventListener("keyup",   this.boundKeyUp);
@@ -2665,12 +2739,14 @@
         updateHud({ health: safeHealth, maxHealth: safeMaxHealth });
       },
       onCoinsEarned: function(amount, source) {
+        recordOnlineScore(source);
         if (source === 'chest' && game.replayMode) return;
         state.coins += amount;
         saveState(state);
         syncUI();
       },
       onDamage: function(damage) { },
+      onAttemptEnded: finishOnlineScoreAttempt,
       onAllChestsCollected: function() {
         setGameMessage("¡Cofres recogidos! Mata a los enemigos restantes");
       },
@@ -2696,7 +2772,6 @@
         var island   = ISLANDS[currentIsland];
         var isReplay = game.replayMode;
         var bonus    = isReplay ? 0 : GAMEPLAY.levelCompleteBonus;
-        saveOnlineLevelScore(gameStats, currentIsland, currentLevel);
         state.coins += bonus;
         var dailyBonus = 0;
         var todayKey = getTodayKey();
@@ -2929,6 +3004,7 @@
 
     document.getElementById("btn-start-level").addEventListener("click", function() {
       document.getElementById("level-ready").classList.add("hidden");
+      beginOnlineScoreAttempt();
       game.resume();
     });
 

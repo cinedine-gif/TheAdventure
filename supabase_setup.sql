@@ -1,4 +1,4 @@
--- Run this script once in Supabase SQL Editor.
+-- Run this script in Supabase SQL Editor, including when updating an existing project.
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -20,6 +20,17 @@ create table if not exists public.level_scores (
   updated_at timestamptz not null default now(),
   constraint level_scores_user_level_unique unique (user_id, island_id, level_num)
 );
+
+alter table public.level_scores add column if not exists best_score integer;
+update public.level_scores set best_score = score where best_score is null;
+alter table public.level_scores alter column best_score set default 0;
+alter table public.level_scores alter column best_score set not null;
+
+create table if not exists public.score_attempts (
+  attempt_id uuid primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade
+);
+alter table public.score_attempts enable row level security;
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -84,12 +95,14 @@ to authenticated
 using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
+drop function if exists public.submit_level_score(integer, integer, integer, integer, integer);
 create or replace function public.submit_level_score(
   p_island_id integer,
   p_level_num integer,
   p_score integer,
   p_enemies_killed integer,
-  p_chests_collected integer
+  p_chests_collected integer,
+  p_attempt_id uuid default null
 )
 returns void
 language plpgsql
@@ -100,22 +113,34 @@ begin
   if auth.uid() is null then
     raise exception 'Authentication required';
   end if;
-  if p_island_id not between 0 and 2 or p_level_num not between 1 and 10
-     or p_score < 0 or p_enemies_killed < 0 or p_chests_collected not between 0 and 6 then
+  if p_island_id is null or p_level_num is null or p_score is null
+     or p_enemies_killed is null or p_chests_collected is null
+     or p_island_id not between 0 and 2 or p_level_num not between 1 and 10
+     or p_score < 0 or p_enemies_killed < 0 or p_chests_collected not between 0 and 6
+     or p_score::bigint <> p_enemies_killed::bigint * 10 + p_chests_collected::bigint * 25 then
     raise exception 'Invalid level score';
   end if;
 
+  if p_attempt_id is not null then
+    insert into public.score_attempts (attempt_id, user_id)
+    values (p_attempt_id, auth.uid())
+    on conflict (attempt_id) do nothing;
+    if not found then return; end if;
+  end if;
+
   insert into public.level_scores as current_score (
-    user_id, island_id, level_num, score, enemies_killed, chests_collected
+    user_id, island_id, level_num, score, enemies_killed, chests_collected, best_score
   ) values (
-    auth.uid(), p_island_id, p_level_num, p_score, p_enemies_killed, p_chests_collected
+    auth.uid(), p_island_id, p_level_num, p_score, p_enemies_killed, p_chests_collected, p_score
   )
   on conflict (user_id, island_id, level_num) do update
-  set score = excluded.score,
-      enemies_killed = excluded.enemies_killed,
-      chests_collected = excluded.chests_collected,
-      updated_at = now()
-  where excluded.score > current_score.score;
+  set score = current_score.score + excluded.score,
+      best_score = greatest(current_score.best_score, excluded.best_score),
+      enemies_killed = case when excluded.best_score > current_score.best_score
+        then excluded.enemies_killed else current_score.enemies_killed end,
+      chests_collected = case when excluded.best_score > current_score.best_score
+        then excluded.chests_collected else current_score.chests_collected end,
+      updated_at = now();
 end;
 $$;
 
@@ -124,7 +149,8 @@ select
   p.username,
   coalesce(sum(s.score), 0)::bigint as total_score,
   count(s.id)::integer as levels_completed,
-  coalesce(max(s.score), 0)::integer as best_level_score
+  coalesce(max(s.best_score), 0)::integer as best_level_score,
+  coalesce(max(s.island_id * 10 + s.level_num), 0)::integer as max_level
 from public.profiles p
 left join public.level_scores s on s.user_id = p.id
 group by p.id, p.username;
@@ -133,5 +159,5 @@ grant select on public.profiles to anon, authenticated;
 grant select on public.level_scores to authenticated;
 grant select on public.level_scores to anon;
 grant select on public.leaderboard to anon, authenticated;
-revoke all on function public.submit_level_score(integer, integer, integer, integer, integer) from public, anon;
-grant execute on function public.submit_level_score(integer, integer, integer, integer, integer) to authenticated;
+revoke all on function public.submit_level_score(integer, integer, integer, integer, integer, uuid) from public, anon;
+grant execute on function public.submit_level_score(integer, integer, integer, integer, integer, uuid) to authenticated;
