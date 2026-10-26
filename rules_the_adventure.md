@@ -11,7 +11,7 @@ Abrir directamente en el navegador haciendo doble clic.
 - **Canvas HTML5**: mundo de 1280×720 px, vista top-down; escritorio muestra el mapa completo y móvil usa una cámara con zoom sin cambiar las coordenadas del juego
 - **Vanilla JS ES5**: prototype-based OOP (`Game.prototype.method = function(){}`), sin arrow functions en métodos de prototipo, sin imports
 - **Bucle de juego**: `requestAnimationFrame` + delta time (`dt`) para independencia de framerate
-- **Persistencia**: `localStorage` con prefijo `lahistoria_*`
+- **Persistencia**: `localStorage` con prefijo `lahistoria_*` para datos locales y operaciones pendientes; Supabase Auth y PostgreSQL para cuentas, puntuaciones y monedas por usuario
 - **Un único `<script>`** sin `type="module"`
 - **Controles**: teclado en escritorio y controles táctiles en móvil (joystick, disparo y bomba)
 
@@ -30,6 +30,19 @@ Abrir directamente en el navegador haciendo doble clic.
 - Partículas y textos de daño flotantes
 - Overlay "Inicia la aventura" antes de cada nivel (pausa el juego)
 - Flash rojo breve al recibir daño
+
+### Vista móvil y zoom
+- La vista móvil se activa con un ancho de ventana de hasta 900 px o en dispositivos sin hover
+- El escenario y sus colisiones siguen midiendo 1280×720; solo cambia la cámara, no las posiciones, velocidades, recompensas ni reglas del juego
+- `Game.prototype.getMobileCamera()` sigue al jugador y adapta el área visible a la orientación y tamaño de la ventana, con escala uniforme para no deformar personajes
+- La escala móvil se ajusta entre 1.1 y 1.45 píxeles de pantalla por unidad del mundo; un enemigo estándar de 28 unidades de diámetro se ve aproximadamente a 31–41 px
+- En un móvil de 390×844, un enemigo estándar pasa de unos 9 px en la vista anterior a unos 32 px con zoom
+- La cámara deja espacio para el HUD y los controles cuando el jugador se aproxima a los bordes; en combates de jefe reserva espacio adicional para su barra de vida
+- `drawOffscreenIndicators()` señala el cofre activo más cercano, el enemigo más cercano y el jefe cuando quedan fuera de la cámara; separa los indicadores que coinciden en una dirección
+- El canvas ocupa toda la ventana disponible, sin los márgenes del menú; el joystick queda abajo a la izquierda y disparo/bomba abajo a la derecha, respetando las zonas seguras del dispositivo
+- Al pulsar iniciar se solicita pantalla completa y después orientación horizontal, únicamente cuando el navegador lo admite; si se rechazan, la partida sigue siendo jugable en vertical o dentro de la ventana
+- El botón de pantalla completa permite alternar ese modo; salir al menú cierra la pantalla completa y libera la orientación solicitada
+- Escritorio conserva el mapa completo sin zoom; girar o redimensionar la pantalla recalcula la vista móvil sin reiniciar la partida
 
 ### Progresión
 - **3 islas × 10 niveles** cada una
@@ -62,6 +75,21 @@ Abrir directamente en el navegador haciendo doble clic.
 - La actualización conserva los puntos ya registrados; no puede recuperar intentos antiguos descartados por la regla anterior de guardar solo el récord
 - Pruebas locales del monedero, sin dependencias adicionales: `node --test scripts/wallet.test.cjs`
 - Pruebas de cámara móvil, indicadores y compatibilidad de pantalla completa: `node --test scripts/mobile.test.cjs`
+
+### Usuarios, monedas y sincronización
+- **Sin sesión:** las monedas pertenecen al navegador y se guardan en `lahistoria_coins`; no se recuperan al cambiar de dispositivo
+- **Con sesión:** cada usuario tiene un saldo propio en `player_wallets`; al conectarse se consulta el saldo de su cuenta y se sincronizan sus operaciones pendientes
+- **Primer traslado:** las monedas locales previas se asignan una sola vez a la primera cuenta conectada en ese navegador. El traslado tiene un identificador persistente para que una recarga o un reenvío no vuelva a sumarlo
+- **Cambio de cuenta:** se muestra el monedero de la nueva cuenta, sin copiarle las monedas ni las operaciones pendientes de la anterior. Si había una partida activa, se detiene y se vuelve al menú
+- **Cerrar sesión:** vuelve al saldo local de invitado; el saldo online se conserva en Supabase. Las monedas ya trasladadas no reaparecen como monedas de invitado
+- **Recompensas:** `earnCoins()` registra cada ingreso con un identificador único y lo envía al servidor; con la cuenta ya conectada se puede seguir acumulando aunque falle temporalmente la conexión
+- **Sin conexión:** las operaciones se conservan en `lahistoria_wallet_<userId>` y se reintentan al reconectar, volver a la ventana, abrir la tienda o restaurar la sesión. Hasta confirmarlas, dependen de la copia local y pueden perderse si se borran los datos del sitio
+- **Compras:** `purchaseWithCoins()` reserva el importe localmente y solicita confirmación a `apply_coin_transaction`; solo después entrega la skin, las vidas o las bombas. Mientras una compra está pendiente no se inicia otra
+- **Respuesta perdida:** la misma compra se reenvía con el mismo identificador; `coin_transactions` evita cobrarla dos veces y los recibos locales evitan entregar dos veces sus artículos
+- **Varios dispositivos:** el servidor actualiza cada saldo de forma atómica y rechaza gastos si ya no hay suficientes monedas, aunque otro dispositivo mostrase un saldo antiguo. El saldo se refresca al recuperar el foco, abrir la tienda o iniciar sesión; no es una actualización en tiempo real
+- **Privacidad:** las políticas RLS permiten a cada usuario leer solo su monedero y sus transacciones; los cambios de saldo se realizan mediante la función SQL autenticada
+- **Límite actual:** se sincronizan las monedas, los puntos de clasificación y el nivel máximo online. Las skins, vidas, bombas, salud, avance jugable y cobro del reto diario siguen siendo locales y no se trasladan automáticamente entre dispositivos
+- **Reiniciar progreso local:** borra el avance y los artículos locales, además de las monedas de invitado; no borra el monedero de la cuenta ni los puntos o el nivel máximo de la clasificación, y no devuelve el coste de las compras borradas
 
 ### Tienda
 - **Mi taquilla**: skins ya desbloqueadas (cambiar skin)
@@ -110,7 +138,7 @@ Abrir directamente en el navegador haciendo doble clic.
 ### Mejoras de gameplay
 - [ ] Arma secundaria o power-ups recogibles en el mapa
 - [ ] Enemigos con comportamiento de huida cuando tienen poca vida
-- [ ] Mini-mapa o indicador de dirección hacia cofres/enemigos
+- [ ] Mini-mapa general (los indicadores de dirección móviles ya están implementados)
 - [ ] Sonidos (Web Audio API, sin archivos externos)
 - [ ] Animación de disparo del jugador (destello en cañón)
 - [ ] Pantalla de pausa con botón explícito (actualmente solo al entrar nivel)
