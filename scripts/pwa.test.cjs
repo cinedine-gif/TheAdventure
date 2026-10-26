@@ -34,6 +34,7 @@ test("app icon matches the skull and straw hat from the main menu", function() {
 
 test("service worker script is valid and precaches the app shell", function() {
   assert.doesNotThrow(function() { new vm.Script(serviceWorker); });
+  assert.match(serviceWorker, /const CACHE_NAME = "the-adventure-v3"/);
   for (const asset of ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"]) {
     assert.ok(serviceWorker.includes(JSON.stringify(asset)));
   }
