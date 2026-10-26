@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>The Adventure</title>
+  <meta name="theme-color" content="#f5d24f" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
   <script>
     if (window.location.hostname === "theadventure.neocities.org") {
       window.location.replace("https://thefinaladventure.netlify.app/");
@@ -3516,6 +3519,9 @@
       syncUI();
     });
 
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(function() {});
+    }
     setupOnlineFeatures();
     syncUI();
     showScreen("screen-menu");

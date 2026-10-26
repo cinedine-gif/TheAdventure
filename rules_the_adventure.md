@@ -75,6 +75,7 @@ Abrir directamente en el navegador haciendo doble clic.
 - La actualización conserva los puntos ya registrados; no puede recuperar intentos antiguos descartados por la regla anterior de guardar solo el récord
 - Pruebas locales del monedero, sin dependencias adicionales: `node --test scripts/wallet.test.cjs`
 - Pruebas de cámara móvil, indicadores y compatibilidad de pantalla completa: `node --test scripts/mobile.test.cjs`
+- Pruebas de manifest, icono y service worker PWA: `node --test scripts/pwa.test.cjs`
 
 ### Usuarios, monedas y sincronización
 - **Sin sesión:** las monedas pertenecen al navegador y se guardan en `lahistoria_coins`; no se recuperan al cambiar de dispositivo

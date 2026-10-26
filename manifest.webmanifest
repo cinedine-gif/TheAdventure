@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "The Adventure",
+  "short_name": "Adventure",
+  "description": "Explora, combate y recoge cofres en The Adventure.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5d24f",
+  "theme_color": "#f5d24f",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
