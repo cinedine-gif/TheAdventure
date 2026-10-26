@@ -8,6 +8,7 @@ const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const presenceSource = html.slice(html.indexOf("    var onlinePresenceChannel = null;"), html.indexOf("    function setupOnlineFeatures()"));
 const exitSource = html.slice(html.indexOf("    function exitToMainMenu()"), html.indexOf('    document.getElementById("btn-back-menu").addEventListener'));
 const leaderboardSource = html.slice(html.indexOf("    function loadLeaderboard()"), html.indexOf("    function createOperationId()"));
+const gameOverSource = html.slice(html.indexOf("      onGameOver: function()"), html.indexOf("      onLevelComplete: function("));
 
 function createPresenceHarness() {
   const handlers = {};
@@ -68,6 +69,10 @@ test("menu exit and online player presence work", async function() {
   assert.match(html, /getElementById\("btn-confirm-ok"\)\.addEventListener/);
   assert.match(html, /id="btn-level-menu"[^>]*>Menú principal<\/button>/);
   assert.match(html, /getElementById\("btn-level-menu"\)\.addEventListener\("click", exitToMainMenu\)/);
+  assert.match(html, /function showGameOver\(title, message, actionLabel, callback\)/);
+  assert.match(html, /btn\.textContent = actionLabel;[\s\S]*?btn\._nextCallback = callback;[\s\S]*?level-overlay"\)\.classList\.remove\("hidden"\)/);
+  assert.match(gameOverSource, /showGameOver\([\s\S]*?"Volver a empezar"/);
+  assert.match(gameOverSource, /showGameOver\([\s\S]*?"Ir a la tienda"[\s\S]*?btn-store/);
 
   const classes = [];
   const elements = {

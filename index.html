@@ -1837,6 +1837,17 @@
       document.getElementById("level-overlay").classList.add("hidden");
     }
 
+    function showGameOver(title, message, actionLabel, callback) {
+      var html = '<span class="lo-trophy">💀</span>';
+      html += '<h2 class="lo-title">' + title + '</h2>';
+      html += '<p class="lo-subtitle">' + message + '</p>';
+      document.getElementById("lo-stats").innerHTML = html;
+      var btn = document.getElementById("btn-next-level");
+      btn.textContent = actionLabel;
+      btn._nextCallback = callback;
+      document.getElementById("level-overlay").classList.remove("hidden");
+    }
+
     function drawSkinPreview(canvas, skinId) {
       var skin = SKINS[skinId] || SKINS.default;
       var ctx2 = canvas.getContext("2d");
@@ -2242,6 +2253,21 @@
       this.updateDamageTexts();
     };
 
+    Game.prototype.resolveCircleOverlap = function(moving, obstacle, fallbackX, fallbackY) {
+      var dx = moving.x - obstacle.x, dy = moving.y - obstacle.y;
+      var distance = Math.hypot(dx, dy);
+      var minDistance = moving.radius + obstacle.radius;
+      if (distance >= minDistance) return;
+      if (distance === 0) {
+        var fallbackDistance = Math.hypot(fallbackX || 0, fallbackY || 0);
+        dx = fallbackDistance > 0 ? -(fallbackX || 0) / fallbackDistance : 1;
+        dy = fallbackDistance > 0 ? -(fallbackY || 0) / fallbackDistance : 0;
+        distance = 1;
+      }
+      moving.x = obstacle.x + (dx / distance) * minDistance;
+      moving.y = obstacle.y + (dy / distance) * minDistance;
+    };
+
     Game.prototype.updatePlayer = function(dt) {
       var dx = 0, dy = 0;
       if (this.keys.has("KeyW")) dy -= 1;
@@ -2260,14 +2286,13 @@
       this.player.x = clamp(this.player.x, this.player.radius, this.canvas.width  - this.player.radius);
       this.player.y = clamp(this.player.y, this.player.radius, this.canvas.height - this.player.radius);
       for (var ti = 0; ti < this.trees.length; ti++) {
-        var tr = this.trees[ti];
-        var tdx = this.player.x - tr.x, tdy = this.player.y - tr.y;
-        var td  = Math.hypot(tdx, tdy);
-        var mnD = this.player.radius + tr.radius;
-        if (td < mnD && td > 0) {
-          this.player.x = tr.x + (tdx / td) * mnD;
-          this.player.y = tr.y + (tdy / td) * mnD;
-        }
+        this.resolveCircleOverlap(this.player, this.trees[ti], dx, dy);
+      }
+      for (var ei = 0; ei < this.enemies.length; ei++) {
+        this.resolveCircleOverlap(this.player, this.enemies[ei], dx, dy);
+      }
+      if (this.bossMode && this.boss && this.boss.alive) {
+        this.resolveCircleOverlap(this.player, this.boss, dx, dy);
       }
     };
 
@@ -2387,6 +2412,7 @@
           var mnD = e.radius + tr.radius;
           if (td < mnD && td > 0) { e.x = tr.x + (tdx / td) * mnD; e.y = tr.y + (tdy / td) * mnD; }
         }
+        this.resolveCircleOverlap(e, this.player);
         if (e.isShooter && this.bossConfig && now - e.lastShotAt >= (e.shotCooldownMs || this.bossConfig.miniShotCooldownMs)) {
           e.lastShotAt = now;
           var sdx = this.player.x - e.x, sdy = this.player.y - e.y;
@@ -2749,6 +2775,9 @@
       if (type === "pirate") this.updateBossPirate(dt, now);
       else if (type === "kraken") this.updateBossKraken(dt, now);
       else this.updateBossTank(dt, now);
+      this.resolveCircleOverlap(this.boss, this.player);
+      this.boss.x = clamp(this.boss.x, this.boss.radius, this.canvas.width - this.boss.radius);
+      this.boss.y = clamp(this.boss.y, this.boss.radius, this.canvas.height - this.boss.radius);
       this.updateTentacles(dt, now);
     };
 
@@ -3418,14 +3447,14 @@
         document.getElementById("boss-hud").classList.add("hidden");
         if (state.progress.lives > 0) {
           game.player.health = game.player.maxHealth;
-          setGameMessage("\u00a1Perdiste una vida! Quedan " + state.progress.lives + " \u2665. Reintentando...");
-          setTimeout(function() {
+          showGameOver("\u00a1Perdiste una vida!", "Quedan " + state.progress.lives + " vidas.", "Volver a empezar", function() {
             if (game.bossMode) { startBossFight(currentIsland); }
             else               { startGameLevel(currentIsland, currentLevel); }
-          }, 1800);
+          });
         } else {
-          setGameMessage("\uD83D\uDC80 \u00a1Game Over! Sin vidas restantes. Ve a la tienda.");
-          setTimeout(function() { showScreen("screen-menu"); }, 2200);
+          showGameOver("\u00a1Game Over!", "Sin vidas restantes. Ve a la tienda.", "Ir a la tienda", function() {
+            document.getElementById("btn-store").click();
+          });
         }
       },
       onLevelComplete: function(gameStats) {
