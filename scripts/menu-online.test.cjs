@@ -7,6 +7,7 @@ const vm = require("node:vm");
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const presenceSource = html.slice(html.indexOf("    var onlinePresenceChannel = null;"), html.indexOf("    function setupOnlineFeatures()"));
 const exitSource = html.slice(html.indexOf("    function exitToMainMenu()"), html.indexOf('    document.getElementById("btn-back-menu").addEventListener'));
+const leaderboardSource = html.slice(html.indexOf("    function loadLeaderboard()"), html.indexOf("    function createOperationId()"));
 
 function createPresenceHarness() {
   const handlers = {};
@@ -112,4 +113,55 @@ test("menu exit and online player presence work", async function() {
   assert.equal(harness.channel.tracked.online, true);
   assert.equal(harness.countElement.textContent, "Jugadores online: 2");
   assert.equal(harness.storage.get("the_adventure_presence_id"), "local-player");
+
+  const rows = [];
+  const body = { innerHTML: "", appendChild: function(row) { rows.push(row); } };
+  const leaderboardQuery = {
+    select: function() { return this; },
+    order: function() { return this; },
+    limit: function() {
+      return Promise.resolve({ data: [
+        { username: "Capitan1", total_score: 100, max_level: 8 },
+        { username: "Capitan2", total_score: 90, max_level: 7 },
+        { username: "Capitan3", total_score: 80, max_level: 6 },
+        { username: "Capitan4", total_score: 70, max_level: 5 }
+      ], error: null });
+    }
+  };
+  const leaderboardContext = vm.createContext({
+    document: {
+      getElementById: function(id) { return id === "leaderboard-body" ? body : { textContent: "" }; },
+      createElement: function(tagName) {
+        return {
+          tagName: tagName,
+          textContent: "",
+          className: "",
+          attributes: {},
+          children: [],
+          setAttribute: function(name, value) { this.attributes[name] = value; },
+          appendChild: function(child) { this.children.push(child); }
+        };
+      }
+    },
+    supabaseClient: { from: function() { return leaderboardQuery; } },
+    flushOnlineScores: function() { return Promise.resolve(); }
+  });
+  vm.runInContext(leaderboardSource, leaderboardContext);
+  leaderboardContext.loadLeaderboard();
+  await new Promise(function(resolve) { setTimeout(resolve, 0); });
+
+  assert.deepEqual(rows.slice(0, 3).map(function(row) { return row.children[0].children[0].className; }), [
+    "leaderboard-medal leaderboard-medal-gold",
+    "leaderboard-medal leaderboard-medal-silver",
+    "leaderboard-medal leaderboard-medal-bronze"
+  ]);
+  assert.deepEqual(rows.slice(0, 3).map(function(row) { return String(row.children[0].children[0].textContent); }), ["1", "2", "3"]);
+  assert.match(html, /\.leaderboard-medal \{[\s\S]*?width: 3\.4rem;[\s\S]*?data:image\/svg\+xml/);
+  assert.match(html, /\.leaderboard-table th:nth-child\(3\),[\s\S]*?\.leaderboard-table td:nth-child\(4\) \{ text-align: center; \}/);
+  assert.deepEqual(rows.slice(0, 3).map(function(row) { return row.children[0].children[0].attributes["aria-label"]; }), [
+    "Medalla de oro, puesto 1", "Medalla de plata, puesto 2", "Medalla de bronce, puesto 3"
+  ]);
+  assert.equal(rows[0].className, "leaderboard-first-place");
+  assert.equal(rows[1].className, "");
+  assert.equal(String(rows[3].children[0].textContent), "4");
 });

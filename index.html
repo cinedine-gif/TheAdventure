@@ -93,7 +93,32 @@
     .leaderboard-table { width: 100%; border-collapse: collapse; text-align: left; }
     .leaderboard-table th, .leaderboard-table td { padding: 0.55rem 0.65rem; border-bottom: 1px solid rgba(90,62,0,0.2); }
     .leaderboard-table th { color: #5a3e00; font-size: 0.82rem; }
-    .leaderboard-table td:first-child { font-weight: 700; width: 3rem; }
+    .leaderboard-table td:first-child { font-weight: 700; width: 4rem; text-align: center; }
+    .leaderboard-table th:nth-child(3),
+    .leaderboard-table td:nth-child(3),
+    .leaderboard-table th:nth-child(4),
+    .leaderboard-table td:nth-child(4) { text-align: center; }
+    .leaderboard-medal {
+      display: inline-grid;
+      width: 3.4rem;
+      height: 2.8rem;
+      place-items: center;
+      background-image:
+        radial-gradient(circle, var(--medal-light) 0%, var(--medal-main) 57%, var(--medal-dark) 72%, transparent 76%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 52'%3E%3Cg fill='%23386641'%3E%3Cpath d='M27 47C14 40 9 29 11 18C12 12 16 7 22 3' fill='none' stroke='%23386641' stroke-width='2.5'/%3E%3Cpath d='M20 39C13 39 8 35 6 30C13 30 18 33 20 39ZM15 29C8 27 5 22 5 17C12 19 16 23 15 29ZM17 18C11 15 10 10 12 6C17 9 19 13 17 18ZM24 9C19 6 19 3 21 0C26 3 27 6 24 9Z'/%3E%3Cpath d='M45 47C58 40 63 29 61 18C60 12 56 7 50 3' fill='none' stroke='%23386641' stroke-width='2.5'/%3E%3Cpath d='M52 39C59 39 64 35 66 30C59 30 54 33 52 39ZM57 29C64 27 67 22 67 17C60 19 56 23 57 29ZM55 18C61 15 62 10 60 6C55 9 53 13 55 18ZM48 9C53 6 53 3 51 0C46 3 45 6 48 9Z'/%3E%3C/g%3E%3C/svg%3E");
+      background-position: center, center;
+      background-size: 1.8rem 1.8rem, 100% 100%;
+      background-repeat: no-repeat;
+      color: var(--medal-dark);
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1;
+      vertical-align: middle;
+    }
+    .leaderboard-medal-gold { --medal-light: #fff1b8; --medal-main: #e2b627; --medal-dark: #8b6412; }
+    .leaderboard-medal-silver { --medal-light: #ffffff; --medal-main: #c4cbd1; --medal-dark: #69737b; }
+    .leaderboard-medal-bronze { --medal-light: #f3bd91; --medal-main: #ba7044; --medal-dark: #704126; }
+    .leaderboard-first-place td { font-weight: 700; }
     .menu-actions, .game-actions { display: flex; gap: 0.75rem; }
     #screen-menu h1,
     #screen-menu .subtitle {
@@ -707,7 +732,7 @@
       <p>Ranking por la suma de tus mejores puntuaciones de nivel.</p>
       <div class="leaderboard-wrap">
         <table class="leaderboard-table">
-          <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th><th>Nivel m&aacute;ximo</th></tr></thead>
+          <thead><tr><th>Puesto</th><th>Jugador</th><th>Puntos</th><th>Nivel m&aacute;ximo</th></tr></thead>
           <tbody id="leaderboard-body"><tr><td colspan="4">Cargando clasificación…</td></tr></tbody>
         </table>
       </div>
@@ -1252,9 +1277,24 @@
             body.innerHTML = "<tr><td colspan=\"4\">Aún no hay puntuaciones. ¡Sé el primero!</td></tr>";
             return;
           }
+          var medalNames = ["oro", "plata", "bronce"];
+          var medalClasses = ["gold", "silver", "bronze"];
           result.data.forEach(function(entry, index) {
             var row = document.createElement("tr");
-            [index + 1, entry.username, entry.total_score, entry.max_level].forEach(function(value) {
+            if (index === 0) row.className = "leaderboard-first-place";
+            var rankCell = document.createElement("td");
+            if (index < medalNames.length) {
+              var medal = document.createElement("span");
+              medal.className = "leaderboard-medal leaderboard-medal-" + medalClasses[index];
+              medal.textContent = index + 1;
+              medal.setAttribute("role", "img");
+              medal.setAttribute("aria-label", "Medalla de " + medalNames[index] + ", puesto " + (index + 1));
+              rankCell.appendChild(medal);
+            } else {
+              rankCell.textContent = index + 1;
+            }
+            row.appendChild(rankCell);
+            [entry.username, entry.total_score, entry.max_level].forEach(function(value) {
               var cell = document.createElement("td");
               cell.textContent = value;
               row.appendChild(cell);
