@@ -76,6 +76,7 @@ Abrir directamente en el navegador haciendo doble clic.
 - Pruebas locales del monedero, sin dependencias adicionales: `node --test scripts/wallet.test.cjs`
 - Pruebas de cámara móvil, indicadores y compatibilidad de pantalla completa: `node --test scripts/mobile.test.cjs`
 - Pruebas de manifest, icono y service worker PWA: `node --test scripts/pwa.test.cjs`
+- Pruebas de salida al menú y jugadores online: `node --test scripts/menu-online.test.cjs`
 
 ### Usuarios, monedas y sincronización
 - **Sin sesión:** las monedas pertenecen al navegador y se guardan en `lahistoria_coins`; no se recuperan al cambiar de dispositivo

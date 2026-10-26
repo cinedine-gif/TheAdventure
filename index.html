@@ -356,6 +356,32 @@
       max-width: 400px;
       width: 90%;
     }
+    .level-overlay-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 0.9rem;
+    }
+    .level-overlay-actions button { flex: 1 1 145px; }
+    .level-overlay-actions .btn-level-menu { background: #6b5b36; }
+    .level-overlay-actions .btn-level-menu:hover { background: #51442a; }
+    .online-player-count {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      margin: 0.35rem auto 0.8rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .online-player-count::before {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: #1a936f;
+      content: "";
+    }
     .lo-trophy   { font-size: 2.4rem; display: block; margin-bottom: 0.15rem; }
     .lo-title    { margin: 0 0 0.1rem; font-size: 1.15rem; }
     .lo-subtitle { margin: 0 0 0.8rem; opacity: 0.7; font-size: 0.82rem; }
@@ -595,6 +621,7 @@
       </svg>
       <h1>The Adventure</h1>
       <p class="subtitle">⚓ Donde termina el mapa, comienza la aventura</p>
+      <p id="online-player-count" class="online-player-count" role="status" aria-live="polite">Conectando jugadores...</p>
       <div class="daily-challenge-banner">
         <p class="daily-challenge-text">🎯 Consigue 100 monedas extra al matar a 50 enemigos en un mismo nivel</p>
         <p id="daily-challenge-status" class="daily-challenge-status">Disponible hoy</p>
@@ -729,7 +756,10 @@
       <div id="level-overlay" class="level-overlay hidden">
         <div class="level-overlay-box">
           <div id="lo-stats"></div>
-          <button id="btn-next-level">Siguiente nivel</button>
+          <div class="level-overlay-actions">
+            <button id="btn-next-level">Siguiente nivel</button>
+            <button id="btn-level-menu" class="btn-level-menu" type="button">Menú principal</button>
+          </div>
         </div>
       </div>
       <div id="level-ready" class="level-overlay hidden">
@@ -1451,7 +1481,61 @@
       if (event.persisted && game.running && !game.paused) beginOnlineScoreAttempt();
     });
 
+    var onlinePresenceChannel = null;
+
+    function getOnlinePresenceKey() {
+      var storageKey = "the_adventure_presence_id";
+      try {
+        var presenceKey = localStorage.getItem(storageKey);
+        if (presenceKey) return presenceKey;
+        presenceKey = createOperationId();
+        localStorage.setItem(storageKey, presenceKey);
+        return presenceKey;
+      } catch (error) {
+        return createOperationId();
+      }
+    }
+
+    function setOnlinePresenceUnavailable() {
+      var countElement = document.getElementById("online-player-count");
+      if (countElement) countElement.textContent = "Jugadores online: no disponible";
+    }
+
+    function updateOnlinePlayerCount() {
+      var countElement = document.getElementById("online-player-count");
+      if (!countElement || !onlinePresenceChannel) return;
+      var presence = onlinePresenceChannel.presenceState();
+      var playerCount = Object.keys(presence).filter(function(key) {
+        return presence[key] && presence[key].length > 0;
+      }).length;
+      countElement.textContent = "Jugadores online: " + playerCount;
+    }
+
+    function setupOnlinePresence() {
+      if (!supabaseClient) {
+        setOnlinePresenceUnavailable();
+        return;
+      }
+      try {
+        var channel = supabaseClient.channel("the-adventure-online", {
+          config: { presence: { key: getOnlinePresenceKey() } }
+        });
+        onlinePresenceChannel = channel;
+        channel.on("presence", { event: "sync" }, updateOnlinePlayerCount);
+        channel.subscribe(function(status) {
+          if (status === "SUBSCRIBED") {
+            channel.track({ online: true }).then(updateOnlinePlayerCount).catch(setOnlinePresenceUnavailable);
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            setOnlinePresenceUnavailable();
+          }
+        });
+      } catch (error) {
+        setOnlinePresenceUnavailable();
+      }
+    }
+
     function setupOnlineFeatures() {
+      setupOnlinePresence();
       if (!supabaseClient) {
         setAccountStatus("No se pudo cargar Supabase. Revisa la conexión a internet.", "error");
       } else {
@@ -3469,15 +3553,19 @@
       syncUI();
     });
 
-    document.getElementById("btn-back-menu").addEventListener("click", function() {
+    function exitToMainMenu() {
       game.stop();
       hideLevelComplete();
+      document.getElementById("level-ready").classList.add("hidden");
       document.getElementById("boss-hud").classList.add("hidden");
       showScreen("screen-menu");
       setGameMessage("");
       saveState(state);
       syncUI();
-    });
+    }
+
+    document.getElementById("btn-back-menu").addEventListener("click", exitToMainMenu);
+    document.getElementById("btn-level-menu").addEventListener("click", exitToMainMenu);
 
     document.getElementById("btn-start-level").addEventListener("click", function() {
       document.getElementById("level-ready").classList.add("hidden");

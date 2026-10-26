@@ -1,7 +1,7 @@
 {
   "id": "./",
   "name": "The Adventure",
-  "short_name": "Adventure",
+  "short_name": "The Adventure",
   "description": "Explora, combate y recoge cofres en The Adventure.",
   "start_url": "./",
   "scope": "./",

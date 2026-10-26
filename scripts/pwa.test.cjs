@@ -12,6 +12,7 @@ const icon = fs.readFileSync(path.join(root, "icon.svg"), "utf8");
 
 test("PWA manifest declares an installable standalone app and existing icon", function() {
   assert.equal(manifest.name, "The Adventure");
+  assert.equal(manifest.short_name, "The Adventure");
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.start_url, "./");
   assert.equal(manifest.scope, "./");
