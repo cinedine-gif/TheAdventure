@@ -48,6 +48,23 @@ function createPresenceHarness() {
 }
 
 test("menu exit and online player presence work", async function() {
+  assert.match(html, /title="Reiniciar progreso"/);
+  assert.match(html, /id="btn-reset"[^>]*>Reiniciar progreso<\/button>/);
+  assert.doesNotMatch(html, /Reiniciar progreso local/);
+  assert.match(html, /@media \(max-width: 760px\) \{[\s\S]*?\.menu-tools \{[\s\S]*?align-items: flex-end;[\s\S]*?width: auto;/);
+  assert.match(html, /\.menu-tools button \{[\s\S]*?height: 40px;/);
+  assert.match(html, /#btn-account \{[\s\S]*?text-overflow: ellipsis;/);
+  assert.match(html, /\.menu-tools #btn-account \{[\s\S]*?background: #f5d24f;[\s\S]*?color: #2d2410;/);
+  const menuSection = html.slice(html.indexOf('id="screen-menu"'), html.indexOf('id="screen-account"'));
+  const progressSection = html.slice(html.indexOf('id="screen-islands"'), html.indexOf('id="screen-game"'));
+  assert.doesNotMatch(menuSection, /id="btn-reset"/);
+  assert.match(progressSection, /id="btn-reset"/);
+  assert.match(progressSection, /class="islands-actions"[\s\S]*id="btn-islands-back"[\s\S]*id="btn-reset"/);
+  assert.match(html, /\.islands-actions \{[\s\S]*?justify-content: space-between;/);
+  assert.doesNotMatch(progressSection, /id="btn-reset"[^>]*>[\s\S]*?<img/);
+  assert.match(html, /getElementById\("btn-reset"\)\.addEventListener\("click", function\(\) \{\s*document\.getElementById\("confirm-modal"\)\.classList\.remove\("hidden"\)/);
+  assert.match(html, /getElementById\("btn-confirm-cancel"\)\.addEventListener/);
+  assert.match(html, /getElementById\("btn-confirm-ok"\)\.addEventListener/);
   assert.match(html, /id="btn-level-menu"[^>]*>Menú principal<\/button>/);
   assert.match(html, /getElementById\("btn-level-menu"\)\.addEventListener\("click", exitToMainMenu\)/);
 

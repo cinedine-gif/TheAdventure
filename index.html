@@ -425,6 +425,13 @@
       line-height: 1.25;
       overflow-wrap: anywhere;
     }
+    .menu-tools #btn-account {
+      background: #f5d24f;
+      border: 1px solid #c5a53f;
+      color: #2d2410;
+      font-weight: 700;
+    }
+    .menu-tools #btn-account:hover { background: #edc63c; }
     .btn-reset-progress {
       display: flex;
       align-items: center;
@@ -436,6 +443,19 @@
     }
     .btn-reset-progress img { flex-shrink: 0; }
     .btn-reset-progress:hover { background: rgba(192,57,43,0.1); }
+    .islands-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+    .islands-actions button {
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+    }
+    .islands-actions .btn-reset-progress { white-space: nowrap; }
     .menu-tools button:focus-visible,
     #screen-menu .menu-actions button:focus-visible {
       outline: 3px solid var(--text);
@@ -445,7 +465,32 @@
       .menu-tools {
         position: static;
         align-self: flex-end;
-        margin-bottom: 1rem;
+        align-items: flex-end;
+        width: auto;
+        max-width: 100%;
+        gap: 0.4rem;
+        margin-bottom: 0.7rem;
+      }
+      .menu-tools button {
+        width: max-content;
+        max-width: 100%;
+        height: 40px;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.82rem;
+      }
+      #btn-account {
+        max-width: min(190px, 100%);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .btn-reset-progress {
+        gap: 0.4rem;
+        white-space: nowrap;
+      }
+      .btn-reset-progress img {
+        width: 18px;
+        height: 18px;
       }
       #screen-menu .menu-actions {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -584,10 +629,6 @@
     <section id="screen-menu" class="screen screen-visible" style="text-align:center">
       <div class="menu-tools">
         <button id="btn-account" type="button">Cuenta online</button>
-        <button id="btn-reset" class="btn-reset-progress" type="button" title="Reiniciar progreso local">
-          <img src="https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/rotate-ccw.svg" alt="" width="24" height="24" aria-hidden="true" />
-          <span>Reiniciar progreso local</span>
-        </button>
       </div>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 132" width="140" height="132" style="display:block;margin:0 auto 0.4rem" aria-hidden="true">
         <!-- Straw hat brim -->
@@ -627,8 +668,8 @@
         <p id="daily-challenge-status" class="daily-challenge-status">Disponible hoy</p>
       </div>
       <div class="menu-actions">
-        <button id="btn-play">Play</button>
-        <button id="btn-progress">Mapa de progreso</button>
+        <button id="btn-play">Jugar</button>
+        <button id="btn-progress">Mapa</button>
         <button id="btn-leaderboard">Clasificaci&oacute;n</button>
         <button id="btn-store">Tienda</button>
       </div>
@@ -711,7 +752,10 @@
     <section id="screen-islands" class="screen">
       <h2>Mapa del progreso</h2>
       <div id="islands-grid" class="islands-grid"></div>
-      <button id="btn-islands-back">Volver al menú</button>
+      <div class="islands-actions">
+        <button id="btn-islands-back">Volver al menú</button>
+        <button id="btn-reset" class="btn-reset-progress" type="button" title="Reiniciar progreso">Reiniciar progreso</button>
+      </div>
     </section>
 
     <section id="screen-game" class="screen">
