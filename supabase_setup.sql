@@ -12,7 +12,7 @@ create unique index if not exists profiles_username_lower_unique
 create table if not exists public.level_scores (
   id bigint generated always as identity primary key,
   user_id uuid not null references public.profiles(id) on delete cascade,
-  island_id integer not null check (island_id between 0 and 2),
+  island_id integer not null check (island_id between 0 and 5),
   level_num integer not null check (level_num between 1 and 10),
   score integer not null default 0 check (score >= 0),
   enemies_killed integer not null default 0 check (enemies_killed >= 0),
@@ -20,6 +20,11 @@ create table if not exists public.level_scores (
   updated_at timestamptz not null default now(),
   constraint level_scores_user_level_unique unique (user_id, island_id, level_num)
 );
+
+alter table public.level_scores
+  drop constraint if exists level_scores_island_id_check;
+alter table public.level_scores
+  add constraint level_scores_island_id_check check (island_id between 0 and 5);
 
 alter table public.level_scores add column if not exists best_score integer;
 update public.level_scores set best_score = score where best_score is null;
@@ -115,7 +120,7 @@ begin
   end if;
   if p_island_id is null or p_level_num is null or p_score is null
      or p_enemies_killed is null or p_chests_collected is null
-     or p_island_id not between 0 and 2 or p_level_num not between 1 and 10
+    or p_island_id not between 0 and 5 or p_level_num not between 1 and 10
      or p_score < 0 or p_enemies_killed < 0 or p_chests_collected not between 0 and 6
      or p_score::bigint <> p_enemies_killed::bigint * 10 + p_chests_collected::bigint * 25 then
     raise exception 'Invalid level score';

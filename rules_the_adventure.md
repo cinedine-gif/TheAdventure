@@ -45,11 +45,11 @@ Abrir directamente en el navegador haciendo doble clic.
 - Escritorio conserva el mapa completo sin zoom; girar o redimensionar la pantalla recalcula la vista móvil sin reiniciar la partida
 
 ### Progresión
-- **3 islas × 10 niveles** cada una
+- **6 islas jugables × 10 niveles**: 3 en Mundo Aventura y 3 en Mundo Terror (Bosque Maldito, Cementerio de la Niebla y Faro de los Condenados).
 - Cada nivel: recoger 6 cofres → parar spawns → matar todos los enemigos → nivel completo
 - Spawns de enemigos más rápidos conforme avanza el nivel (3000ms → 800ms mín.)
-- Daño de enemigos sube por isla (+1 por isla)
-- Árboles: 4 en nivel 1 → 22 en nivel 10 (4 + (nivel-1)×2)
+- Daño de enemigos sube por isla (+1 por isla), salvo las tres islas de Mundo Terror, donde los fantasmas hacen 1 de daño
+- Árboles: Mundo Aventura tiene 4 en nivel 1 → 22 en nivel 10; Mundo Terror tiene 12 → 30 y sus arenas de jefe, 14
 - Popup al completar nivel: desglose de monedas (⚔️ enemigos / 📦 cofres / ⭐ bonus)
 
 ### Economía
@@ -65,7 +65,7 @@ Abrir directamente en el navegador haciendo doble clic.
 
 ### Cuentas online y clasificación 🔧
 - Integración frontend preparada con Supabase Auth: registro con correo/contraseña, alias público, inicio y cierre de sesión
-- Clasificación pública con puntos acumulados por jugador y su nivel máximo alcanzado (1-30: isla 2/nivel 1 = 11)
+- Clasificación pública con puntos acumulados por jugador y su nivel máximo alcanzado (1-60: Cementerio de la Niebla/nivel 1 = 41; Faro de los Condenados/nivel 1 = 51)
 - Cada intento con sesión iniciada suma 10 puntos por enemigo y 25 por cofre, también al repetir niveles, perder una vida, salir al menú o combatir jefes; sin bajas ni cofres no se generan puntos
 - Los puntos se guardan localmente durante el intento y se envían al detenerlo; los pendientes se recuperan tras recargar y se reintentan al iniciar sesión, recuperar conexión o abrir la clasificación
 - Cada intento tiene un identificador único para que los reenvíos no dupliquen puntos; el récord de cada nivel se conserva por separado
@@ -74,6 +74,7 @@ Abrir directamente en el navegador haciendo doble clic.
 - Para activar o actualizar el servicio: ejecutar todo `supabase_setup.sql` en Supabase (también si ya estaba instalado) y añadir `https://theadventure.neocities.org` a las URLs permitidas de Auth
 - La actualización conserva los puntos ya registrados; no puede recuperar intentos antiguos descartados por la regla anterior de guardar solo el récord
 - Pruebas locales del monedero, sin dependencias adicionales: `node --test scripts/wallet.test.cjs`
+- Pruebas de aparición, disparos y daño del fantasma: `node --test scripts/ghost.test.cjs`
 - Pruebas de cámara móvil, indicadores y compatibilidad de pantalla completa: `node --test scripts/mobile.test.cjs`
 - Pruebas de manifest, icono y service worker PWA: `node --test scripts/pwa.test.cjs`
 - Pruebas de salida al menú y jugadores online: `node --test scripts/menu-online.test.cjs`
@@ -107,21 +108,23 @@ Abrir directamente en el navegador haciendo doble clic.
 - Compra de vidas en la tienda (100 🪙 = +3 vidas)
 - Vidas mostradas en HUD: `❤️ Vidas: N`
 
-### Jefes de las tres islas ✅
+### Jefes de las islas jugables ✅
 - Cada jefe aparece al completar el nivel 10 de su isla y tiene barra de vida propia en el HUD
 - **Isla 1 — Gran Tanque**: 500 HP; persigue al jugador y genera minitanques que disparan
 - **Isla 2 — Barco Pirata**: 500 HP; patrulla horizontalmente, dispara cañonazos en arco y genera piratas menores
 - **Isla 3 — Kraken Abisal**: 500 HP; se desplaza por el mapa, ataca con tentáculos y genera peces enemigos
-- Los combates de jefe no tienen árboles ni cofres
+- **Isla 4 — Espectro del Bosque**, **isla 5 — Espectro del Cementerio** e **isla 6 — Espectro del Faro**: 500 HP; se mantienen a distancia, invocan un fantasma pequeño cada 5 segundos y disparan un proyectil cada 4 segundos. Fantasmas y proyectiles hacen 1 de daño
+- Las arenas de jefe de Mundo Terror tienen 14 árboles y no tienen cofres; los árboles bloquean los disparos
 - Al derrotar a un jefe se desbloquea la siguiente isla; derrotar al jefe final marca la última isla como completada
 
 ### Enemigos diferenciados por isla ✅
 - **Isla 1**: enemigos estándar circulares
 - **Isla 2**: enemigos más rápidos con movimiento en zigzag
 - **Isla 3**: enemigos más resistentes con apariciones en grupos
+- **Mundo Terror**: las tres islas usan fantasmas errantes, con el mismo comportamiento provisional mientras se diseñan sus diferencias
 
 ### Mapa de progreso / Islas
-- Pantalla con las 3 islas y dots de niveles
+- Pantalla con las seis islas jugables agrupadas por mundo y desbloqueo consecutivo tras derrotar a cada jefe
 - Click en dot completado → rejugar ese nivel (modo replay)
 - Click en isla completada (jefe derrotado) → rejugar desde nivel 1
 - Click en isla con jefe pendiente → ir directamente al jefe
@@ -163,7 +166,7 @@ Abrir directamente en el navegador haciendo doble clic.
 ### Pulido visual
 - [ ] Transición de pantalla entre niveles (fade)
 - [ ] Animación de apertura de cofre
-- [ ] Pantalla de victoria final al terminar las 3 islas + jefes
+- [ ] Pantalla de victoria final al terminar las 6 islas jugables + jefes
 
 ---
 
@@ -185,8 +188,9 @@ GAMEPLAY = {
 DAILY_CHALLENGE = { killsTarget: 50, rewardCoins: 100 }
 
 BOSS_CONFIGS[0] = { type:"tank", health:500, spawnIntervalMs:10000, spawnCount:3, ... }
-BOSS_CONFIGS[1] = { type:"pirate", health:500, patrolSpeed:82, cannonCooldownMs:3300, ... }
-BOSS_CONFIGS[2] = { type:"kraken", health:500, fishSpawnIntervalMs:6200, tentacleSpawnMs:1800, ... }
+BOSS_CONFIGS[1] = { type:"pirate", health:500, patrolSpeed:82, spawnIntervalMs:8000, cannonCooldownMs:5000, ... }
+BOSS_CONFIGS[2] = { type:"kraken", health:500, fishSpawnIntervalMs:6200, tentacleSpawnMs:4000, tentacleDamage:2, ... }
+BOSS_CONFIGS[3] = { type:"ghost", health:500, spawnIntervalMs:5000, shotCooldownMs:4000, ghostShotDamage:1, miniDamage:1, ... }
 ```
 
 ---

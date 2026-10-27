@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 500" role="img" aria-labelledby="title desc">
+  <title id="title">Mundo Aventura</title>
+  <desc id="desc">Un archipiélago de tres islas rodeado por un mar turquesa.</desc>
+  <defs>
+    <linearGradient id="sea" x2="0" y2="1"><stop stop-color="#54b9b0"/><stop offset="1" stop-color="#368f96"/></linearGradient>
+    <linearGradient id="land" x2="0.8" y2="1"><stop stop-color="#b5d77b"/><stop offset="1" stop-color="#569b68"/></linearGradient>
+    <pattern id="waves" width="120" height="70" patternUnits="userSpaceOnUse"><path d="M8 24c12-10 24-10 36 0s24 10 36 0 24-10 36 0M-28 58c12-10 24-10 36 0s24 10 36 0 24-10 36 0 24 10 36 0" fill="none" stroke="#d7f4df" stroke-opacity=".27" stroke-width="3"/></pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="11"/><feComponentTransfer><feFuncA type="linear" slope=".28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <g id="palm"><path d="M0 0q5-18 2-31" fill="none" stroke="#805a3b" stroke-width="5" stroke-linecap="round"/><path d="M2-30q-19-13-25-3 13-1 22 7-20-4-22 8 15-7 25-2-12 8-7 15 9-10 10-17 8 11 20 9-5-10-19-13 18 2 24-8-16 0-25 5 9-13 5-21-9 10-9 20Z" fill="#287a59"/></g>
+    <g id="pine"><path d="M0 10 14-9 7-9 18-25 10-25 22-43h-44l12 18h-8L-7-9h-7Z" fill="#276c55"/><path d="M0 8v12" stroke="#805a3b" stroke-width="5"/></g>
+    <g id="island">
+      <path d="M-171 10Q-158-54-97-64q38-55 100-23 64-43 113 8 76-5 84 57 59 39 15 84-37 47-101 28-63 42-117 10-75 23-116-24-80 0-71-66Z" fill="#f2d58c"/>
+      <path d="M-143 11q15-48 59-46 40-48 78-14 54-41 91 5 55-2 59 43 48 27 9 57-28 33-78 17-44 32-87 9-56 20-88-22-58 2-43-49Z" fill="url(#land)"/>
+      <path d="M-51-4q22-27 53-8 22 16 6 36-26 20-48 1-22-12-11-29Z" fill="#80c7bd" stroke="#e5d28f" stroke-width="5"/>
+      <use href="#palm" x="-93" y="-29"/><use href="#palm" x="74" y="-20"/><use href="#palm" x="89" y="42"/>
+      <use href="#pine" x="-28" y="-43"/><use href="#pine" x="29" y="42"/>
+      <path d="M-126 76q33 12 57 0M96-54q22 4 35 19" fill="none" stroke="#fff2c8" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </defs>
+  <rect width="1440" height="500" fill="url(#sea)"/>
+  <rect width="1440" height="500" fill="url(#waves)"/>
+  <g fill="none" stroke="#e9f5c2" stroke-opacity=".58" stroke-width="3"><path d="M0 88q58-20 116 0t116 0M1205 74q58-20 116 0t119 0M32 425q58-20 116 0t116 0M1120 437q58-20 116 0t116 0"/></g>
+  <path d="M303 281C460 108 560 150 716 216s230 110 384 52" fill="none" stroke="#f8e3a1" stroke-opacity=".8" stroke-width="7" stroke-dasharray="3 18" stroke-linecap="round"/>
+  <g filter="url(#shadow)">
+    <g transform="translate(300 258)"><use href="#island"/><use href="#pine" x="-80" y="-25"/><use href="#palm" x="80" y="-20"/></g>
+    <g transform="translate(720 195) scale(.92 1.08)"><use href="#island"/><use href="#pine" x="-80" y="-25"/><use href="#pine" x="-42" y="-40"/><use href="#palm" x="80" y="-20"/></g>
+    <g transform="translate(1140 292) scale(1.05 .88)"><use href="#island"/><use href="#pine" x="-80" y="-25"/><use href="#pine" x="-42" y="-40"/><use href="#palm" x="80" y="-20"/></g>
+  </g>
+  <g fill="#194e4b" font-family="Trebuchet MS, Verdana, sans-serif" font-size="24" font-weight="700" text-anchor="middle"><text x="300" y="422">ISLA 1</text><text x="720" y="382">ISLA 2</text><text x="1140" y="442">ISLA 3</text></g>
+  <g transform="translate(1344 83)" fill="none" stroke="#eff2c8" stroke-width="3" opacity=".8"><circle r="34"/><path d="M0-27 7 0 0 27-7 0ZM-27 0 0-7 27 0 0 7Z" fill="#eff2c8"/><circle r="5" fill="#368f96"/></g>
+</svg>

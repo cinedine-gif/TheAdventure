@@ -62,6 +62,14 @@ test("menu exit and online player presence work", async function() {
   assert.doesNotMatch(menuSection, /id="btn-reset"/);
   assert.match(progressSection, /id="btn-reset"/);
   assert.match(progressSection, /class="islands-actions"[\s\S]*id="btn-islands-back"[\s\S]*id="btn-reset"/);
+  assert.match(progressSection, /<h3>Mundo Aventura<\/h3>[\s\S]*<h3 id="terror-world-title">Mundo Terror<\/h3>/);
+  assert.match(progressSection, /id="terror-islands-grid" class="islands-grid horror-islands-grid"/);
+  assert.doesNotMatch(progressSection, /preview-island-card/);
+  assert.match(html, /\{ id: 3, name: "Bosque Maldito", levels: 10, world: "terror", enemyDamage: 1/);
+  assert.match(html, /\{ id: 4, name: "Cementerio de la Niebla", levels: 10, world: "terror", enemyDamage: 1/);
+  assert.match(html, /\{ id: 5, name: "Faro de los Condenados", levels: 10, world: "terror", enemyDamage: 1/);
+  assert.doesNotMatch(progressSection, /Mapa de campaña|Nueva campaña|3 islas · 30 niveles · 3 jefes|3 islas · En preparación|En preparación/);
+  assert.match(progressSection, /src="\.\/world-terror-map\.svg"/);
   assert.match(html, /\.islands-actions \{[\s\S]*?justify-content: space-between;/);
   assert.doesNotMatch(progressSection, /id="btn-reset"[^>]*>[\s\S]*?<img/);
   assert.match(html, /getElementById\("btn-reset"\)\.addEventListener\("click", function\(\) \{\s*document\.getElementById\("confirm-modal"\)\.classList\.remove\("hidden"\)/);
@@ -161,8 +169,12 @@ test("menu exit and online player presence work", async function() {
   await new Promise(function(resolve) { setTimeout(resolve, 0); });
 
   assert.equal(leaderboardColumns, "username,total_score,max_level,best_level_score,coins");
+  assert.match(html, /aria-label="Puesto"><span class="leaderboard-desktop-label">Puesto<\/span>[\s\S]*?<th scope="col">Jugador<\/th><th scope="col">Nivel<\/th>/);
+  assert.match(html, /aria-label="Monedas">🪙<\/th>/);
+  assert.doesNotMatch(html, /leaderboard-mobile-label|aria-hidden="true">#<\/span>/);
   assert.deepEqual(leaderboardOrders, [["max_level", false], ["total_score", false], ["best_level_score", false]]);
-  assert.deepEqual(rows.map(function(row) { return String(row.children[1].textContent); }), [
+  assert.deepEqual(rows.map(function(row) { return String(row.children[2].textContent); }), ["8", "8", "7", "5"]);
+  assert.deepEqual(rows.map(function(row) { return String(row.children[1].children[0].textContent); }), [
     "Capitan2", "Capitan3", "Capitan1", "Capitan4"
   ]);
   assert.deepEqual(rows.map(function(row) { return String(row.children[4].textContent); }), ["45", "30", "100", "5"]);
@@ -173,11 +185,12 @@ test("menu exit and online player presence work", async function() {
   ]);
   assert.deepEqual(rows.slice(0, 3).map(function(row) { return String(row.children[0].children[0].textContent); }), ["1", "2", "3"]);
   assert.match(html, /\.leaderboard-medal \{[\s\S]*?width: 3\.4rem;[\s\S]*?data:image\/svg\+xml/);
-  assert.match(html, /\.leaderboard-table th:nth-child\(3\),[\s\S]*?\.leaderboard-table td:nth-child\(5\) \{ text-align: center; \}/);
+  assert.match(html, /\.leaderboard-table \{ table-layout: fixed; font-size: 0\.72rem; \}/);
+  assert.match(html, /\.leaderboard-table th:nth-child\(5\), \.leaderboard-table td:nth-child\(5\) \{ width: 22%; \}/);
   assert.deepEqual(rows.slice(0, 3).map(function(row) { return row.children[0].children[0].attributes["aria-label"]; }), [
     "Medalla de oro, puesto 1", "Medalla de plata, puesto 2", "Medalla de bronce, puesto 3"
   ]);
   assert.equal(rows[0].className, "leaderboard-first-place");
   assert.equal(rows[1].className, "");
-  assert.equal(String(rows[3].children[0].textContent), "4");
+  assert.equal(String(rows[3].children[0].children[0].textContent), "4");
 });

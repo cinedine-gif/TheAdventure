@@ -94,12 +94,36 @@
     .leaderboard-table th, .leaderboard-table td { padding: 0.55rem 0.65rem; border-bottom: 1px solid rgba(90,62,0,0.2); }
     .leaderboard-table th { color: #5a3e00; font-size: 0.82rem; }
     .leaderboard-table td:first-child { font-weight: 700; width: 4rem; text-align: center; }
+    .leaderboard-table th:first-child,
     .leaderboard-table th:nth-child(3),
     .leaderboard-table td:nth-child(3),
     .leaderboard-table th:nth-child(4),
     .leaderboard-table td:nth-child(4),
     .leaderboard-table th:nth-child(5),
     .leaderboard-table td:nth-child(5) { text-align: center; }
+    .leaderboard-player-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .leaderboard-rank {
+      display: inline-flex;
+      flex: 0 0 2.4rem;
+      align-items: center;
+      justify-content: center;
+      color: #5a3e00;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    @media (max-width: 600px) {
+      .leaderboard-wrap { overflow-x: hidden; margin: 0.6rem 0; }
+      .leaderboard-table { table-layout: fixed; font-size: 0.72rem; }
+      .leaderboard-table th, .leaderboard-table td { padding: 0.38rem 0.2rem; }
+      .leaderboard-table th:first-child, .leaderboard-table td:first-child { width: 10%; }
+      .leaderboard-table th:nth-child(2), .leaderboard-table td:nth-child(2) { width: 34%; text-align: left; }
+      .leaderboard-table th:nth-child(3), .leaderboard-table td:nth-child(3) { width: 12%; }
+      .leaderboard-table th:nth-child(4), .leaderboard-table td:nth-child(4) { width: 22%; }
+      .leaderboard-table th:nth-child(5), .leaderboard-table td:nth-child(5) { width: 22%; }
+      .leaderboard-desktop-label { display: none; }
+      .leaderboard-rank { width: 1.35rem; flex-basis: 1.35rem; font-size: 0.65rem; }
+      .leaderboard-table td:first-child .leaderboard-medal { width: 1.35rem; height: 1.35rem; font-size: 0.68rem; background-size: 0.8rem 0.8rem, 100% 100%; }
+    }
     .leaderboard-medal {
       display: inline-grid;
       width: 3.4rem;
@@ -280,23 +304,72 @@
       font-size: 0.85rem;
     }
     /* ── Islands ── */
+    .world-map {
+      padding: 1rem;
+      border: 2px solid #367e70;
+      border-radius: 10px;
+      background: linear-gradient(155deg, rgba(229, 248, 220, 0.92), rgba(191, 232, 214, 0.94));
+      box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.38);
+    }
+    .world-heading {
+      margin: 0 0 0.65rem;
+    }
+    .world-heading h3 { margin: 0; color: #174f48; font-size: 1.35rem; }
+    .world-map-art {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+      object-fit: cover;
+      border: 1px solid rgba(31, 98, 86, 0.5);
+      border-radius: 7px;
+      background: #64bdb3;
+    }
+    .world-map + .world-map { margin-top: 1rem; }
+    .world-map--terror {
+      border-color: #78634c;
+      background: linear-gradient(155deg, rgba(237, 232, 210, 0.96), rgba(207, 220, 202, 0.96));
+    }
+    .world-map--terror .world-heading h3 { color: #344b43; }
+    .world-map--terror .world-map-art { border-color: rgba(86, 75, 58, 0.72); background: #344e50; }
+    .horror-islands-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .world-map--terror .preview-island-card {
+      cursor: default;
+      border-color: #a58c68;
+      background: rgba(249, 246, 230, 0.92);
+    }
+    .preview-island-card:hover { background: rgba(255, 253, 242, 0.96); }
+    .preview-island-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.45rem;
+      color: #76553c;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .preview-island-card h3 { margin: 0; color: #354b43; font-size: 1.05rem; }
+    .preview-island-card p { margin: 0.4rem 0 0; color: #5e6252; font-size: 0.86rem; line-height: 1.45; }
     .islands-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
-      margin-bottom: 1rem;
+      margin-top: 0.85rem;
     }
     .island-card {
-      background: rgba(255,255,255,0.55);
-      border: 2px solid #c5a53f;
-      border-radius: 12px;
+      background: rgba(255, 251, 229, 0.88);
+      border: 2px solid #b39a4e;
+      border-radius: 8px;
       padding: 1rem;
       cursor: pointer;
       transition: background 0.15s;
     }
-    .island-card:hover { background: rgba(255,255,255,0.85); }
+    .island-card:hover { background: rgba(255, 255, 255, 0.96); }
     .island-card.locked { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     .island-card h3 { margin: 0 0 0.5rem; }
+    .island-description { margin: 0.25rem 0 0.55rem; color: #5e6252; font-size: 0.82rem; line-height: 1.4; }
     .island-sub { margin: 0.3rem 0 0; font-size: 0.8rem; opacity: 0.65; }
     .level-dots { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 0.5rem; }
     .level-dot {
@@ -483,6 +556,37 @@
       font-size: 0.9rem;
     }
     .islands-actions .btn-reset-progress { white-space: nowrap; }
+    @media (max-width: 600px) {
+      .world-map { padding: 0.6rem; }
+      .world-heading { margin-bottom: 0.45rem; }
+      .world-heading h3 { font-size: 1.15rem; }
+      .islands-grid { grid-template-columns: 1fr; gap: 0.4rem; margin-top: 0.55rem; }
+      .island-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "title progress" "subtitle progress";
+        align-items: center;
+        gap: 0 0.45rem;
+        padding: 0.5rem 0.65rem;
+      }
+      .island-card h3 { grid-area: title; margin: 0; font-size: 0.9rem; line-height: 1.15; }
+      .island-description { display: none; }
+      .island-sub { grid-area: subtitle; margin: 0.18rem 0 0; font-size: 0.7rem; line-height: 1.15; }
+      .level-dots { grid-area: progress; align-items: center; justify-content: flex-end; gap: 2px; margin: 0; }
+      .level-dot { width: 9px; height: 9px; border-width: 1px; flex: 0 0 9px; }
+      .boss-nav-btn { width: 23px; height: 23px; margin-left: 0.15rem; font-size: 0.75rem; }
+      .horror-islands-grid { gap: 0.35rem; }
+      .world-map--terror .preview-island-card {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        align-items: center;
+        gap: 0 0.55rem;
+        padding: 0.48rem 0.65rem;
+      }
+      .preview-island-topline { margin: 0; font-size: 0.65rem; }
+      .preview-island-card h3 { font-size: 0.9rem; }
+      .preview-island-card p { display: none; }
+    }
     .menu-tools button:focus-visible,
     #screen-menu .menu-actions button:focus-visible {
       outline: 3px solid var(--text);
@@ -734,7 +838,7 @@
       <p>Ranking por la suma de tus mejores puntuaciones de nivel.</p>
       <div class="leaderboard-wrap">
         <table class="leaderboard-table">
-          <thead><tr><th>Puesto</th><th>Jugador</th><th>Puntos</th><th>Nivel m&aacute;ximo</th><th>Monedas</th></tr></thead>
+          <thead><tr><th scope="col" aria-label="Puesto"><span class="leaderboard-desktop-label">Puesto</span></th><th scope="col">Jugador</th><th scope="col">Nivel</th><th scope="col">Puntos</th><th scope="col" aria-label="Monedas">🪙</th></tr></thead>
           <tbody id="leaderboard-body"><tr><td colspan="5">Cargando clasificación…</td></tr></tbody>
         </table>
       </div>
@@ -778,7 +882,20 @@
 
     <section id="screen-islands" class="screen">
       <h2>Mapa del progreso</h2>
-      <div id="islands-grid" class="islands-grid"></div>
+      <div class="world-map">
+        <div class="world-heading">
+          <h3>Mundo Aventura</h3>
+        </div>
+        <img class="world-map-art" src="./world-map.svg" alt="Mapa ilustrado de tres islas unidas en un archipiélago" />
+        <div id="islands-grid" class="islands-grid"></div>
+      </div>
+      <div class="world-map world-map--terror" aria-labelledby="terror-world-title">
+        <div class="world-heading">
+          <h3 id="terror-world-title">Mundo Terror</h3>
+        </div>
+        <img class="world-map-art" src="./world-terror-map.svg" alt="Mapa oscuro con un bosque maldito, un cementerio y un faro abandonado" />
+        <div id="terror-islands-grid" class="islands-grid horror-islands-grid"></div>
+      </div>
       <div class="islands-actions">
         <button id="btn-islands-back">Volver al menú</button>
         <button id="btn-reset" class="btn-reset-progress" type="button" title="Reiniciar progreso">Reiniciar progreso</button>
@@ -888,7 +1005,10 @@
     const ISLANDS = [
       { id: 0, name: "Isla 1", levels: 10 },
       { id: 1, name: "Isla 2", levels: 10 },
-      { id: 2, name: "Isla 3", levels: 10 }
+      { id: 2, name: "Isla 3", levels: 10 },
+      { id: 3, name: "Bosque Maldito", levels: 10, world: "terror", enemyDamage: 1, description: "Un bosque oscuro donde los fantasmas errantes acechan entre los árboles." },
+      { id: 4, name: "Cementerio de la Niebla", levels: 10, world: "terror", enemyDamage: 1, description: "Un camposanto hundido junto a una vieja cripta, donde las campanas suenan sin viento." },
+      { id: 5, name: "Faro de los Condenados", levels: 10, world: "terror", enemyDamage: 1, description: "Un faro abandonado vigila acantilados oscuros y guía barcos que ya no tienen tripulación." }
     ];
 
     const SKINS = {
@@ -960,6 +1080,14 @@
         radius: 14,
         packSpawnChance: 0.4,
         colors: ["#7c3aed", "#8b5cf6", "#6366f1"]
+      },
+      3: {
+        movementType: "chase",
+        speed: 48,
+        health: 12,
+        radius: 13,
+        isGhost: true,
+        colors: ["#c8f4e3"]
       }
     };
 
@@ -988,7 +1116,7 @@
       bodyRadius: 56,
       health: 500,
       patrolSpeed: 82,
-      spawnIntervalMs: 5200,
+      spawnIntervalMs: 8000,
       spawnCount: 2,
       miniRadius: 14,
       miniHealth: 7,
@@ -997,7 +1125,7 @@
       miniShotCooldownMs: 2300,
       miniBulletDamage: 2,
       miniBulletSpeed: 200,
-      cannonCooldownMs: 3300,
+      cannonCooldownMs: 5000,
       cannonDamage: 3,
       cannonSpeed: 145,
       cannonGravity: 210
@@ -1016,16 +1144,35 @@
       fishHealth: 8,
       fishDamage: 2,
       fishSpeed: 82,
-      tentacleSpawnMs: 1800,
+      tentacleSpawnMs: 4000,
       tentacleSpeed: 340,
       tentacleWidth: 16,
       tentacleMinLength: 90,
       tentacleMaxLength: 320,
-      tentacleDamage: 4,
+      tentacleDamage: 2,
       maxTentacles: 5
     };
 
-    const BOSS_CONFIGS = [BOSS_ISLAND_1, BOSS_ISLAND_2, BOSS_ISLAND_3];
+    const BOSS_ISLAND_4 = {
+      type: "ghost",
+      hudName: "👻 Espectro del Bosque",
+      bodyRadius: 56,
+      health: 500,
+      bossSpeed: 30,
+      spawnIntervalMs: 5000,
+      shotCooldownMs: 4000,
+      ghostShotDamage: 1,
+      ghostShotSpeed: 230,
+      miniHealth: 8,
+      miniDamage: 1,
+      miniSpeed: 48,
+      miniRadius: 13,
+      miniBulletDamage: 1
+    };
+
+    const BOSS_ISLAND_5 = Object.assign({}, BOSS_ISLAND_4, { hudName: "👻 Espectro del Cementerio" });
+    const BOSS_ISLAND_6 = Object.assign({}, BOSS_ISLAND_4, { hudName: "👻 Espectro del Faro" });
+    const BOSS_CONFIGS = [BOSS_ISLAND_1, BOSS_ISLAND_2, BOSS_ISLAND_3, BOSS_ISLAND_4, BOSS_ISLAND_5, BOSS_ISLAND_6];
 
     // ── STATE ──────────────────────────────────────────────
     function toInt(value, fallback) {
@@ -1041,6 +1188,12 @@
       const progressRaw = localStorage.getItem(STORAGE_KEYS.progress);
       const progress = progressRaw ? JSON.parse(progressRaw) : { unlockedIslands: [0], islandLevels: {}, bossDefeated: [] };
       if (!progress.bossDefeated) progress.bossDefeated = [];
+      if (!Array.isArray(progress.unlockedIslands)) progress.unlockedIslands = [0];
+      for (var defeatedIslandId = 0; defeatedIslandId < ISLANDS.length - 1; defeatedIslandId++) {
+        if (progress.bossDefeated.includes(defeatedIslandId) && !progress.unlockedIslands.includes(defeatedIslandId + 1)) {
+          progress.unlockedIslands.push(defeatedIslandId + 1);
+        }
+      }
       progress.lives = toInt(progress.lives, GAMEPLAY.startingLives);
       progress.bombs = toInt(progress.bombs, 0);
       progress.playerHealth = toInt(progress.playerHealth, PLAYER_START.maxHealth);
@@ -1294,10 +1447,26 @@
               medal.setAttribute("aria-label", "Medalla de " + medalNames[index] + ", puesto " + (index + 1));
               rankCell.appendChild(medal);
             } else {
-              rankCell.textContent = index + 1;
+              var rank = document.createElement("span");
+              rank.className = "leaderboard-rank";
+              rank.textContent = index + 1;
+              rankCell.appendChild(rank);
             }
             row.appendChild(rankCell);
-            [entry.username, entry.total_score, entry.max_level, entry.coins].forEach(function(value) {
+
+            var username = document.createElement("span");
+            username.className = "leaderboard-player-name";
+            username.textContent = entry.username;
+            username.setAttribute("title", entry.username);
+            var playerCell = document.createElement("td");
+            playerCell.appendChild(username);
+            row.appendChild(playerCell);
+
+            var levelCell = document.createElement("td");
+            levelCell.textContent = entry.max_level;
+            row.appendChild(levelCell);
+
+            [entry.total_score, entry.coins].forEach(function(value) {
               var cell = document.createElement("td");
               cell.textContent = value;
               row.appendChild(cell);
@@ -1736,9 +1905,12 @@
     }
 
     function renderIslands(state) {
-      var grid = document.getElementById("islands-grid");
-      grid.innerHTML = "";
+      var adventureGrid = document.getElementById("islands-grid");
+      var terrorGrid = document.getElementById("terror-islands-grid");
+      adventureGrid.innerHTML = "";
+      terrorGrid.innerHTML = "";
       ISLANDS.forEach(function(island) {
+        var grid = island.world === "terror" ? terrorGrid : adventureGrid;
         var unlocked  = state.progress.unlockedIslands.includes(island.id);
         var completed = state.progress.islandLevels[String(island.id)] || 0;
         var card = document.createElement("div");
@@ -1746,6 +1918,12 @@
         var title = document.createElement("h3");
         title.textContent = island.name + (unlocked ? "" : " 🔒");
         card.appendChild(title);
+        if (island.description) {
+          var description = document.createElement("p");
+          description.className = "island-description";
+          description.textContent = island.description;
+          card.appendChild(description);
+        }
         var dots = document.createElement("div");
         dots.className = "level-dots";
         for (var l = 1; l <= island.levels; l++) {
@@ -2111,6 +2289,10 @@
         var x = rand(margin, this.canvas.width  - margin);
         var y = rand(margin, this.canvas.height - margin);
         if (Math.hypot(x - cx, y - cy) < 90) continue;
+        if (this.boss && (
+          Math.hypot(x - this.player.x, y - this.player.y) < this.player.radius + r + 28 ||
+          Math.hypot(x - this.boss.x, y - this.boss.y) < this.boss.radius + r + 24
+        )) continue;
         var ok = true;
         for (var i = 0; i < this.trees.length; i++) {
           if (Math.hypot(x - this.trees[i].x, y - this.trees[i].y) < r * 2.6) { ok = false; break; }
@@ -2138,6 +2320,7 @@
         zigzagFreq: profile.zigzagFreq || 0,
         zigzagPhase: Math.random() * Math.PI * 2,
         spawnedAt: Date.now(),
+        isGhost: !!profile.isGhost,
         color: profile.colors[Math.floor(Math.random() * profile.colors.length)]
       };
       this.enemies.push(enemy);
@@ -2194,7 +2377,7 @@
     };
 
     Game.prototype.getEnemyProfile = function() {
-      return ENEMY_PROFILES[this.currentIsland] || ENEMY_PROFILES[0];
+      return ENEMY_PROFILES[this.currentIsland] || (this.currentIsland >= 3 ? ENEMY_PROFILES[3] : ENEMY_PROFILES[0]);
     };
 
     Game.prototype.handleKeyDown = function(e) {
@@ -2610,9 +2793,10 @@
 
     Game.prototype.drawBackground = function() {
       var ctx = this.ctx;
-      ctx.fillStyle = "#2d6a4f";
+      var hauntedForest = this.currentIsland >= 3;
+      ctx.fillStyle = hauntedForest ? "#111b18" : "#2d6a4f";
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.strokeStyle = hauntedForest ? "rgba(167,190,177,0.035)" : "rgba(255,255,255,0.08)";
       ctx.lineWidth = 1;
       for (var x = 0; x <= this.canvas.width; x += GAMEPLAY.worldGrid) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); ctx.stroke();
@@ -2624,17 +2808,18 @@
 
     Game.prototype.drawTrees = function() {
       var ctx = this.ctx;
+      var hauntedForest = this.currentIsland >= 3;
       for (var i = 0; i < this.trees.length; i++) {
         var t = this.trees[i], x = t.x, y = t.y, r = t.radius;
-        ctx.fillStyle = "rgba(0,0,0,0.28)";
+        ctx.fillStyle = hauntedForest ? "rgba(0,0,0,0.48)" : "rgba(0,0,0,0.28)";
         ctx.beginPath(); ctx.ellipse(x + 7, y + r * 0.55, r * 0.85, r * 0.38, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#14451e";
+        ctx.fillStyle = hauntedForest ? "#080f0e" : "#14451e";
         ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#1e7a32";
+        ctx.fillStyle = hauntedForest ? "#0d1915" : "#1e7a32";
         ctx.beginPath(); ctx.arc(x, y - 2, r * 0.86, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#2da845";
+        ctx.fillStyle = hauntedForest ? "#15231a" : "#2da845";
         ctx.beginPath(); ctx.arc(x - r * 0.22, y - r * 0.3, r * 0.5, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#4fc864";
+        ctx.fillStyle = hauntedForest ? "#293422" : "#4fc864";
         ctx.beginPath(); ctx.arc(x - r * 0.1, y - r * 0.42, r * 0.17, 0, Math.PI * 2); ctx.fill();
       }
     };
@@ -2681,7 +2866,9 @@
       var ctx = this.ctx;
       for (var i = 0; i < this.enemies.length; i++) {
         var e = this.enemies[i];
-        if (e.isMiniFish) {
+        if (e.isGhost) {
+          this.drawGhost(ctx, e, false);
+        } else if (e.isMiniFish) {
           this.drawMiniFish(ctx, e);
         } else if (e.isMiniPirate || e.isMiniBoat) {
           this.drawMiniPirate(ctx, e);
@@ -2702,6 +2889,47 @@
         ctx.fillStyle = "#22c55e";
         ctx.fillRect(e.x - barW / 2, e.y - 22, barW * (e.health / e.maxHealth), 3);
       }
+    };
+
+    Game.prototype.drawGhost = function(ctx, ghost, isBoss) {
+      var radius = ghost.radius;
+      var bob = Math.sin(Date.now() * 0.003 + (ghost.ghostPhase || 0)) * (isBoss ? 4 : 2);
+      ctx.save();
+      ctx.translate(ghost.x, ghost.y + bob);
+      ctx.globalAlpha = isBoss ? 0.9 : 0.78;
+      ctx.shadowColor = isBoss ? "#a8f0d7" : "#b9ecd9";
+      ctx.shadowBlur = isBoss ? 20 : 9;
+      if (isBoss) {
+        ctx.fillStyle = "#a9ddc9";
+        ctx.beginPath();
+        ctx.moveTo(-radius * 0.62, -radius * 0.38);
+        ctx.lineTo(-radius * 0.44, -radius * 0.95);
+        ctx.lineTo(-radius * 0.12, -radius * 0.68);
+        ctx.lineTo(radius * 0.02, -radius * 1.2);
+        ctx.lineTo(radius * 0.2, -radius * 0.68);
+        ctx.lineTo(radius * 0.52, -radius * 0.94);
+        ctx.lineTo(radius * 0.68, -radius * 0.34);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = isBoss ? "#d8fff0" : "#c8f4e3";
+      ctx.beginPath();
+      ctx.moveTo(-radius * 0.76, radius * 0.48);
+      ctx.bezierCurveTo(-radius * 1.05, -radius * 0.14, -radius * 0.76, -radius * 0.86, 0, -radius * 0.82);
+      ctx.bezierCurveTo(radius * 0.76, -radius * 0.86, radius * 1.05, -radius * 0.14, radius * 0.76, radius * 0.48);
+      ctx.lineTo(radius * 0.42, radius * 0.28);
+      ctx.lineTo(radius * 0.12, radius * 0.54);
+      ctx.lineTo(-radius * 0.18, radius * 0.28);
+      ctx.lineTo(-radius * 0.48, radius * 0.52);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = isBoss ? "#8b3c43" : "#315d54";
+      ctx.beginPath();
+      ctx.ellipse(-radius * 0.25, -radius * 0.12, radius * 0.09, radius * 0.14, 0, 0, Math.PI * 2);
+      ctx.ellipse(radius * 0.25, -radius * 0.12, radius * 0.09, radius * 0.14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     };
 
     Game.prototype.drawBullets = function() {
@@ -2756,6 +2984,7 @@
       this.onHealthChange(this.player.health, this.player.maxHealth);
       var bossType = config.type || "tank";
       var spawnInterval = config.spawnIntervalMs || config.fishSpawnIntervalMs || 4000;
+      var now = Date.now();
       this.boss = {
         x: bossType === "pirate" ? this.canvas.width / 2 : config.bodyRadius + 20,
         y: this.canvas.height / 2,
@@ -2763,9 +2992,10 @@
         health: config.health,
         maxHealth: config.health,
         speed: config.bossSpeed || 20,
-        lastSpawnAt: Date.now() - spawnInterval + 3000,
-        lastCannonAt: Date.now() - (config.cannonCooldownMs || 2500) + 1200,
-        lastTentacleAt: Date.now() - (config.tentacleSpawnMs || 2000),
+        lastSpawnAt: bossType === "ghost" ? now : now - spawnInterval + 3000,
+        lastShotAt: now,
+        lastCannonAt: now - (config.cannonCooldownMs || 2500) + 1200,
+        lastTentacleAt: now - (config.tentacleSpawnMs || 2000),
         patrolDir: Math.random() > 0.5 ? 1 : -1,
         alive: true
       };
@@ -2777,11 +3007,44 @@
       var type = this.bossConfig.type || "tank";
       if (type === "pirate") this.updateBossPirate(dt, now);
       else if (type === "kraken") this.updateBossKraken(dt, now);
+      else if (type === "ghost") this.updateBossGhost(dt, now);
       else this.updateBossTank(dt, now);
       this.resolveCircleOverlap(this.boss, this.player);
       this.boss.x = clamp(this.boss.x, this.boss.radius, this.canvas.width - this.boss.radius);
       this.boss.y = clamp(this.boss.y, this.boss.radius, this.canvas.height - this.boss.radius);
       this.updateTentacles(dt, now);
+    };
+
+    Game.prototype.updateBossGhost = function(dt, now) {
+      var dx = this.player.x - this.boss.x;
+      var dy = this.player.y - this.boss.y;
+      var distance = Math.hypot(dx, dy);
+      var moveDirection = distance < 220 ? -1 : 1;
+      if (distance > 0) {
+        this.boss.x += (dx / distance) * this.boss.speed * dt * moveDirection;
+        this.boss.y += (dy / distance) * this.boss.speed * dt * 0.75 * moveDirection;
+      }
+      this.boss.x = clamp(this.boss.x, this.boss.radius, this.canvas.width - this.boss.radius);
+      this.boss.y = clamp(this.boss.y, this.boss.radius, this.canvas.height - this.boss.radius);
+
+      if (now - this.boss.lastShotAt >= this.bossConfig.shotCooldownMs) {
+        this.boss.lastShotAt = now;
+        this.enemyBullets.push({
+          x: this.boss.x,
+          y: this.boss.y,
+          dir: Math.atan2(this.player.y - this.boss.y, this.player.x - this.boss.x),
+          speed: this.bossConfig.ghostShotSpeed,
+          radius: 7,
+          damage: this.bossConfig.ghostShotDamage,
+          color: "#b9f4dc",
+          isGhostBolt: true
+        });
+      }
+
+      if (now - this.boss.lastSpawnAt >= this.bossConfig.spawnIntervalMs) {
+        this.boss.lastSpawnAt = now;
+        this.spawnEnemy();
+      }
     };
 
     Game.prototype.updateBossTank = function(dt, now) {
@@ -2986,14 +3249,39 @@
     Game.prototype.updateEnemyBullets = function(dt) {
       for (var i = this.enemyBullets.length - 1; i >= 0; i--) {
         var b = this.enemyBullets[i];
+        var startX = b.x, startY = b.y;
+        var moveX, moveY;
         if (typeof b.vx === "number" && typeof b.vy === "number") {
           b.vy += (b.gravity || 0) * dt;
-          b.x += b.vx * dt;
-          b.y += b.vy * dt;
+          moveX = b.vx * dt;
+          moveY = b.vy * dt;
         } else {
-          b.x += Math.cos(b.dir) * b.speed * dt;
-          b.y += Math.sin(b.dir) * b.speed * dt;
+          moveX = Math.cos(b.dir) * b.speed * dt;
+          moveY = Math.sin(b.dir) * b.speed * dt;
         }
+        b.x += moveX;
+        b.y += moveY;
+        var moveLengthSquared = moveX * moveX + moveY * moveY;
+        var blockedByTree = false;
+        for (var ti = 0; ti < this.trees.length; ti++) {
+          var tree = this.trees[ti];
+          var radius = b.radius + tree.radius;
+          var offsetX = startX - tree.x, offsetY = startY - tree.y;
+          var closestT = moveLengthSquared > 0
+            ? clamp(-(offsetX * moveX + offsetY * moveY) / moveLengthSquared, 0, 1)
+            : 0;
+          var closestX = startX + moveX * closestT;
+          var closestY = startY + moveY * closestT;
+          if (Math.hypot(closestX - tree.x, closestY - tree.y) <= radius) {
+            b.x = closestX;
+            b.y = closestY;
+            this.enemyBullets.splice(i, 1);
+            this.addParticles(b.x, b.y, b.color || "#a7f3d0");
+            blockedByTree = true;
+            break;
+          }
+        }
+        if (blockedByTree) continue;
         if (b.x < -20 || b.y < -20 || b.x > this.canvas.width + 20 || b.y > this.canvas.height + 20) {
           this.enemyBullets.splice(i, 1); continue;
         }
@@ -3012,6 +3300,7 @@
       var type = this.bossConfig.type || "tank";
       if (type === "pirate") this.drawBossPirate();
       else if (type === "kraken") this.drawBossKraken();
+      else if (type === "ghost") this.drawGhost(this.ctx, this.boss, true);
       else this.drawBossTank();
     };
 
@@ -3300,7 +3589,10 @@
       for (var i = 0; i < this.enemyBullets.length; i++) {
         var b = this.enemyBullets[i];
         ctx.fillStyle = b.color || "#fb923c";
+        ctx.shadowColor = b.isGhostBolt ? b.color : "transparent";
+        ctx.shadowBlur = b.isGhostBolt ? 12 : 0;
         ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
       }
     };
 
@@ -3524,8 +3816,10 @@
       game.currentIsland = islandIdx;
       game.currentLevel  = levelNum;
       game.levelSpawnMs     = Math.max(800, GAMEPLAY.enemySpawnMs - (levelNum - 1) * 200);
-      game.levelEnemyDamage = GAMEPLAY.enemyDamage + islandIdx;
-      game.levelTreeCount   = 4 + (levelNum - 1) * 2;
+      game.levelEnemyDamage = ISLANDS[islandIdx].enemyDamage === undefined
+        ? GAMEPLAY.enemyDamage + islandIdx
+        : ISLANDS[islandIdx].enemyDamage;
+      game.levelTreeCount   = (islandIdx >= 3 ? 12 : 4) + (levelNum - 1) * 2;
       game.replayMode = levelNum <= (state.progress.islandLevels[String(islandIdx)] || 0);
       hideLevelComplete();
       setGameMessage("");
@@ -3546,6 +3840,9 @@
       currentLevel = ISLANDS[islandIdx].levels;
       game.currentIsland = islandIdx;
       game.currentLevel = currentLevel;
+      game.levelEnemyDamage = ISLANDS[islandIdx].enemyDamage === undefined
+        ? GAMEPLAY.enemyDamage + islandIdx
+        : ISLANDS[islandIdx].enemyDamage;
       hideLevelComplete();
       setGameMessage("");
       showScreen("screen-game");
@@ -3579,6 +3876,10 @@
       game.levelTreeCount = 0;
       game.start();
       game.startBoss(config);
+      if (islandIdx >= 3) {
+        game.levelTreeCount = 14;
+        game.spawnTrees();
+      }
       game.pause();
       document.getElementById("ready-title").textContent = "\u26a0\ufe0f " + (config.hudName || "Jefe") + " \u00b7 " + ISLANDS[islandIdx].name;
       document.getElementById("level-ready").classList.remove("hidden");
