@@ -44,6 +44,7 @@ Abrir directamente en el navegador haciendo doble clic.
 - El botón de pantalla completa permite alternar ese modo; salir al menú cierra la pantalla completa y libera la orientación solicitada
 - Escritorio conserva el mapa completo sin zoom; girar o redimensionar la pantalla recalcula la vista móvil sin reiniciar la partida
 
+
 ### Progresión
 - **6 islas jugables × 10 niveles**: 3 en Mundo Aventura y 3 en Mundo Terror (Bosque Maldito, Cementerio de la Niebla y Faro de los Condenados).
 - Cada nivel: recoger 6 cofres → parar spawns → matar todos los enemigos → nivel completo
