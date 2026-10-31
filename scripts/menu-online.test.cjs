@@ -5,6 +5,11 @@ const test = require("node:test");
 const vm = require("node:vm");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const sql = fs.readFileSync(path.join(__dirname, "..", "supabase_setup.sql"), "utf8");
+const progressNormalizerSource = html.slice(
+  html.indexOf("    function createDefaultProgress()"),
+  html.indexOf("    function loadState()")
+);
 const presenceSource = html.slice(html.indexOf("    var onlinePresenceChannel = null;"), html.indexOf("    function setupOnlineFeatures()"));
 const exitSource = html.slice(html.indexOf("    function exitToMainMenu()"), html.indexOf('    document.getElementById("btn-back-menu").addEventListener'));
 const leaderboardSource = html.slice(html.indexOf("    function loadLeaderboard()"), html.indexOf("    function createOperationId()"));
@@ -50,6 +55,30 @@ function createPresenceHarness() {
 }
 
 test("menu exit and online player presence work", async function() {
+  assert.match(sql, /create table if not exists public\.player_progress/);
+  assert.match(sql, /Users can read their progress[\s\S]*?auth\.uid\(\)\) = user_id/);
+  assert.match(sql, /create table if not exists public\.player_inventory/);
+  assert.match(sql, /Users can read their inventory[\s\S]*?auth\.uid\(\)\) = user_id/);
+  assert.match(html, /function saveOnlineProgressCheckpoint\(\)/);
+  assert.match(html, /from\("player_progress"\)\.upsert/);
+  assert.match(html, /from\("player_inventory"\)\.upsert/);
+  const activeLevelSource = html.slice(html.indexOf("    function startGameLevel("), html.indexOf("    function startBossFight("));
+  const completedLevelSource = html.slice(html.indexOf("      onLevelComplete: function(gameStats)"), html.indexOf("    setupTouchControls(game);"));
+  const defeatedBossSource = html.slice(html.indexOf("      game.onBossDefeated = function()"), html.indexOf("      game.levelTreeCount = 0;"));
+  assert.doesNotMatch(activeLevelSource, /saveOnlineProgressCheckpoint\(\)/);
+  assert.equal((completedLevelSource.match(/saveOnlineProgressCheckpoint\(\);/g) || []).length, 3);
+  assert.match(defeatedBossSource, /saveOnlineProgressCheckpoint\(\)/);
+  assert.match(html, /id="account-password-toggle"[^>]*aria-label="Mostrar contraseña"/);
+  assert.match(html, /id="account-password-confirm-wrap" class="hidden"/);
+  assert.match(html, /\.online-form \.hidden \{ display: none; \}/);
+  assert.match(html, /id="account-password-confirm-toggle"/);
+  assert.match(html, /function setupPasswordVisibility\(buttonId, inputId\)/);
+  assert.match(html, /setupPasswordVisibility\("account-password-toggle", "account-password"\)/);
+  assert.match(html, /setupPasswordVisibility\("account-password-confirm-toggle", "account-password-confirm"\)/);
+  assert.match(html, /if \(password !== passwordConfirmation\) \{\s*setAccountStatus\("Las contraseñas no coinciden\.", "error"\)/);
+  assert.match(html, /auth\.resetPasswordForEmail\(email, \{[\s\S]*?redirectTo: window\.location\.origin \+ window\.location\.pathname/);
+  assert.match(html, /event === "PASSWORD_RECOVERY"/);
+  assert.match(html, /auth\.updateUser\(\{ password: password \}\)/);
   assert.match(html, /title="Reiniciar progreso"/);
   assert.match(html, /id="btn-reset"[^>]*>Reiniciar progreso<\/button>/);
   assert.doesNotMatch(html, /Reiniciar progreso local/);
@@ -193,4 +222,37 @@ test("menu exit and online player presence work", async function() {
   assert.equal(rows[0].className, "leaderboard-first-place");
   assert.equal(rows[1].className, "");
   assert.equal(String(rows[3].children[0].children[0].textContent), "4");
+});
+
+test("legacy accounts replay islands four to six once after clearing island three", function() {
+  const context = vm.createContext({
+    GAMEPLAY: { startingLives: 3 },
+    PLAYER_START: { maxHealth: 25 },
+    clamp: function(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); },
+    toInt: function(value, fallback) {
+      const parsed = Number.parseInt(value, 10);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+  });
+  vm.runInContext(progressNormalizerSource, context);
+  const legacyProgress = {
+    unlockedIslands: [0, 1, 2, 3, 4, 5],
+    islandLevels: { "0": 10, "2": 10, "3": 10, "4": 8, "5": 4 },
+    bossDefeated: [0, 1, 2, 3, 4, 5],
+    lives: 2, bombs: 4, dynamite: 5, playerHealth: 13
+  };
+
+  const migrated = context.normalizeProgress(legacyProgress);
+  assert.deepEqual(JSON.parse(JSON.stringify(migrated.unlockedIslands)), [0, 1, 2, 3]);
+  assert.deepEqual(JSON.parse(JSON.stringify(migrated.islandLevels)), { "0": 10, "2": 10 });
+  assert.deepEqual(JSON.parse(JSON.stringify(migrated.bossDefeated)), [0, 1, 2]);
+  assert.equal(migrated.lives, 2);
+  assert.equal(migrated.bombs, 4);
+  assert.equal(migrated.dynamite, 5);
+  assert.equal(migrated.playerHealth, 13);
+  assert.equal(migrated.islandReplayVersion, 1);
+
+  const alreadyMigrated = context.normalizeProgress(Object.assign({}, legacyProgress, { islandReplayVersion: 1 }));
+  assert.equal(alreadyMigrated.islandLevels["3"], 10);
+  assert.match(sql, /bossDefeated[^;]*@> '\[2\]'/);
 });

@@ -160,6 +160,98 @@ create table if not exists public.player_wallets (
   coins bigint not null default 0 check (coins between 0 and 9007199254740991)
 );
 
+create table if not exists public.player_progress (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  progress jsonb not null default '{}'::jsonb check (jsonb_typeof(progress) = 'object'),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.player_progress enable row level security;
+
+drop policy if exists "Users can read their progress" on public.player_progress;
+create policy "Users can read their progress"
+on public.player_progress for select to authenticated
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can insert their progress" on public.player_progress;
+create policy "Users can insert their progress"
+on public.player_progress for insert to authenticated
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their progress" on public.player_progress;
+create policy "Users can update their progress"
+on public.player_progress for update to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can delete their progress" on public.player_progress;
+create policy "Users can delete their progress"
+on public.player_progress for delete to authenticated
+using ((select auth.uid()) = user_id);
+
+grant select, insert, update, delete on public.player_progress to authenticated;
+
+-- One-time content reset: users who defeated island 3 must replay islands 4-6.
+update public.player_progress as saved
+set progress = jsonb_set(
+  saved.progress,
+  '{progress}',
+  coalesce(saved.progress -> 'progress', '{}'::jsonb) || jsonb_build_object(
+    'islandLevels', coalesce(saved.progress -> 'progress' -> 'islandLevels', '{}'::jsonb) - array['3', '4', '5'],
+    'bossDefeated', coalesce((
+      select jsonb_agg(defeated.boss_id order by defeated.ordinal)
+      from jsonb_array_elements(coalesce(saved.progress -> 'progress' -> 'bossDefeated', '[]'::jsonb))
+        with ordinality as defeated(boss_id, ordinal)
+      where (defeated.boss_id #>> '{}')::integer < 3
+    ), '[]'::jsonb),
+    'unlockedIslands', coalesce((
+      select jsonb_agg(kept.island_id order by kept.island_id)
+      from (
+        select distinct (unlocked.island_value #>> '{}')::integer as island_id
+        from jsonb_array_elements(coalesce(saved.progress -> 'progress' -> 'unlockedIslands', '[]'::jsonb)) as unlocked(island_value)
+        where (unlocked.island_value #>> '{}')::integer between 0 and 3
+        union select 3
+      ) as kept
+    ), '[0, 1, 2, 3]'::jsonb)
+  ),
+  true
+),
+updated_at = now()
+where coalesce(saved.progress -> 'progress' -> 'bossDefeated', '[]'::jsonb) @> '[2]'::jsonb
+  and coalesce((saved.progress -> 'progress' ->> 'islandReplayVersion')::integer, 0) < 1;
+
+update public.player_progress as saved
+set progress = jsonb_set(saved.progress, '{progress,islandReplayVersion}', '1'::jsonb, true),
+    updated_at = now()
+where jsonb_typeof(saved.progress -> 'progress') = 'object'
+  and coalesce((saved.progress -> 'progress' ->> 'islandReplayVersion')::integer, 0) < 1;
+
+create table if not exists public.player_inventory (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  inventory jsonb not null default '{}'::jsonb check (jsonb_typeof(inventory) = 'object'),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.player_inventory enable row level security;
+
+drop policy if exists "Users can read their inventory" on public.player_inventory;
+create policy "Users can read their inventory"
+on public.player_inventory for select to authenticated
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can insert their inventory" on public.player_inventory;
+create policy "Users can insert their inventory"
+on public.player_inventory for insert to authenticated
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their inventory" on public.player_inventory;
+create policy "Users can update their inventory"
+on public.player_inventory for update to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
+
+grant select, insert, update on public.player_inventory to authenticated;
+
 create or replace view public.leaderboard as
 select
   p.username,

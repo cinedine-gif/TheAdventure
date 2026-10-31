@@ -84,8 +84,15 @@
     .online-panel { max-width: 620px; margin: 0 auto; }
     .online-form { display: grid; gap: 0.65rem; margin: 1rem 0; text-align: left; }
     .online-form.hidden, .online-actions .hidden { display: none; }
+    .online-form .hidden { display: none; }
     .online-form label { display: grid; gap: 0.25rem; font-size: 0.88rem; font-weight: 700; }
     .online-form input { width: 100%; padding: 0.65rem 0.75rem; border: 1px solid #9a8444; border-radius: 6px; font: inherit; }
+    .password-input-wrap { display: flex; align-items: center; gap: 0.45rem; }
+    .password-input-wrap input { min-width: 0; flex: 1; }
+    .password-toggle { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; padding: 0.55rem; }
+    .password-toggle img { display: block; }
+    .account-forgot-password { align-self: center; padding: 0.4rem; background: transparent; color: var(--accent); font-size: 0.84rem; }
+    .account-forgot-password:hover { background: transparent; color: var(--accent-2); text-decoration: underline; }
     .online-status { min-height: 1.4rem; font-weight: 700; }
     .online-status.error { color: #a12622; }
     .online-status.success { color: #166534; }
@@ -146,6 +153,7 @@
     .leaderboard-medal-bronze { --medal-light: #f3bd91; --medal-main: #ba7044; --medal-dark: #704126; }
     .leaderboard-first-place td { font-weight: 700; }
     .menu-actions, .game-actions { display: flex; gap: 0.75rem; }
+    #screen-game > .game-actions { margin-top: 0.75rem; }
     #screen-menu h1,
     #screen-menu .subtitle {
       color: var(--text);
@@ -196,6 +204,8 @@
       padding: 0.75rem 0.4rem 0.5rem;
     }
     .skin-preview {
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
       background: #2d6a4f;
       border: 2px solid #114025;
@@ -280,6 +290,7 @@
     }
     .mobile-action-btn.shoot { background: linear-gradient(180deg, #0ea5e9, #0369a1); }
     .mobile-action-btn.bomb { background: linear-gradient(180deg, #f97316, #c2410c); }
+    .mobile-action-btn.dynamite { background: linear-gradient(180deg, #dc2626, #7f1d1d); }
     @media (hover: none), (max-width: 900px) {
       .mobile-controls { display: flex; }
       .game-actions { padding-bottom: 5.4rem; }
@@ -750,6 +761,7 @@
       #screen-game .joystick-base { width: 96px; height: 96px; }
       #screen-game .mobile-action-btn.shoot { width: 72px; height: 72px; }
       #screen-game .mobile-action-btn.bomb { width: 56px; height: 56px; }
+      #screen-game .mobile-action-btn.dynamite { width: 48px; height: 48px; font-size: 1.15rem; }
       #screen-game .level-overlay { z-index: 50; padding: 1rem; overflow-y: auto; }
       #screen-game .level-overlay-box { max-height: calc(100dvh - 2rem); overflow-y: auto; }
     }
@@ -811,18 +823,39 @@
         <h2>Cuenta online</h2>
         <p id="account-session-label">No has iniciado sesión.</p>
         <form id="account-form" class="online-form">
-          <label id="account-username-wrap">Nombre público
+          <label id="account-username-wrap" class="hidden">Nombre público
             <input id="account-username" name="username" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="CapitanMar" />
           </label>
-          <label>Correo electrónico
+          <label id="account-email-wrap">Correo electrónico
             <input id="account-email" name="email" type="email" autocomplete="email" required />
           </label>
-          <label>Contraseña
-            <input id="account-password" name="password" type="password" minlength="6" autocomplete="current-password" required />
+          <label id="account-password-wrap"><span id="account-password-label">Contraseña</span>
+            <div class="password-input-wrap">
+              <input id="account-password" name="password" type="password" minlength="6" autocomplete="current-password" required />
+              <button id="account-password-toggle" class="password-toggle" type="button" title="Mostrar contraseña" aria-label="Mostrar contraseña" aria-pressed="false">
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/eye.svg" alt="" width="20" height="20" aria-hidden="true" />
+              </button>
+            </div>
           </label>
-          <div class="online-actions">
+          <label id="account-password-confirm-wrap" class="hidden">Repite la contraseña
+            <div class="password-input-wrap">
+              <input id="account-password-confirm" name="password-confirm" type="password" minlength="6" autocomplete="new-password" />
+              <button id="account-password-confirm-toggle" class="password-toggle" type="button" title="Mostrar contraseña" aria-label="Mostrar contraseña" aria-pressed="false">
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/eye.svg" alt="" width="20" height="20" aria-hidden="true" />
+              </button>
+            </div>
+          </label>
+          <div id="account-login-actions" class="online-actions">
             <button id="btn-sign-in" type="button">Iniciar sesión</button>
             <button id="btn-sign-up" type="button">Crear cuenta</button>
+            <button id="btn-forgot-password" class="account-forgot-password" type="button">Olvidé mi contraseña</button>
+          </div>
+          <div id="account-reset-actions" class="online-actions hidden">
+            <button id="btn-send-password-reset" type="button">Enviar enlace</button>
+            <button id="btn-cancel-password-reset" type="button">Volver</button>
+          </div>
+          <div id="account-recovery-actions" class="online-actions hidden">
+            <button id="btn-save-new-password" type="button">Guardar nueva contraseña</button>
           </div>
         </form>
         <p id="account-status" class="online-status" role="status" aria-live="polite"></p>
@@ -875,6 +908,14 @@
           <span class="consumible-stock">Tienes: <strong id="store-bombs">0</strong></span>
           <button id="btn-buy-bombs">Comprar</button>
         </div>
+        <div class="consumible-row" style="margin-top:0.55rem">
+          <div class="consumible-info">
+            <span class="consumible-name">🧨 Pack de dinamita</span>
+            <span id="store-dynamite-desc" class="consumible-desc"></span>
+          </div>
+          <span class="consumible-stock">Tienes: <strong id="store-dynamite">0</strong></span>
+          <button id="btn-buy-dynamite">Comprar</button>
+        </div>
       </div>
       <p id="store-message" class="status"></p>
       <button id="btn-store-back">Volver</button>
@@ -908,6 +949,7 @@
         <span>🪙 <strong id="hud-coins">0</strong></span>
         <span>❤️ <span class="hud-label">Vidas: </span><strong id="hud-lives">3</strong></span>
         <span>💣 <span class="hud-label">Bombas: </span><strong id="hud-bombs">0</strong><span class="keyboard-hint"> (B)</span></span>
+        <span>🧨 <span class="hud-label">Dinamita: </span><strong id="hud-dynamite">0</strong><span class="keyboard-hint"> (Q)</span></span>
         <span>💀 <span class="hud-label">Muertos: </span><strong id="hud-kills">0</strong></span>
         <span><span class="hud-label">Isla: </span><strong id="hud-island">—</strong><span class="hud-label"> · </span>Nivel: <strong id="hud-level">—</strong></span>
       </div>
@@ -930,6 +972,7 @@
         <div class="mobile-right">
           <button id="touch-shoot" type="button" class="mobile-action-btn shoot" aria-label="Disparar">🔥</button>
           <button id="touch-bomb" type="button" class="mobile-action-btn bomb" aria-label="Bomba">💣</button>
+          <button id="touch-dynamite" type="button" class="mobile-action-btn dynamite" aria-label="Colocar dinamita" title="Colocar dinamita">🧨</button>
         </div>
       </div>
       <div class="game-actions">
@@ -984,6 +1027,8 @@
     var onlineSession = null;
     var onlineUsername = "";
     var onlineWallet = null;
+    var onlineProgressUserId = null;
+    var onlineProgressLoading = false;
     const STORAGE_KEYS = {
       coins: "lahistoria_coins",
       selectedSkin: "lahistoria_selected_skin",
@@ -991,16 +1036,22 @@
       progress: "lahistoria_progress",
       resetVersion: "lahistoria_reset_version"
     };
+    const PROGRESS_MIGRATION_OWNER_KEY = "lahistoria_progress_migration_owner";
 
     // Incrementa este valor cuando quieras forzar un reseteo global
     // en todos los navegadores al cargar la nueva version.
     const GLOBAL_RESET_VERSION = "3";
 
-    // Modo prueba para arrancar en un jefe concreto.
-    // Deja solo uno en true a la vez.
+    // Modos de prueba. Deja solo uno en true a la vez.
     const DEBUG_START_TANK_TEST = false;
     const DEBUG_START_PIRATE_TEST = false;
     const DEBUG_START_KRAKEN_TEST = false;
+    const DEBUG_START_GHOST_ISLAND_TEST = false;
+    const DEBUG_START_GHOST_BOSS_TEST = false;
+    const DEBUG_START_CEMETERY_ISLAND_TEST = false;
+    const DEBUG_START_CEMETERY_BOSS_TEST = false;
+    const DEBUG_START_LIGHTHOUSE_ISLAND_TEST = false;
+    const DEBUG_START_LIGHTHOUSE_BOSS_TEST = false;
 
     const ISLANDS = [
       { id: 0, name: "Isla 1", levels: 10 },
@@ -1013,11 +1064,11 @@
 
     const SKINS = {
       default: { label: "default", color: "#2f80ed", price: 0 },
-      green:   { label: "verde",   color: "#2f9e44", price: 600 },
-      yellow:  { label: "amarillo",color: "#f2c94c", price: 825 },
-      white:   { label: "blanco",  color: "#f8f9fa", border: "#111111", price: 1350 },
-      orange:  { label: "naranja", color: "#f97316", price: 1125 },
-      red:     { label: "rojo",    color: "#e63030", price: 100 }
+      green:   { label: "verde",   color: "#2f9e44", price: 150 },
+      yellow:  { label: "amarillo",color: "#f2c94c", price: 150 },
+      white:   { label: "blanco",  color: "#f8f9fa", border: "#111111", price: 150 },
+      orange:  { label: "naranja", color: "#f97316", price: 150 },
+      red:     { label: "rojo",    color: "#e63030", price: 150 }
     };
 
     const PLAYER_START = { x: 640, y: 360, radius: 14, speed: 220, maxHealth: 25 };
@@ -1046,7 +1097,13 @@
       livesCost: 100,
       livesPerPack: 3,
       bombPackCost: 200,
-      bombsPerPack: 10
+      bombsPerPack: 10,
+      dynamiteCost: 300,
+      dynamitesPerPack: 10,
+      dynamiteDamage: 10,
+      dynamiteRadius: 12,
+      dynamiteFuseMs: 800,
+      dynamiteCooldownMs: 350
     };
 
     const DAILY_CHALLENGE = {
@@ -1088,6 +1145,22 @@
         radius: 13,
         isGhost: true,
         colors: ["#c8f4e3"]
+      },
+      4: {
+        movementType: "chase",
+        speed: 42,
+        health: GAMEPLAY.enemyHealth + 8,
+        radius: 14,
+        isCemeteryEnemy: true,
+        colors: ["#829455", "#687b42", "#9b8054"]
+      },
+      5: {
+        movementType: "chase",
+        speed: 54,
+        health: GAMEPLAY.enemyHealth + 10,
+        radius: 14,
+        isVampire: true,
+        colors: ["#491b2a", "#682333", "#37243e"]
       }
     };
 
@@ -1170,8 +1243,29 @@
       miniBulletDamage: 1
     };
 
-    const BOSS_ISLAND_5 = Object.assign({}, BOSS_ISLAND_4, { hudName: "👻 Espectro del Cementerio" });
-    const BOSS_ISLAND_6 = Object.assign({}, BOSS_ISLAND_4, { hudName: "👻 Espectro del Faro" });
+    const BOSS_ISLAND_5 = {
+      type: "zombie",
+      hudName: "🧟 Zombi Colosal",
+      bodyRadius: 64,
+      health: 500,
+      bossSpeed: 20,
+      spawnIntervalMs: 5000,
+      attackCooldownMs: 1300,
+      meleeDamage: 2,
+      shotCooldownMs: 3200,
+      bloodShotDamage: 2,
+      bloodShotSpeed: 250,
+      bloodShotRadius: 9,
+      bloodShotSpread: 0.22
+    };
+    const BOSS_ISLAND_6 = Object.assign({}, BOSS_ISLAND_5, {
+      type: "vampire",
+      hudName: "🧛 Conde del Faro",
+      bodyRadius: 64,
+      health: 600,
+      bossSpeed: 26,
+      spawnIntervalMs: 4300
+    });
     const BOSS_CONFIGS = [BOSS_ISLAND_1, BOSS_ISLAND_2, BOSS_ISLAND_3, BOSS_ISLAND_4, BOSS_ISLAND_5, BOSS_ISLAND_6];
 
     // ── STATE ──────────────────────────────────────────────
@@ -1180,27 +1274,60 @@
       return Number.isFinite(n) ? n : fallback;
     }
 
+    function createDefaultProgress() {
+      return {
+        unlockedIslands: [0], islandLevels: {}, bossDefeated: [],
+        lives: GAMEPLAY.startingLives, bombs: 0, dynamite: 0,
+        playerHealth: PLAYER_START.maxHealth, daily50BonusLastClaim: "",
+        coinPurchaseReceipts: [], islandReplayVersion: 1
+      };
+    }
+
+    function normalizeProgress(progress) {
+      var hasIslandReplayVersion = !!progress && Object.prototype.hasOwnProperty.call(progress, "islandReplayVersion");
+      progress = Object.assign(createDefaultProgress(), progress && typeof progress === "object" ? progress : {});
+      progress.unlockedIslands = Array.isArray(progress.unlockedIslands) ? progress.unlockedIslands : [0];
+      progress.islandLevels = progress.islandLevels && typeof progress.islandLevels === "object"
+        ? Object.assign({}, progress.islandLevels)
+        : {};
+      progress.bossDefeated = Array.isArray(progress.bossDefeated) ? progress.bossDefeated : [];
+      progress.lives = Math.max(0, toInt(progress.lives, GAMEPLAY.startingLives));
+      progress.bombs = Math.max(0, toInt(progress.bombs, 0));
+      progress.dynamite = Math.max(0, toInt(progress.dynamite, 0));
+      progress.playerHealth = clamp(toInt(progress.playerHealth, PLAYER_START.maxHealth), 0, PLAYER_START.maxHealth);
+      progress.daily50BonusLastClaim = typeof progress.daily50BonusLastClaim === "string" ? progress.daily50BonusLastClaim : "";
+      progress.coinPurchaseReceipts = Array.isArray(progress.coinPurchaseReceipts) ? progress.coinPurchaseReceipts : [];
+      if (!hasIslandReplayVersion || toInt(progress.islandReplayVersion, 0) < 1) {
+        if (progress.bossDefeated.includes(2)) {
+          ["3", "4", "5"].forEach(function(islandId) { delete progress.islandLevels[islandId]; });
+          progress.bossDefeated = progress.bossDefeated.filter(function(islandId) { return toInt(islandId, -1) < 3; });
+          progress.unlockedIslands = progress.unlockedIslands.filter(function(islandId) {
+            var id = toInt(islandId, -1);
+            return id >= 0 && id <= 3;
+          });
+          if (!progress.unlockedIslands.includes(3)) progress.unlockedIslands.push(3);
+        }
+        progress.islandReplayVersion = 1;
+      }
+      return progress;
+    }
+
+    function getAccountProgressCacheKey(userId) { return "lahistoria_progress_" + userId; }
+    function getPendingProgressKey(userId) { return "lahistoria_progress_pending_" + userId; }
+    function getPendingInventoryKey(userId) { return "lahistoria_inventory_pending_" + userId; }
+
     function loadState() {
       const coins = toInt(localStorage.getItem(STORAGE_KEYS.coins), 0);
       const selectedSkin = localStorage.getItem(STORAGE_KEYS.selectedSkin) || "default";
       const unlockedRaw = localStorage.getItem(STORAGE_KEYS.unlockedSkins);
       const unlocked = unlockedRaw ? JSON.parse(unlockedRaw) : ["default"];
       const progressRaw = localStorage.getItem(STORAGE_KEYS.progress);
-      const progress = progressRaw ? JSON.parse(progressRaw) : { unlockedIslands: [0], islandLevels: {}, bossDefeated: [] };
-      if (!progress.bossDefeated) progress.bossDefeated = [];
-      if (!Array.isArray(progress.unlockedIslands)) progress.unlockedIslands = [0];
+      const progress = normalizeProgress(progressRaw ? JSON.parse(progressRaw) : null);
       for (var defeatedIslandId = 0; defeatedIslandId < ISLANDS.length - 1; defeatedIslandId++) {
         if (progress.bossDefeated.includes(defeatedIslandId) && !progress.unlockedIslands.includes(defeatedIslandId + 1)) {
           progress.unlockedIslands.push(defeatedIslandId + 1);
         }
       }
-      progress.lives = toInt(progress.lives, GAMEPLAY.startingLives);
-      progress.bombs = toInt(progress.bombs, 0);
-      progress.playerHealth = toInt(progress.playerHealth, PLAYER_START.maxHealth);
-      progress.playerHealth = clamp(progress.playerHealth, 0, PLAYER_START.maxHealth);
-      progress.daily50BonusLastClaim = typeof progress.daily50BonusLastClaim === "string"
-        ? progress.daily50BonusLastClaim
-        : "";
       return {
         coins,
         selectedSkin: SKINS[selectedSkin] ? selectedSkin : "default",
@@ -1211,10 +1338,220 @@
 
     function saveState(state) {
       if (!onlineWallet) localStorage.setItem(STORAGE_KEYS.coins, String(state.coins));
-      localStorage.setItem(STORAGE_KEYS.selectedSkin, state.selectedSkin);
-      localStorage.setItem(STORAGE_KEYS.unlockedSkins, JSON.stringify(state.unlockedSkins));
-      localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(state.progress));
+      if (onlineSession) {
+        localStorage.setItem(getAccountProgressCacheKey(onlineSession.user.id), JSON.stringify(buildPlayerAccountCache(state)));
+      } else {
+        localStorage.setItem(STORAGE_KEYS.selectedSkin, state.selectedSkin);
+        localStorage.setItem(STORAGE_KEYS.unlockedSkins, JSON.stringify(state.unlockedSkins));
+        localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(state.progress));
+      }
       if (onlineWallet) persistOnlineWallet(onlineWallet);
+    }
+
+    function buildPlayerProgressSnapshot(sourceState) {
+      return {
+        selectedSkin: sourceState.selectedSkin,
+        unlockedSkins: sourceState.unlockedSkins.slice(),
+        progress: JSON.parse(JSON.stringify(sourceState.progress))
+      };
+    }
+
+    function buildPlayerInventorySnapshot(sourceState) {
+      return {
+        selectedSkin: sourceState.selectedSkin,
+        unlockedSkins: sourceState.unlockedSkins.slice(),
+        lives: sourceState.progress.lives,
+        bombs: sourceState.progress.bombs,
+        dynamite: sourceState.progress.dynamite,
+        coinPurchaseReceipts: (sourceState.progress.coinPurchaseReceipts || []).slice()
+      };
+    }
+
+    function buildPlayerAccountCache(sourceState) {
+      return {
+        checkpoint: buildPlayerProgressSnapshot(sourceState),
+        inventory: buildPlayerInventorySnapshot(sourceState)
+      };
+    }
+
+    function applyPlayerProgressSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== "object") return;
+      state.selectedSkin = SKINS[snapshot.selectedSkin] ? snapshot.selectedSkin : "default";
+      state.unlockedSkins = Array.isArray(snapshot.unlockedSkins)
+        ? Array.from(new Set(["default"].concat(snapshot.unlockedSkins.filter(function(id) { return !!SKINS[id]; }))))
+        : ["default"];
+      state.progress = normalizeProgress(snapshot.progress);
+      for (var defeatedIslandId = 0; defeatedIslandId < ISLANDS.length - 1; defeatedIslandId++) {
+        if (state.progress.bossDefeated.includes(defeatedIslandId) && !state.progress.unlockedIslands.includes(defeatedIslandId + 1)) {
+          state.progress.unlockedIslands.push(defeatedIslandId + 1);
+        }
+      }
+      if (typeof game !== "undefined" && game && game.player) game.player.health = state.progress.playerHealth;
+      if (typeof lastHudHealth !== "undefined") lastHudHealth = state.progress.playerHealth;
+      saveState(state);
+      syncUI();
+    }
+
+    function applyPlayerInventorySnapshot(inventory) {
+      if (!inventory || typeof inventory !== "object") return;
+      state.selectedSkin = SKINS[inventory.selectedSkin] ? inventory.selectedSkin : state.selectedSkin;
+      state.unlockedSkins = Array.isArray(inventory.unlockedSkins)
+        ? Array.from(new Set(["default"].concat(inventory.unlockedSkins.filter(function(id) { return !!SKINS[id]; }))))
+        : state.unlockedSkins;
+      state.progress.lives = Math.max(0, toInt(inventory.lives, state.progress.lives));
+      state.progress.bombs = Math.max(0, toInt(inventory.bombs, state.progress.bombs));
+      state.progress.dynamite = Math.max(0, toInt(inventory.dynamite, state.progress.dynamite));
+      state.progress.coinPurchaseReceipts = Array.isArray(inventory.coinPurchaseReceipts)
+        ? inventory.coinPurchaseReceipts
+        : state.progress.coinPurchaseReceipts;
+      saveState(state);
+      syncUI();
+    }
+
+    function applyCachedAccountProgress(cache) {
+      if (!cache) return;
+      applyPlayerProgressSnapshot(cache.checkpoint || cache);
+      if (cache.inventory) applyPlayerInventorySnapshot(cache.inventory);
+    }
+
+    function resetAccountProgress() {
+      state.selectedSkin = "default";
+      state.unlockedSkins = ["default"];
+      state.progress = createDefaultProgress();
+      if (typeof game !== "undefined" && game && game.player) game.player.health = state.progress.playerHealth;
+      if (typeof lastHudHealth !== "undefined") lastHudHealth = state.progress.playerHealth;
+      saveState(state);
+      syncUI();
+    }
+
+    function loadCachedAccountProgress(userId) {
+      try {
+        var cached = localStorage.getItem(getAccountProgressCacheKey(userId));
+        return cached ? JSON.parse(cached) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function saveOnlineProgressCheckpoint() {
+      if (!onlineSession || !supabaseClient) return Promise.resolve(false);
+      var userId = onlineSession.user.id;
+      var snapshot = buildPlayerProgressSnapshot(state);
+      var serialized = JSON.stringify(snapshot);
+      localStorage.setItem(getAccountProgressCacheKey(userId), JSON.stringify(buildPlayerAccountCache(state)));
+      localStorage.setItem(getPendingProgressKey(userId), serialized);
+      return Promise.all([flushOnlineProgress(userId), saveOnlineInventory()]);
+    }
+
+    function flushOnlineProgress(userId) {
+      if (!supabaseClient || !onlineSession || onlineSession.user.id !== userId) return Promise.resolve(false);
+      var pendingKey = getPendingProgressKey(userId);
+      var serialized = localStorage.getItem(pendingKey);
+      if (!serialized) return Promise.resolve(true);
+      var snapshot;
+      try {
+        snapshot = JSON.parse(serialized);
+      } catch (error) {
+        return Promise.resolve(false);
+      }
+      return supabaseClient.from("player_progress").upsert({
+        user_id: userId,
+        progress: snapshot,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id" }).select("progress").single().then(function(result) {
+        if (result.error) throw result.error;
+        if (!onlineSession || onlineSession.user.id !== userId) return false;
+        if (localStorage.getItem(pendingKey) === serialized) {
+          localStorage.removeItem(pendingKey);
+          applyPlayerProgressSnapshot(result.data.progress);
+        }
+        return true;
+      }).catch(function() { return false; });
+    }
+
+    function saveOnlineInventory() {
+      if (!onlineSession || !supabaseClient) return Promise.resolve(true);
+      var userId = onlineSession.user.id;
+      var serialized = JSON.stringify(buildPlayerInventorySnapshot(state));
+      localStorage.setItem(getPendingInventoryKey(userId), serialized);
+      return flushOnlineInventory(userId);
+    }
+
+    function flushOnlineInventory(userId) {
+      if (!supabaseClient || !onlineSession || onlineSession.user.id !== userId) return Promise.resolve(false);
+      var pendingKey = getPendingInventoryKey(userId);
+      var serialized = localStorage.getItem(pendingKey);
+      if (!serialized) return Promise.resolve(true);
+      var inventory;
+      try {
+        inventory = JSON.parse(serialized);
+      } catch (error) {
+        return Promise.resolve(false);
+      }
+      return supabaseClient.from("player_inventory").upsert({
+        user_id: userId,
+        inventory: inventory,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id" }).select("inventory").single().then(function(result) {
+        if (result.error) throw result.error;
+        if (!onlineSession || onlineSession.user.id !== userId) return false;
+        if (localStorage.getItem(pendingKey) === serialized) {
+          localStorage.removeItem(pendingKey);
+          applyPlayerInventorySnapshot(result.data.inventory);
+        }
+        return true;
+      }).catch(function() { return false; });
+    }
+
+    function loadOnlineProgress(session) {
+      if (!session || !supabaseClient) return Promise.resolve(false);
+      var userId = session.user.id;
+      var migrationOwner = localStorage.getItem(PROGRESS_MIGRATION_OWNER_KEY);
+      if (!migrationOwner) {
+        migrationOwner = userId;
+        localStorage.setItem(PROGRESS_MIGRATION_OWNER_KEY, userId);
+      }
+      return Promise.all([flushOnlineProgress(userId), flushOnlineInventory(userId)]).then(function() {
+        return Promise.all([
+          supabaseClient.from("player_progress").select("progress").eq("user_id", userId).maybeSingle(),
+          supabaseClient.from("player_inventory").select("inventory").eq("user_id", userId).maybeSingle()
+        ]);
+      }).then(function(results) {
+        if (!onlineSession || onlineSession.user.id !== userId) return false;
+        var progressResult = results[0];
+        var inventoryResult = results[1];
+        var cached = loadCachedAccountProgress(userId);
+        if (progressResult.error || inventoryResult.error) {
+          if (cached) applyCachedAccountProgress(cached);
+          else if (migrationOwner !== userId) resetAccountProgress();
+          return false;
+        }
+        if (progressResult.data && progressResult.data.progress) {
+          applyPlayerProgressSnapshot(progressResult.data.progress);
+        } else if (cached) {
+          applyCachedAccountProgress(cached);
+        } else if (migrationOwner !== userId) {
+          resetAccountProgress();
+        } else {
+          saveState(state);
+        }
+        if (inventoryResult.data && inventoryResult.data.inventory) {
+          applyPlayerInventorySnapshot(inventoryResult.data.inventory);
+        } else if (cached && cached.inventory) {
+          applyPlayerInventorySnapshot(cached.inventory);
+        }
+        return true;
+      }).catch(function() {
+        if (onlineSession && onlineSession.user.id === userId) {
+          var cached = loadCachedAccountProgress(userId);
+          if (cached) applyCachedAccountProgress(cached);
+          else {
+            var migrationOwner = localStorage.getItem(PROGRESS_MIGRATION_OWNER_KEY);
+            if (migrationOwner !== userId) resetAccountProgress();
+          }
+        }
+        return false;
+      });
     }
 
     function applyGlobalResetIfNeeded() {
@@ -1324,6 +1661,7 @@
       }
       if (typeof opts.lives === "number") document.getElementById("hud-lives").textContent = opts.lives;
       if (typeof opts.bombs === "number") document.getElementById("hud-bombs").textContent = opts.bombs;
+      if (typeof opts.dynamite === "number") document.getElementById("hud-dynamite").textContent = opts.dynamite;
       if (typeof opts.kills === "number") document.getElementById("hud-kills").textContent = Math.max(0, Math.floor(opts.kills));
       if (typeof opts.coins === "number")     document.getElementById("hud-coins").textContent = opts.coins;
     }
@@ -1367,21 +1705,49 @@
       status.classList.toggle("success", type === "success");
     }
 
-    function renderAccountSession(session) {
+    function renderAccountSession(session, passwordRecovery) {
       if (onlineScoreAttempt && (!session || onlineScoreAttempt.userId !== session.user.id)) {
         onlineScoreAttempt = null;
       }
+      var nextProgressUserId = session && session.user ? session.user.id : null;
       onlineSession = session || null;
       onlineUsername = "";
       connectOnlineWallet(onlineSession);
+      if (!nextProgressUserId) {
+        onlineProgressUserId = null;
+        onlineProgressLoading = false;
+        state = loadState();
+        if (game && game.player) game.player.health = state.progress.playerHealth;
+        syncUI();
+      } else if (onlineProgressUserId !== nextProgressUserId) {
+        onlineProgressUserId = nextProgressUserId;
+        onlineProgressLoading = true;
+        syncUI();
+        loadOnlineProgress(session).then(function() {
+          if (onlineSession && onlineSession.user.id === nextProgressUserId) {
+            onlineProgressLoading = false;
+            syncUI();
+          }
+        });
+      }
       var form = document.getElementById("account-form");
       var signOutButton = document.getElementById("btn-sign-out");
       var sessionLabel = document.getElementById("account-session-label");
       var accountButton = document.getElementById("btn-account");
       if (!onlineSession) {
+        setAccountFormMode("signin");
         form.classList.remove("hidden");
         signOutButton.classList.add("hidden");
         sessionLabel.textContent = "No has iniciado sesión.";
+        accountButton.textContent = "Cuenta online";
+        return;
+      }
+
+      if (passwordRecovery || accountFormMode === "recovery") {
+        setAccountPasswordRecoveryMode(true);
+        form.classList.remove("hidden");
+        signOutButton.classList.add("hidden");
+        sessionLabel.textContent = "Elige una contraseña nueva.";
         accountButton.textContent = "Cuenta online";
         return;
       }
@@ -1402,6 +1768,41 @@
           sessionLabel.textContent = "Sesión iniciada como " + onlineUsername;
           accountButton.textContent = onlineUsername;
         });
+    }
+
+    var accountFormMode = "signin";
+    function setAccountFormMode(mode) {
+      accountFormMode = mode;
+      var isSignup = mode === "signup";
+      var isResetRequest = mode === "reset-request";
+      var isRecovery = mode === "recovery";
+      document.getElementById("account-username-wrap").classList.toggle("hidden", !isSignup);
+      document.getElementById("account-email-wrap").classList.toggle("hidden", isRecovery);
+      document.getElementById("account-password-wrap").classList.toggle("hidden", isResetRequest);
+      document.getElementById("account-password-confirm-wrap").classList.toggle("hidden", !isSignup && !isRecovery);
+      document.getElementById("account-password-label").textContent = isRecovery ? "Nueva contraseña" : "Contraseña";
+      document.getElementById("account-password").autocomplete = isSignup || isRecovery ? "new-password" : "current-password";
+      document.getElementById("account-login-actions").classList.toggle("hidden", isResetRequest || isRecovery);
+      document.getElementById("account-reset-actions").classList.toggle("hidden", !isResetRequest);
+      document.getElementById("account-recovery-actions").classList.toggle("hidden", !isRecovery);
+      if (!isSignup && !isRecovery) document.getElementById("account-password-confirm").value = "";
+    }
+
+    function setAccountRegistrationMode(enabled) { setAccountFormMode(enabled ? "signup" : "signin"); }
+    function setAccountPasswordRecoveryMode(enabled) { setAccountFormMode(enabled ? "recovery" : "signin"); }
+
+    function setupPasswordVisibility(buttonId, inputId) {
+      var button = document.getElementById(buttonId);
+      var input = document.getElementById(inputId);
+      button.addEventListener("click", function() {
+        var showing = input.type === "password";
+        var label = showing ? "Ocultar contraseña" : "Mostrar contraseña";
+        input.type = showing ? "text" : "password";
+        button.title = label;
+        button.setAttribute("aria-label", label);
+        button.setAttribute("aria-pressed", String(showing));
+        button.querySelector("img").src = "https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/" + (showing ? "eye-off" : "eye") + ".svg";
+      });
     }
 
     function loadLeaderboard() {
@@ -1572,7 +1973,7 @@
     function completeCoinPurchase(operation) {
       var purchase = operation.purchase;
       var receipts = state.progress.coinPurchaseReceipts || [];
-      if (receipts.includes(operation.id)) return;
+      if (receipts.includes(operation.id)) return saveOnlineInventory();
       if (purchase.type === "skin") {
         if (!state.unlockedSkins.includes(purchase.skinId)) state.unlockedSkins.push(purchase.skinId);
         state.selectedSkin = purchase.skinId;
@@ -1583,10 +1984,14 @@
       } else if (purchase.type === "bombs") {
         state.progress.bombs += GAMEPLAY.bombsPerPack;
         setStoreMessage("Compraste " + GAMEPLAY.bombsPerPack + " bombas.");
+      } else if (purchase.type === "dynamite") {
+        state.progress.dynamite = (state.progress.dynamite || 0) + GAMEPLAY.dynamitesPerPack;
+        setStoreMessage("Compraste " + GAMEPLAY.dynamitesPerPack + " cargas de dinamita.");
       }
       receipts.push(operation.id);
       state.progress.coinPurchaseReceipts = receipts;
       saveState(state);
+      return saveOnlineInventory();
     }
 
     function purchaseWithCoins(cost, purchase) {
@@ -1634,14 +2039,22 @@
           if (!isCurrent()) return;
           wallet.balance = Number(result.data.balance);
           wallet.ready = true;
-          if (operation) {
-            if (operation.purchase && result.data.applied) completeCoinPurchase(operation);
-            wallet.pending = wallet.pending.filter(function(entry) { return entry.id !== operation.id; });
-            if (!result.data.applied) setStoreMessage("Compra rechazada: el saldo de tu cuenta no es suficiente.");
-          }
-          persistOnlineWallet(wallet);
-          updateWalletBalance(wallet);
-          return sendNext();
+          var inventorySave = operation && operation.purchase && result.data.applied
+            ? completeCoinPurchase(operation)
+            : Promise.resolve(true);
+          return Promise.resolve(inventorySave).then(function(inventorySaved) {
+            if (!isCurrent()) return;
+            if (operation) {
+              if (result.data.applied && operation.purchase && inventorySaved === false) {
+                throw new Error("Inventory sync pending");
+              }
+              wallet.pending = wallet.pending.filter(function(entry) { return entry.id !== operation.id; });
+              if (!result.data.applied) setStoreMessage("Compra rechazada: el saldo de tu cuenta no es suficiente.");
+            }
+            persistOnlineWallet(wallet);
+            updateWalletBalance(wallet);
+            return sendNext();
+          });
         });
       }
       var failed = false;
@@ -1732,6 +2145,15 @@
     }
 
     window.addEventListener("online", flushOnlineScores);
+    window.addEventListener("online", function() {
+      if (onlineSession) flushOnlineProgress(onlineSession.user.id);
+    });
+    window.addEventListener("online", function() {
+      if (onlineSession) flushOnlineInventory(onlineSession.user.id);
+    });
+    window.addEventListener("focus", function() {
+      if (onlineSession) flushOnlineInventory(onlineSession.user.id);
+    });
     window.addEventListener("pagehide", finishOnlineScoreAttempt);
     window.addEventListener("pageshow", function(event) {
       if (event.persisted && game.running && !game.paused) beginOnlineScoreAttempt();
@@ -1792,27 +2214,56 @@
 
     function setupOnlineFeatures() {
       setupOnlinePresence();
+      setAccountFormMode("signin");
+      setupPasswordVisibility("account-password-toggle", "account-password");
+      setupPasswordVisibility("account-password-confirm-toggle", "account-password-confirm");
       if (!supabaseClient) {
         setAccountStatus("No se pudo cargar Supabase. Revisa la conexión a internet.", "error");
       } else {
+        onlineProgressLoading = true;
         supabaseClient.auth.onAuthStateChange(function(event, session) {
-          window.setTimeout(function() { renderAccountSession(session); }, 0);
+          window.setTimeout(function() {
+            if (event === "PASSWORD_RECOVERY") {
+              setAccountPasswordRecoveryMode(true);
+              showScreen("screen-account");
+              renderAccountSession(session, true);
+            } else {
+              renderAccountSession(session);
+            }
+          }, 0);
         });
         supabaseClient.auth.getSession().then(function(result) {
           renderAccountSession(result.data.session);
+        }).catch(function() {
+          onlineProgressLoading = false;
+          setAccountStatus("No se pudo restaurar la sesión. Puedes jugar como invitado.", "error");
+          syncUI();
         });
       }
+      window.addEventListener("online", function() {
+        if (onlineSession) flushOnlineProgress(onlineSession.user.id);
+      });
+      window.addEventListener("online", function() {
+        if (onlineSession) flushOnlineInventory(onlineSession.user.id);
+      });
 
       document.getElementById("account-form").addEventListener("submit", function(event) {
         event.preventDefault();
+        var submitButton = accountFormMode === "signup" ? "btn-sign-up"
+          : accountFormMode === "reset-request" ? "btn-send-password-reset"
+          : accountFormMode === "recovery" ? "btn-save-new-password"
+          : "btn-sign-in";
+        document.getElementById(submitButton).click();
       });
       document.getElementById("btn-account").addEventListener("click", function() {
         setAccountStatus("", "");
+        setAccountFormMode("signin");
         showScreen("screen-account");
         if (!supabaseClient) setAccountStatus("No se pudo cargar Supabase. Revisa la conexión.", "error");
         else renderAccountSession(onlineSession);
       });
       document.getElementById("btn-sign-in").addEventListener("click", function() {
+        setAccountFormMode("signin");
         if (!supabaseClient) return;
         var email = document.getElementById("account-email").value.trim();
         var password = document.getElementById("account-password").value;
@@ -1831,16 +2282,26 @@
         });
       });
       document.getElementById("btn-sign-up").addEventListener("click", function() {
+        if (accountFormMode !== "signup") {
+          setAccountRegistrationMode(true);
+          setAccountStatus("Repite la contraseña para confirmar el registro.", "");
+          return;
+        }
         if (!supabaseClient) return;
         var username = document.getElementById("account-username").value.trim();
         var email = document.getElementById("account-email").value.trim();
         var password = document.getElementById("account-password").value;
+        var passwordConfirmation = document.getElementById("account-password-confirm").value;
         if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
           setAccountStatus("El nombre público debe tener 3-24 caracteres: letras, números o _.", "error");
           return;
         }
         if (!email || password.length < 6) {
           setAccountStatus("Escribe un correo válido y una contraseña de al menos 6 caracteres.", "error");
+          return;
+        }
+        if (password !== passwordConfirmation) {
+          setAccountStatus("Las contraseñas no coinciden.", "error");
           return;
         }
         setAccountStatus("Creando cuenta…", "");
@@ -1862,6 +2323,62 @@
           } else {
             setAccountStatus("Cuenta creada. Confirma el correo y después inicia sesión.", "success");
           }
+        });
+      });
+      document.getElementById("btn-forgot-password").addEventListener("click", function() {
+        setAccountFormMode("reset-request");
+        setAccountStatus("Escribe el correo de tu cuenta para enviarte un enlace de recuperación.", "");
+      });
+      document.getElementById("btn-cancel-password-reset").addEventListener("click", function() {
+        setAccountFormMode("signin");
+        setAccountStatus("", "");
+      });
+      document.getElementById("btn-send-password-reset").addEventListener("click", function() {
+        if (!supabaseClient) {
+          setAccountStatus("No se pudo cargar Supabase. Revisa la conexión.", "error");
+          return;
+        }
+        var emailInput = document.getElementById("account-email");
+        var email = emailInput.value.trim();
+        if (!email || !emailInput.checkValidity()) {
+          setAccountStatus("Escribe un correo válido.", "error");
+          return;
+        }
+        setAccountStatus("Enviando enlace…", "");
+        supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname
+        }).then(function(result) {
+          if (result.error) {
+            setAccountStatus(result.error.message, "error");
+            return;
+          }
+          setAccountStatus("Si existe una cuenta con ese correo, recibirás un enlace para cambiar la contraseña.", "success");
+        });
+      });
+      document.getElementById("btn-save-new-password").addEventListener("click", function() {
+        if (!supabaseClient) {
+          setAccountStatus("No se pudo cargar Supabase. Revisa la conexión.", "error");
+          return;
+        }
+        var password = document.getElementById("account-password").value;
+        var confirmation = document.getElementById("account-password-confirm").value;
+        if (password.length < 6) {
+          setAccountStatus("La contraseña nueva debe tener al menos 6 caracteres.", "error");
+          return;
+        }
+        if (password !== confirmation) {
+          setAccountStatus("Las contraseñas no coinciden.", "error");
+          return;
+        }
+        setAccountStatus("Guardando contraseña…", "");
+        supabaseClient.auth.updateUser({ password: password }).then(function(result) {
+          if (result.error) {
+            setAccountStatus(result.error.message, "error");
+            return;
+          }
+          setAccountPasswordRecoveryMode(false);
+          setAccountStatus("Contraseña actualizada.", "success");
+          renderAccountSession(onlineSession);
         });
       });
       document.getElementById("btn-sign-out").addEventListener("click", function() {
@@ -2082,7 +2599,7 @@
         }
         var result = buyOrEquipSkin(state, skinId);
         setStoreMessage(result.message);
-        if (result.ok) { saveState(state); syncUI(); }
+        if (result.ok) { saveState(state); saveOnlineInventory(); syncUI(); }
       });
       card.appendChild(btn);
       return { card: card, canvas: cv };
@@ -2113,13 +2630,31 @@
     // ── GAME ───────────────────────────────────────────────
     function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
     function rand(mn, mx)     { return mn + Math.random() * (mx - mn); }
+    function getGhostOpacity(ghost, now, isBoss) {
+      var visibleMs = 1600;
+      var fadeMs = 500;
+      var hiddenMs = isBoss ? 1400 : 1000;
+      var cycleMs = visibleMs + fadeMs * 2 + hiddenMs;
+      var phase = ((now - ghost.spawnedAt + (ghost.ghostVisibilityOffset || 0)) % cycleMs + cycleMs) % cycleMs;
+      if (phase < visibleMs) return 1;
+      phase -= visibleMs;
+      if (phase < fadeMs) return 1 - phase / fadeMs;
+      phase -= fadeMs + hiddenMs;
+      return phase < 0 ? 0 : Math.min(1, phase / fadeMs);
+    }
+    const CEMETERY_EMERGENCE_MS = 850;
+    function getCemeteryEmergenceProgress(enemy, now) {
+      return clamp((now - enemy.emergesAt) / CEMETERY_EMERGENCE_MS, 0, 1);
+    }
 
     function Game(canvas, options) {
       this.canvas  = canvas;
       this.ctx     = canvas.getContext("2d");
       this.getSkinId       = options.getSkinId;
       this.getBombs        = options.getBombs || function() { return 0; };
+      this.getDynamites    = options.getDynamites || function() { return 0; };
       this.onBombsChanged  = options.onBombsChanged || function() {};
+      this.onDynamitesChanged = options.onDynamitesChanged || function() {};
       this.onHealthChange  = options.onHealthChange;
       this.onCoinsEarned   = options.onCoinsEarned;
       this.onDamage        = options.onDamage;
@@ -2148,11 +2683,13 @@
       this.lastEnemySpawnMs = 0;
       this.lastShotAt      = 0;
       this.lastBombAt      = 0;
+      this.lastDynamiteAt  = 0;
       this.keys            = new Set();
       this.touchMoveX      = 0;
       this.touchMoveY      = 0;
       this.currentIsland   = 0;
       this.currentLevel    = 1;
+      this.cemeterySpawnIndex = 0;
 
       this.player = {
         x: PLAYER_START.x, y: PLAYER_START.y,
@@ -2164,7 +2701,9 @@
       this.chests      = [];
       this.enemies     = [];
       this.bullets     = [];
+      this.dynamites   = [];
       this.particles   = [];
+      this.bloodStains = [];
       this.damageTexts = [];
       this.trees       = [];
       this.enemyBullets = [];
@@ -2210,12 +2749,15 @@
       this.player.dir = -Math.PI / 2;
       this.chests.length = this.enemies.length = this.bullets.length =
         this.particles.length = this.damageTexts.length = this.enemyBullets.length = this.tentacles.length = 0;
+      this.dynamites.length = 0;
+      this.bloodStains.length = 0;
       this.trees.length = 0;
       this.bossMode = false;
       this.boss     = null;
       this.allChestsCollected       = false;
       this.chestsCollectedThisLevel = 0;
       this.enemiesKilledThisLevel   = 0;
+      this.cemeterySpawnIndex = 0;
       this.onKillsChange(this.enemiesKilledThisLevel);
       this.spawnTrees();
       for (var i = 0; i < GAMEPLAY.chestCount; i++) this.chests.push(this.spawnChest());
@@ -2284,6 +2826,9 @@
       var r = 22, margin = r + 32;
       var cx = this.canvas.width / 2, cy = this.canvas.height / 2;
       var count = this.levelTreeCount, attempts = 0;
+      if (this.currentIsland === 5 && count > 0) {
+        this.trees.push({ x: cx, y: cy - 150, radius: 58, isLighthouse: true });
+      }
       while (this.trees.length < count && attempts < 600) {
         attempts++;
         var x = rand(margin, this.canvas.width  - margin);
@@ -2295,24 +2840,51 @@
         )) continue;
         var ok = true;
         for (var i = 0; i < this.trees.length; i++) {
-          if (Math.hypot(x - this.trees[i].x, y - this.trees[i].y) < r * 2.6) { ok = false; break; }
+          if (Math.hypot(x - this.trees[i].x, y - this.trees[i].y) < r + this.trees[i].radius + 14) { ok = false; break; }
         }
-        if (ok) this.trees.push({ x: x, y: y, radius: r });
+        if (ok) this.trees.push({ x: x, y: y, radius: r, isTombstone: this.currentIsland === 4 || this.currentIsland === 5 });
       }
+    };
+
+    Game.prototype.findCemeteryEnemySpawnPosition = function(radius) {
+      var tombstones = this.trees.filter(function(tree) { return tree.isTombstone; });
+      if (!tombstones.length) return this.findEnemySpawnPosition(radius);
+      for (var attempt = 0; attempt < 100; attempt++) {
+        var tombstone = tombstones[Math.floor(Math.random() * tombstones.length)];
+        var angle = Math.random() * Math.PI * 2;
+        var distance = tombstone.radius + radius + 12;
+        var x = clamp(tombstone.x + Math.cos(angle) * distance, radius + 8, this.canvas.width - radius - 8);
+        var y = clamp(tombstone.y + Math.sin(angle) * distance, radius + 8, this.canvas.height - radius - 8);
+        if (Math.hypot(x - this.player.x, y - this.player.y) < 130) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.trees, 5)) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.chests, 24)) continue;
+        if (!this.isCirclePositionFree(x, y, radius, this.enemies, 10)) continue;
+        return { x: x, y: y };
+      }
+      return this.findEnemySpawnPosition(radius);
     };
 
     Game.prototype.spawnEnemy = function() {
       if (this.enemies.length >= GAMEPLAY.maxEnemies) return;
       var profile = this.getEnemyProfile();
-      var spawnPos = this.findEnemySpawnPosition(profile.radius);
+      var isCemeteryEnemy = !!profile.isCemeteryEnemy;
+      var isVampireEnemy = !!profile.isVampire;
+      var emergesFromGrave = isCemeteryEnemy || isVampireEnemy;
+      var spawnPos = emergesFromGrave
+        ? this.findCemeteryEnemySpawnPosition(profile.radius)
+        : this.findEnemySpawnPosition(profile.radius);
       if (!spawnPos) return;
+      var cemeteryTypeIndex = this.cemeterySpawnIndex || 0;
+      var isZombie = isCemeteryEnemy && cemeteryTypeIndex % 2 === 0;
+      var isSkeleton = isCemeteryEnemy && cemeteryTypeIndex % 2 === 1;
+      if (isCemeteryEnemy) this.cemeterySpawnIndex = cemeteryTypeIndex + 1;
       var enemy = {
         x: spawnPos.x,
         y: spawnPos.y,
         radius: profile.radius,
         health: profile.health,
         maxHealth: profile.health,
-        speed: profile.speed,
+        speed: isZombie ? profile.speed * 3 / 5 : profile.speed,
         damage: this.levelEnemyDamage,
         lastDamageAt: 0,
         movementType: profile.movementType,
@@ -2320,7 +2892,14 @@
         zigzagFreq: profile.zigzagFreq || 0,
         zigzagPhase: Math.random() * Math.PI * 2,
         spawnedAt: Date.now(),
+        isCemeteryEnemy: isCemeteryEnemy,
+        isCemeteryEmerging: emergesFromGrave,
+        emergesAt: emergesFromGrave ? Date.now() : 0,
+        ghostVisibilityOffset: profile.isGhost ? Math.random() * 3600 : 0,
         isGhost: !!profile.isGhost,
+        isZombie: isZombie,
+        isSkeleton: isSkeleton,
+        isVampire: isVampireEnemy,
         color: profile.colors[Math.floor(Math.random() * profile.colors.length)]
       };
       this.enemies.push(enemy);
@@ -2384,6 +2963,7 @@
       this.keys.add(e.code);
       if (e.code === "Space") { e.preventDefault(); this.tryShoot(); }
       if (e.code === "KeyB") { e.preventDefault(); this.tryThrowBomb(); }
+      if (e.code === "KeyQ") { e.preventDefault(); this.tryPlaceDynamite(); }
     };
 
     Game.prototype.handleKeyUp = function(e) { this.keys.delete(e.code); };
@@ -2415,6 +2995,26 @@
       });
     };
 
+    Game.prototype.tryPlaceDynamite = function() {
+      if (!this.running || this.paused) return false;
+      var now = Date.now();
+      if (now - this.lastDynamiteAt < GAMEPLAY.dynamiteCooldownMs) return false;
+      var dynamites = this.getDynamites();
+      if (dynamites <= 0) return false;
+      var x = this.player.x, y = this.player.y;
+      var radius = GAMEPLAY.dynamiteRadius;
+      if (!this.isCirclePositionFree(x, y, radius, this.trees, 2)) return false;
+      if (!this.isCirclePositionFree(x, y, radius, this.dynamites, 10)) return false;
+      this.lastDynamiteAt = now;
+      this.dynamites.push({
+        x: x, y: y, radius: radius,
+        armedAt: now + GAMEPLAY.dynamiteFuseMs,
+        rotation: (Math.random() - 0.5) * 0.25
+      });
+      this.onDynamitesChanged(dynamites - 1);
+      return true;
+    };
+
     Game.prototype.loop = function(now) {
       if (!this.running) return;
       var dt = Math.min((now - this.lastTime) / 1000, 0.05);
@@ -2435,7 +3035,9 @@
       }
       this.updateBullets(dt);
       this.updateEnemies(dt);
+      if (this.running) this.updateDynamites(Date.now());
       this.updateParticles();
+      this.updateBloodStains(dt);
       this.updateDamageTexts();
     };
 
@@ -2524,6 +3126,7 @@
         }
         for (var e = this.enemies.length - 1; !removed && e >= 0; e--) {
           var enemy = this.enemies[e];
+          if (enemy.isGhost && getGhostOpacity(enemy, Date.now()) === 0) continue;
           if (Math.hypot(b.x - enemy.x, b.y - enemy.y) <= b.radius + enemy.radius) {
             if (isBomb) {
               this.enemies.splice(e, 1);
@@ -2549,7 +3152,8 @@
             break;
           }
         }
-        if (!removed && this.bossMode && this.boss && this.boss.alive &&
+        var bossVisible = !this.boss || !this.bossConfig || this.bossConfig.type !== "ghost" || getGhostOpacity(this.boss, Date.now(), true) > 0;
+        if (!removed && this.bossMode && this.boss && this.boss.alive && bossVisible &&
             Math.hypot(b.x - this.boss.x, b.y - this.boss.y) <= b.radius + this.boss.radius) {
           this.bullets.splice(i, 1);
           removed = true;
@@ -2573,6 +3177,7 @@
       var now = Date.now();
       for (var i = 0; i < this.enemies.length; i++) {
         var e = this.enemies[i];
+        if (e.isCemeteryEmerging && now - e.emergesAt < CEMETERY_EMERGENCE_MS) continue;
         var dx = this.player.x - e.x, dy = this.player.y - e.y;
         var dist = Math.hypot(dx, dy);
         if (dist > 0) {
@@ -2590,6 +3195,10 @@
           }
           e.x += mvx * e.speed * dt;
           e.y += mvy * e.speed * dt;
+          if (e.isZombie && now >= (e.nextBloodAt || 0)) {
+            e.nextBloodAt = now + 300;
+            this.addBloodStain(e.x - mvx * e.radius * 0.6, e.y - mvy * e.radius * 0.6, Math.max(2.5, e.radius * 0.22));
+          }
         }
         for (var ti = 0; ti < this.trees.length; ti++) {
           var tr = this.trees[ti];
@@ -2622,6 +3231,72 @@
             if (this.player.health <= 0) { this.stop(); this.onGameOver(); return; }
           }
         }
+      }
+    };
+
+    Game.prototype.updateDynamites = function(now) {
+      if (!this.running) return;
+      for (var i = this.dynamites.length - 1; i >= 0; i--) {
+        var charge = this.dynamites[i];
+        if (now < charge.armedAt) continue;
+        var target = null;
+        var targetType = "";
+        if (Math.hypot(this.player.x - charge.x, this.player.y - charge.y) <= this.player.radius + charge.radius) {
+          target = this.player;
+          targetType = "player";
+        } else {
+          for (var enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
+            var enemy = this.enemies[enemyIndex];
+            if (Math.hypot(enemy.x - charge.x, enemy.y - charge.y) <= enemy.radius + charge.radius) {
+              target = enemy;
+              targetType = "enemy";
+              break;
+            }
+          }
+          if (!target && this.bossMode && this.boss && this.boss.alive &&
+              Math.hypot(this.boss.x - charge.x, this.boss.y - charge.y) <= this.boss.radius + charge.radius) {
+            target = this.boss;
+            targetType = "boss";
+          }
+        }
+        if (!target) continue;
+
+        this.dynamites.splice(i, 1);
+        this.addParticles(charge.x, charge.y, "#dc2626");
+        this.addDamageText(target.x, target.y, "-" + GAMEPLAY.dynamiteDamage);
+        if (targetType === "player") {
+          target.health = Math.max(0, target.health - GAMEPLAY.dynamiteDamage);
+          this.onHealthChange(target.health, target.maxHealth);
+          this.onDamage(GAMEPLAY.dynamiteDamage);
+          this.addParticles(target.x, target.y, "#ef4444");
+          if (target.health <= 0) {
+            this.stop();
+            this.onGameOver();
+            return;
+          }
+        } else if (targetType === "enemy") {
+          target.health -= GAMEPLAY.dynamiteDamage;
+          this.addParticles(target.x, target.y, "#b91c1c");
+          if (target.health <= 0) {
+            var killedIndex = this.enemies.indexOf(target);
+            if (killedIndex !== -1) this.enemies.splice(killedIndex, 1);
+            this.onCoinsEarned(GAMEPLAY.enemyKillReward, "enemy");
+            this.enemiesKilledThisLevel += 1;
+            this.onKillsChange(this.enemiesKilledThisLevel);
+            this.checkLevelComplete();
+          }
+        } else {
+          target.health -= GAMEPLAY.dynamiteDamage;
+          this.onBossHealthChange(target.health, target.maxHealth);
+          this.addParticles(target.x, target.y, "#b91c1c");
+          if (target.health <= 0) {
+            target.alive = false;
+            this.stop();
+            this.onBossDefeated();
+            return;
+          }
+        }
+        if (!this.running) return;
       }
     };
 
@@ -2659,6 +3334,23 @@
         this.particles.push({ x: x, y: y,
           vx: (Math.random() - 0.5) * 3.6, vy: (Math.random() - 0.5) * 3.6,
           life: 30, color: color });
+      }
+    };
+
+    Game.prototype.addBloodStain = function(x, y, radius) {
+      var maxLife = 3.2;
+      this.bloodStains.push({
+        x: x, y: y, radius: radius || 4,
+        rotation: (Math.random() - 0.5) * 0.8,
+        life: maxLife, maxLife: maxLife
+      });
+      if (this.bloodStains.length > 500) this.bloodStains.shift();
+    };
+
+    Game.prototype.updateBloodStains = function(dt) {
+      for (var i = this.bloodStains.length - 1; i >= 0; i--) {
+        this.bloodStains[i].life -= dt;
+        if (this.bloodStains[i].life <= 0) this.bloodStains.splice(i, 1);
       }
     };
 
@@ -2707,7 +3399,9 @@
         this.ctx.translate(-camera.x, -camera.y);
       }
       this.drawBackground();
+      this.drawBloodStains();
       this.drawTrees();
+      this.drawDynamites();
       if (this.bossMode) this.drawTentacles(now);
       if (this.bossMode && this.boss) this.drawBoss();
       this.drawChests(now);
@@ -2794,9 +3488,10 @@
     Game.prototype.drawBackground = function() {
       var ctx = this.ctx;
       var hauntedForest = this.currentIsland >= 3;
-      ctx.fillStyle = hauntedForest ? "#111b18" : "#2d6a4f";
+      var lighthouseNight = this.currentIsland === 5;
+      ctx.fillStyle = lighthouseNight ? "#101620" : hauntedForest ? "#111b18" : "#2d6a4f";
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      ctx.strokeStyle = hauntedForest ? "rgba(167,190,177,0.035)" : "rgba(255,255,255,0.08)";
+      ctx.strokeStyle = lighthouseNight ? "rgba(171,190,209,0.045)" : hauntedForest ? "rgba(167,190,177,0.035)" : "rgba(255,255,255,0.08)";
       ctx.lineWidth = 1;
       for (var x = 0; x <= this.canvas.width; x += GAMEPLAY.worldGrid) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); ctx.stroke();
@@ -2811,6 +3506,14 @@
       var hauntedForest = this.currentIsland >= 3;
       for (var i = 0; i < this.trees.length; i++) {
         var t = this.trees[i], x = t.x, y = t.y, r = t.radius;
+        if (t.isLighthouse) {
+          this.drawLighthouse(ctx, t);
+          continue;
+        }
+        if (t.isTombstone) {
+          this.drawTombstone(ctx, t);
+          continue;
+        }
         ctx.fillStyle = hauntedForest ? "rgba(0,0,0,0.48)" : "rgba(0,0,0,0.28)";
         ctx.beginPath(); ctx.ellipse(x + 7, y + r * 0.55, r * 0.85, r * 0.38, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = hauntedForest ? "#080f0e" : "#14451e";
@@ -2822,6 +3525,101 @@
         ctx.fillStyle = hauntedForest ? "#293422" : "#4fc864";
         ctx.beginPath(); ctx.arc(x - r * 0.1, y - r * 0.42, r * 0.17, 0, Math.PI * 2); ctx.fill();
       }
+    };
+
+    Game.prototype.drawLighthouse = function(ctx, lighthouse) {
+      var x = lighthouse.x, y = lighthouse.y, r = lighthouse.radius;
+      var beaconY = y - r * 2.55;
+      ctx.save();
+      ctx.translate(x, beaconY);
+      ctx.rotate(Date.now() * 0.00012);
+      ctx.globalAlpha = 0.11;
+      ctx.fillStyle = "#ffe8a3";
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r * 10, -r * 1.8); ctx.lineTo(r * 10, r * 1.8); ctx.closePath(); ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.beginPath(); ctx.ellipse(x + 10, y + r * 0.48, r * 1.25, r * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#27343b";
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.58, y + r * 0.48);
+      ctx.lineTo(x - r * 0.36, y - r * 2.18);
+      ctx.lineTo(x + r * 0.36, y - r * 2.18);
+      ctx.lineTo(x + r * 0.58, y + r * 0.48);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#b9b8ad";
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.42, y + r * 0.32);
+      ctx.lineTo(x - r * 0.25, y - r * 2.05);
+      ctx.lineTo(x + r * 0.25, y - r * 2.05);
+      ctx.lineTo(x + r * 0.42, y + r * 0.32);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#8e3439";
+      ctx.beginPath(); ctx.moveTo(x - r * 0.35, y - r * 1.48); ctx.lineTo(x + r * 0.35, y - r * 1.48); ctx.lineTo(x + r * 0.38, y - r * 1.18); ctx.lineTo(x - r * 0.38, y - r * 1.18); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x - r * 0.32, y - r * 0.56); ctx.lineTo(x + r * 0.32, y - r * 0.56); ctx.lineTo(x + r * 0.35, y - r * 0.28); ctx.lineTo(x - r * 0.35, y - r * 0.28); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#26343a";
+      ctx.fillRect(x - r * 0.48, y - r * 2.28, r * 0.96, r * 0.16);
+      ctx.fillRect(x - r * 0.4, y - r * 2.48, r * 0.8, r * 0.12);
+      ctx.fillStyle = "#d8d5c5";
+      ctx.fillRect(x - r * 0.25, beaconY - r * 0.3, r * 0.5, r * 0.58);
+      ctx.fillStyle = "#ffd875";
+      ctx.shadowColor = "#ffe8a3";
+      ctx.shadowBlur = 20;
+      ctx.fillRect(x - r * 0.16, beaconY - r * 0.2, r * 0.32, r * 0.38);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#7d2c34";
+      ctx.beginPath(); ctx.moveTo(x - r * 0.38, beaconY - r * 0.3); ctx.lineTo(x, beaconY - r * 0.72); ctx.lineTo(x + r * 0.38, beaconY - r * 0.3); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#242b31";
+      ctx.fillRect(x - r * 0.16, y + r * 0.08, r * 0.32, r * 0.4);
+      ctx.fillStyle = "#e4d7b4";
+      ctx.fillRect(x - r * 0.05, y + r * 0.08, r * 0.1, r * 0.4);
+    };
+
+    Game.prototype.drawBloodStains = function() {
+      var ctx = this.ctx;
+      for (var i = 0; i < this.bloodStains.length; i++) {
+        var stain = this.bloodStains[i];
+        var fade = stain.life / stain.maxLife;
+        ctx.save();
+        ctx.translate(stain.x, stain.y);
+        ctx.rotate(stain.rotation);
+        ctx.globalAlpha = fade * 0.72;
+        ctx.fillStyle = "#4a1018";
+        ctx.beginPath(); ctx.ellipse(0, 0, stain.radius * 1.65, stain.radius * 0.88, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#8f1722";
+        ctx.beginPath(); ctx.ellipse(-stain.radius * 0.35, -stain.radius * 0.12, stain.radius * 0.82, stain.radius * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(stain.radius * 1.15, stain.radius * 0.35, stain.radius * 0.32, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    };
+
+    Game.prototype.drawTombstone = function(ctx, tombstone) {
+      var x = tombstone.x, y = tombstone.y, r = tombstone.radius;
+      ctx.fillStyle = "rgba(0,0,0,0.42)";
+      ctx.beginPath(); ctx.ellipse(x + 5, y + r * 0.62, r * 0.78, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#343f3d";
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.58, y + r * 0.62);
+      ctx.lineTo(x - r * 0.5, y - r * 0.2);
+      ctx.quadraticCurveTo(x - r * 0.5, y - r * 0.78, x, y - r * 0.78);
+      ctx.quadraticCurveTo(x + r * 0.5, y - r * 0.78, x + r * 0.5, y - r * 0.2);
+      ctx.lineTo(x + r * 0.58, y + r * 0.62);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#89938b";
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.43, y + r * 0.48);
+      ctx.lineTo(x - r * 0.37, y - r * 0.18);
+      ctx.quadraticCurveTo(x - r * 0.36, y - r * 0.62, x, y - r * 0.62);
+      ctx.quadraticCurveTo(x + r * 0.36, y - r * 0.62, x + r * 0.37, y - r * 0.18);
+      ctx.lineTo(x + r * 0.43, y + r * 0.48);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#46534d";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x, y - r * 0.43); ctx.lineTo(x, y + r * 0.08);
+      ctx.moveTo(x - r * 0.18, y - r * 0.23); ctx.lineTo(x + r * 0.18, y - r * 0.23);
+      ctx.stroke();
     };
 
     Game.prototype.drawPlayer = function() {
@@ -2864,16 +3662,27 @@
 
     Game.prototype.drawEnemies = function() {
       var ctx = this.ctx;
+      var now = Date.now();
       for (var i = 0; i < this.enemies.length; i++) {
         var e = this.enemies[i];
         if (e.isGhost) {
-          this.drawGhost(ctx, e, false);
+          var opacity = getGhostOpacity(e, now);
+          if (opacity === 0) continue;
+          this.drawGhost(ctx, e, false, opacity);
         } else if (e.isMiniFish) {
           this.drawMiniFish(ctx, e);
         } else if (e.isMiniPirate || e.isMiniBoat) {
           this.drawMiniPirate(ctx, e);
         } else if (e.isMiniTank) {
           this.drawMiniTank(ctx, e);
+        } else if (e.isVampire) {
+          this.drawVampire(ctx, e);
+        } else if (e.isSkeleton) {
+          this.drawSkeleton(ctx, e);
+        } else if (e.isVampire) {
+          this.drawVampire(ctx, e);
+        } else if (e.isZombie) {
+          this.drawZombie(ctx, e);
         } else {
           ctx.fillStyle = "rgba(0,0,0,0.22)";
           ctx.beginPath(); ctx.ellipse(e.x, e.y + 11, 10, 4, 0, 0, Math.PI * 2); ctx.fill();
@@ -2883,6 +3692,7 @@
           ctx.beginPath(); ctx.arc(e.x - 4, e.y - 2, 2.3, 0, Math.PI * 2); ctx.fill();
           ctx.beginPath(); ctx.arc(e.x + 4, e.y - 2, 2.3, 0, Math.PI * 2); ctx.fill();
         }
+        if (e.isCemeteryEmerging && getCemeteryEmergenceProgress(e, now) < 1) continue;
         var barW = e.isMiniTank ? 30 : 24;
         ctx.fillStyle = "#2d2d2d";
         ctx.fillRect(e.x - barW / 2, e.y - 22, barW, 3);
@@ -2891,12 +3701,151 @@
       }
     };
 
-    Game.prototype.drawGhost = function(ctx, ghost, isBoss) {
+    Game.prototype.drawVampire = function(ctx, vampire) {
+      var r = vampire.radius;
+      ctx.save();
+      this.prepareCemeteryEmergence(ctx, vampire);
+      ctx.fillStyle = "rgba(0,0,0,0.34)";
+      ctx.beginPath(); ctx.ellipse(2, r * 0.68, r * 0.86, r * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#211a2b";
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.48, -r * 0.18); ctx.lineTo(-r * 0.82, r * 0.72);
+      ctx.lineTo(-r * 0.34, r * 0.55); ctx.lineTo(0, r * 0.82);
+      ctx.lineTo(r * 0.34, r * 0.55); ctx.lineTo(r * 0.82, r * 0.72);
+      ctx.lineTo(r * 0.48, -r * 0.18); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#17131f";
+      ctx.lineWidth = r * 0.19;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.32, 0); ctx.lineTo(-r * 0.78, r * 0.26);
+      ctx.moveTo(r * 0.32, 0); ctx.lineTo(r * 0.78, r * 0.26);
+      ctx.stroke();
+      ctx.fillStyle = vampire.color || "#76283b";
+      ctx.beginPath(); ctx.ellipse(0, r * 0.12, r * 0.38, r * 0.46, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#a83245";
+      ctx.beginPath(); ctx.moveTo(-r * 0.45, -r * 0.46); ctx.lineTo(-r * 0.2, -r * 0.74); ctx.lineTo(-r * 0.04, -r * 0.4); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(r * 0.45, -r * 0.46); ctx.lineTo(r * 0.2, -r * 0.74); ctx.lineTo(r * 0.04, -r * 0.4); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#d8c8bd";
+      ctx.beginPath(); ctx.ellipse(0, -r * 0.4, r * 0.42, r * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#1c1722";
+      ctx.beginPath(); ctx.moveTo(-r * 0.42, -r * 0.48); ctx.lineTo(-r * 0.34, -r * 0.83); ctx.lineTo(-r * 0.08, -r * 0.68);
+      ctx.lineTo(0, -r * 0.9); ctx.lineTo(r * 0.13, -r * 0.67); ctx.lineTo(r * 0.4, -r * 0.82);
+      ctx.lineTo(r * 0.42, -r * 0.45); ctx.closePath(); ctx.fill();
+      ctx.shadowColor = "#ff2638";
+      ctx.shadowBlur = r * 0.16;
+      ctx.fillStyle = "#ed2638";
+      ctx.beginPath(); ctx.ellipse(-r * 0.16, -r * 0.43, r * 0.055, r * 0.08, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(r * 0.16, -r * 0.43, r * 0.055, r * 0.08, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#30202a";
+      ctx.beginPath(); ctx.ellipse(0, -r * 0.16, r * 0.2, r * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff0d6";
+      ctx.beginPath(); ctx.moveTo(-r * 0.14, -r * 0.2); ctx.lineTo(-r * 0.07, -r * 0.02); ctx.lineTo(-r * 0.01, -r * 0.18); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(r * 0.14, -r * 0.2); ctx.lineTo(r * 0.07, -r * 0.02); ctx.lineTo(r * 0.01, -r * 0.18); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    };
+
+    Game.prototype.drawZombie = function(ctx, zombie) {
+      var r = zombie.radius;
+      ctx.save();
+      this.prepareCemeteryEmergence(ctx, zombie);
+      ctx.rotate(Math.sin(Date.now() * 0.004 + (zombie.spawnedAt || 0)) * 0.045);
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath(); ctx.ellipse(2, r * 0.68, r * 0.82, r * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#414a2c";
+      ctx.lineWidth = r * 0.32;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.38, -r * 0.08); ctx.lineTo(-r * 0.88, r * 0.18);
+      ctx.moveTo(r * 0.38, -r * 0.08); ctx.lineTo(r * 0.88, -r * 0.25);
+      ctx.stroke();
+      ctx.strokeStyle = "#bbb18e";
+      ctx.lineWidth = Math.max(1.5, r * 0.055);
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.88, r * 0.18); ctx.lineTo(-r * 1.04, r * 0.3); ctx.lineTo(-r * 0.92, r * 0.32);
+      ctx.moveTo(r * 0.88, -r * 0.25); ctx.lineTo(r * 1.02, -r * 0.4); ctx.lineTo(r * 0.9, -r * 0.37);
+      ctx.stroke();
+      ctx.fillStyle = zombie.color || "#829455";
+      ctx.beginPath(); ctx.ellipse(0, r * 0.12, r * 0.52, r * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#687545";
+      ctx.beginPath(); ctx.moveTo(-r * 0.5, r * 0.12); ctx.lineTo(-r * 0.18, r * 0.18); ctx.lineTo(-r * 0.32, r * 0.48); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#a4ae70";
+      ctx.beginPath(); ctx.arc(0, -r * 0.42, r * 0.48, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#261b1b";
+      ctx.beginPath(); ctx.ellipse(-r * 0.18, -r * 0.48, r * 0.11, r * 0.14, -0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(r * 0.18, -r * 0.48, r * 0.11, r * 0.14, 0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = "#ff2638";
+      ctx.shadowBlur = r * 0.18;
+      ctx.fillStyle = "#e51d32";
+      ctx.beginPath(); ctx.arc(-r * 0.18, -r * 0.48, r * 0.047, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(r * 0.18, -r * 0.48, r * 0.047, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#291517";
+      ctx.beginPath(); ctx.ellipse(0, -r * 0.22, r * 0.24, r * 0.16, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#e7d8b8";
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.16, -r * 0.34); ctx.lineTo(-r * 0.08, -r * 0.2); ctx.lineTo(0, -r * 0.34);
+      ctx.lineTo(r * 0.08, -r * 0.2); ctx.lineTo(r * 0.16, -r * 0.34); ctx.lineTo(r * 0.12, -r * 0.39); ctx.lineTo(-r * 0.12, -r * 0.39);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#50412e";
+      ctx.lineWidth = Math.max(1.5, r * 0.045);
+      ctx.beginPath(); ctx.moveTo(-r * 0.35, -r * 0.67); ctx.lineTo(-r * 0.1, -r * 0.57); ctx.lineTo(r * 0.02, -r * 0.61); ctx.stroke();
+      ctx.strokeStyle = "#54252a";
+      ctx.beginPath(); ctx.moveTo(r * 0.28, r * 0.02); ctx.lineTo(r * 0.16, r * 0.24); ctx.lineTo(r * 0.34, r * 0.38); ctx.stroke();
+      ctx.restore();
+    };
+
+    Game.prototype.drawSkeleton = function(ctx, skeleton) {
+      var r = skeleton.radius;
+      ctx.save();
+      this.prepareCemeteryEmergence(ctx, skeleton);
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath(); ctx.ellipse(2, r * 0.68, r * 0.82, r * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#d8d1b8";
+      ctx.lineWidth = r * 0.16;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(0, -r * 0.08); ctx.lineTo(0, r * 0.48);
+      ctx.moveTo(-r * 0.2, -r * 0.02); ctx.lineTo(-r * 0.62, r * 0.22); ctx.lineTo(-r * 0.88, r * 0.02);
+      ctx.moveTo(r * 0.2, -r * 0.02); ctx.lineTo(r * 0.62, r * 0.2); ctx.lineTo(r * 0.86, -r * 0.04);
+      ctx.moveTo(0, r * 0.42); ctx.lineTo(-r * 0.26, r * 0.72); ctx.lineTo(-r * 0.45, r * 0.72);
+      ctx.moveTo(0, r * 0.42); ctx.lineTo(r * 0.25, r * 0.7); ctx.lineTo(r * 0.46, r * 0.7);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.26, r * 0.04); ctx.quadraticCurveTo(0, r * 0.2, r * 0.26, r * 0.04);
+      ctx.moveTo(-r * 0.25, r * 0.2); ctx.quadraticCurveTo(0, r * 0.36, r * 0.25, r * 0.2);
+      ctx.stroke();
+      ctx.fillStyle = "#d8d1b8";
+      ctx.beginPath(); ctx.arc(0, -r * 0.45, r * 0.4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#26312d";
+      ctx.beginPath(); ctx.arc(-r * 0.15, -r * 0.48, r * 0.09, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(r * 0.15, -r * 0.48, r * 0.09, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-r * 0.1, -r * 0.25); ctx.lineTo(r * 0.1, -r * 0.25); ctx.stroke();
+      ctx.restore();
+    };
+
+    Game.prototype.prepareCemeteryEmergence = function(ctx, enemy) {
+      var progress = getCemeteryEmergenceProgress(enemy, Date.now());
+      var r = enemy.radius;
+      if (progress < 1) {
+        ctx.fillStyle = "rgba(12,10,8,0.72)";
+        ctx.beginPath();
+        ctx.ellipse(enemy.x, enemy.y + r * 0.52, r * (0.55 + (1 - progress) * 0.35), r * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.translate(enemy.x, enemy.y + (1 - progress) * r * 0.6);
+      var scale = 0.45 + progress * 0.55;
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = progress;
+      return progress;
+    };
+
+    Game.prototype.drawGhost = function(ctx, ghost, isBoss, opacity) {
       var radius = ghost.radius;
       var bob = Math.sin(Date.now() * 0.003 + (ghost.ghostPhase || 0)) * (isBoss ? 4 : 2);
       ctx.save();
       ctx.translate(ghost.x, ghost.y + bob);
-      ctx.globalAlpha = isBoss ? 0.9 : 0.78;
+      ctx.globalAlpha = (isBoss ? 0.9 : 0.78) * opacity;
       ctx.shadowColor = isBoss ? "#a8f0d7" : "#b9ecd9";
       ctx.shadowBlur = isBoss ? 20 : 9;
       if (isBoss) {
@@ -2949,6 +3898,32 @@
       }
     };
 
+    Game.prototype.drawDynamites = function() {
+      var ctx = this.ctx;
+      var now = Date.now();
+      for (var i = 0; i < this.dynamites.length; i++) {
+        var charge = this.dynamites[i];
+        var armed = now >= charge.armedAt;
+        var pulse = armed ? 0.65 + Math.sin(now * 0.018) * 0.3 : 0.25;
+        ctx.save();
+        ctx.translate(charge.x, charge.y);
+        ctx.rotate(charge.rotation);
+        ctx.fillStyle = "rgba(0,0,0,0.28)";
+        ctx.beginPath(); ctx.ellipse(2, charge.radius * 0.8, charge.radius * 1.4, charge.radius * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#7f1d1d";
+        ctx.fillRect(-charge.radius, -charge.radius * 0.42, charge.radius * 2, charge.radius * 0.84);
+        ctx.fillStyle = "#dc2626";
+        ctx.fillRect(-charge.radius * 0.8, -charge.radius * 0.28, charge.radius * 1.6, charge.radius * 0.56);
+        ctx.strokeStyle = "#292524";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(charge.radius * 0.65, -charge.radius * 0.2); ctx.lineTo(charge.radius * 1.05, -charge.radius * 0.78); ctx.stroke();
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = armed ? "#fef08a" : "#fb923c";
+        ctx.beginPath(); ctx.arc(charge.radius * 1.08, -charge.radius * 0.82, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    };
+
     Game.prototype.drawParticles = function() {
       var ctx = this.ctx;
       for (var i = 0; i < this.particles.length; i++) {
@@ -2979,6 +3954,7 @@
       this.bossConfig = config;
       this.chests.length = this.trees.length = this.enemies.length =
         this.bullets.length = this.enemyBullets.length = this.tentacles.length = 0;
+      this.dynamites.length = 0;
       this.player.x = this.canvas.width * 0.72;
       this.player.y = this.canvas.height / 2;
       this.onHealthChange(this.player.health, this.player.maxHealth);
@@ -2992,8 +3968,12 @@
         health: config.health,
         maxHealth: config.health,
         speed: config.bossSpeed || 20,
-        lastSpawnAt: bossType === "ghost" ? now : now - spawnInterval + 3000,
+        lastSpawnAt: bossType === "ghost" || bossType === "zombie" || bossType === "vampire" ? now : now - spawnInterval + 3000,
+        spawnedAt: now,
+        emergesAt: bossType === "zombie" || bossType === "vampire" ? now - CEMETERY_EMERGENCE_MS : now,
+        color: bossType === "zombie" ? "#53683b" : bossType === "vampire" ? "#542238" : undefined,
         lastShotAt: now,
+        lastMeleeAt: now,
         lastCannonAt: now - (config.cannonCooldownMs || 2500) + 1200,
         lastTentacleAt: now - (config.tentacleSpawnMs || 2000),
         patrolDir: Math.random() > 0.5 ? 1 : -1,
@@ -3007,12 +3987,59 @@
       var type = this.bossConfig.type || "tank";
       if (type === "pirate") this.updateBossPirate(dt, now);
       else if (type === "kraken") this.updateBossKraken(dt, now);
+      else if (type === "zombie") this.updateBossZombie(dt, now);
+      else if (type === "vampire") this.updateBossZombie(dt, now);
       else if (type === "ghost") this.updateBossGhost(dt, now);
       else this.updateBossTank(dt, now);
       this.resolveCircleOverlap(this.boss, this.player);
       this.boss.x = clamp(this.boss.x, this.boss.radius, this.canvas.width - this.boss.radius);
       this.boss.y = clamp(this.boss.y, this.boss.radius, this.canvas.height - this.boss.radius);
       this.updateTentacles(dt, now);
+    };
+
+    Game.prototype.updateBossZombie = function(dt, now) {
+      var dx = this.player.x - this.boss.x;
+      var dy = this.player.y - this.boss.y;
+      var distance = Math.hypot(dx, dy);
+      if (distance > 0) {
+        this.boss.x += (dx / distance) * this.boss.speed * dt;
+        this.boss.y += (dy / distance) * this.boss.speed * dt;
+      }
+      if (now - this.boss.lastSpawnAt >= this.bossConfig.spawnIntervalMs) {
+        this.boss.lastSpawnAt = now;
+        this.spawnEnemy();
+      }
+      if (now >= (this.boss.nextBloodAt || 0)) {
+        this.boss.nextBloodAt = now + 300;
+        this.addBloodStain(this.boss.x - dx / (distance || 1) * this.boss.radius * 0.55,
+          this.boss.y - dy / (distance || 1) * this.boss.radius * 0.55, this.boss.radius * 0.12);
+      }
+      if (now - this.boss.lastShotAt >= this.bossConfig.shotCooldownMs) {
+        this.boss.lastShotAt = now;
+        var shotDirection = Math.atan2(dy, dx);
+        for (var shotIndex = -1; shotIndex <= 1; shotIndex++) {
+          var direction = shotDirection + shotIndex * this.bossConfig.bloodShotSpread;
+          this.enemyBullets.push({
+            x: this.boss.x + Math.cos(direction) * this.boss.radius * 0.7,
+            y: this.boss.y + Math.sin(direction) * this.boss.radius * 0.7,
+            dir: direction,
+            speed: this.bossConfig.bloodShotSpeed,
+            radius: this.bossConfig.bloodShotRadius,
+            damage: this.bossConfig.bloodShotDamage,
+            color: "#a3192b",
+            isBloodBolt: true
+          });
+        }
+      }
+      if (distance <= this.boss.radius + this.player.radius + 2 &&
+          now - this.boss.lastMeleeAt >= this.bossConfig.attackCooldownMs) {
+        this.boss.lastMeleeAt = now;
+        this.player.health = Math.max(0, this.player.health - this.bossConfig.meleeDamage);
+        this.onHealthChange(this.player.health, this.player.maxHealth);
+        this.onDamage(this.bossConfig.meleeDamage);
+        this.addParticles(this.player.x, this.player.y, "#65a34e");
+        if (this.player.health <= 0) { this.stop(); this.onGameOver(); }
+      }
     };
 
     Game.prototype.updateBossGhost = function(dt, now) {
@@ -3300,7 +4327,12 @@
       var type = this.bossConfig.type || "tank";
       if (type === "pirate") this.drawBossPirate();
       else if (type === "kraken") this.drawBossKraken();
-      else if (type === "ghost") this.drawGhost(this.ctx, this.boss, true);
+      else if (type === "zombie") this.drawZombie(this.ctx, this.boss);
+      else if (type === "vampire") this.drawVampire(this.ctx, this.boss);
+      else if (type === "ghost") {
+        var opacity = getGhostOpacity(this.boss, Date.now(), true);
+        if (opacity > 0) this.drawGhost(this.ctx, this.boss, true, opacity);
+      }
       else this.drawBossTank();
     };
 
@@ -3589,9 +4621,13 @@
       for (var i = 0; i < this.enemyBullets.length; i++) {
         var b = this.enemyBullets[i];
         ctx.fillStyle = b.color || "#fb923c";
-        ctx.shadowColor = b.isGhostBolt ? b.color : "transparent";
-        ctx.shadowBlur = b.isGhostBolt ? 12 : 0;
+        ctx.shadowColor = b.isGhostBolt || b.isBloodBolt ? b.color : "transparent";
+        ctx.shadowBlur = b.isBloodBolt ? 16 : b.isGhostBolt ? 12 : 0;
         ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
+        if (b.isBloodBolt) {
+          ctx.fillStyle = "#ed5260";
+          ctx.beginPath(); ctx.arc(b.x - b.radius * 0.28, b.y - b.radius * 0.28, b.radius * 0.3, 0, Math.PI * 2); ctx.fill();
+        }
         ctx.shadowBlur = 0;
       }
     };
@@ -3601,7 +4637,8 @@
       var knob = document.getElementById("touch-joystick-knob");
       var shootBtn = document.getElementById("touch-shoot");
       var bombBtn = document.getElementById("touch-bomb");
-      if (!joystick || !knob || !shootBtn || !bombBtn) return;
+      var dynamiteBtn = document.getElementById("touch-dynamite");
+      if (!joystick || !knob || !shootBtn || !bombBtn || !dynamiteBtn) return;
 
       var activePointerId = null;
       var maxRadius = 32;
@@ -3680,6 +4717,11 @@
         game.tryThrowBomb();
       });
 
+      dynamiteBtn.addEventListener("pointerdown", function(e) {
+        e.preventDefault();
+        game.tryPlaceDynamite();
+      });
+
       window.addEventListener("blur", function() {
         resetJoystick();
         stopShootLoop();
@@ -3705,9 +4747,17 @@
     var game = new Game(canvas, {
       getSkinId: function() { return state.selectedSkin; },
       getBombs: function() { return state.progress.bombs || 0; },
+      getDynamites: function() { return state.progress.dynamite || 0; },
       onBombsChanged: function(newBombs) {
         state.progress.bombs = Math.max(0, newBombs);
         saveState(state);
+        saveOnlineInventory();
+        syncUI();
+      },
+      onDynamitesChanged: function(newDynamites) {
+        state.progress.dynamite = Math.max(0, newDynamites);
+        saveState(state);
+        saveOnlineInventory();
         syncUI();
       },
       onKillsChange: function(kills) {
@@ -3738,6 +4788,7 @@
         state.progress.lives = Math.max(0, state.progress.lives - 1);
         state.progress.playerHealth = PLAYER_START.maxHealth;
         saveState(state);
+        saveOnlineInventory();
         syncUI();
         document.getElementById("boss-hud").classList.add("hidden");
         if (state.progress.lives > 0) {
@@ -3782,6 +4833,7 @@
         var isLastLevel = currentLevel >= island.levels;
         if (isLastLevel && BOSS_CONFIGS[currentIsland]) {
           saveState(state);
+          saveOnlineProgressCheckpoint();
           syncUI();
           showLevelComplete(false, currentIsland, currentLevel, stats, function() {
             startBossFight(currentIsland);
@@ -3793,6 +4845,7 @@
             state.progress.unlockedIslands.push(nextId);
           }
           saveState(state);
+          saveOnlineProgressCheckpoint();
           syncUI();
           showLevelComplete(true, currentIsland, currentLevel, stats, function() {
             hideLevelComplete();
@@ -3801,6 +4854,7 @@
           });
         } else {
           saveState(state);
+          saveOnlineProgressCheckpoint();
           syncUI();
           showLevelComplete(false, currentIsland, currentLevel, stats, function() {
             startGameLevel(currentIsland, currentLevel + 1);
@@ -3863,6 +4917,7 @@
           state.progress.unlockedIslands.push(nextId);
         }
         saveState(state);
+        saveOnlineProgressCheckpoint();
         syncUI();
         showLevelComplete(true, islandIdx, ISLANDS[islandIdx].levels, {
           enemiesKilled: 0, chestsCollected: 0, fromEnemies: 0, fromChests: 0,
@@ -3898,6 +4953,7 @@
         coins: state.coins,
         lives: state.progress.lives,
         bombs: state.progress.bombs,
+        dynamite: state.progress.dynamite,
         kills: game.enemiesKilledThisLevel || 0
       });
       updateStoreCoins(state.coins);
@@ -3906,10 +4962,20 @@
       if (livesEl) livesEl.textContent = state.progress.lives;
       var bombsEl = document.getElementById("store-bombs");
       if (bombsEl) bombsEl.textContent = state.progress.bombs;
+      var dynamiteEl = document.getElementById("store-dynamite");
+      if (dynamiteEl) dynamiteEl.textContent = state.progress.dynamite;
+      var dynamiteDescEl = document.getElementById("store-dynamite-desc");
+      if (dynamiteDescEl) dynamiteDescEl.textContent = "+" + GAMEPLAY.dynamitesPerPack + " cargas · " + GAMEPLAY.dynamiteCost + " 🪙";
       var livesBtn = document.getElementById("btn-buy-lives");
       if (livesBtn) livesBtn.disabled = state.coins < GAMEPLAY.livesCost;
       var bombsBtn = document.getElementById("btn-buy-bombs");
       if (bombsBtn) bombsBtn.disabled = state.coins < GAMEPLAY.bombPackCost;
+      var dynamiteBtn = document.getElementById("btn-buy-dynamite");
+      if (dynamiteBtn) dynamiteBtn.disabled = state.coins < GAMEPLAY.dynamiteCost;
+      var touchDynamiteBtn = document.getElementById("touch-dynamite");
+      if (touchDynamiteBtn) touchDynamiteBtn.disabled = state.progress.dynamite <= 0;
+      var playBtn = document.getElementById("btn-play");
+      if (playBtn) playBtn.disabled = onlineProgressLoading;
       updateDailyChallengeStatus();
     }
 
@@ -3954,6 +5020,10 @@
 
     document.getElementById("btn-buy-bombs").addEventListener("click", function() {
       purchaseWithCoins(GAMEPLAY.bombPackCost, { type: "bombs" });
+    });
+
+    document.getElementById("btn-buy-dynamite").addEventListener("click", function() {
+      purchaseWithCoins(GAMEPLAY.dynamiteCost, { type: "dynamite" });
     });
 
     document.getElementById("btn-store").addEventListener("click", function() {
@@ -4011,6 +5081,9 @@
       state = loadState();
       if (onlineWallet) updateWalletBalance(onlineWallet);
       game.player.health = game.player.maxHealth;
+      saveState(state);
+      saveOnlineInventory();
+      if (onlineSession) saveOnlineProgressCheckpoint();
       syncUI();
       setStoreMessage("");
     });
@@ -4029,7 +5102,13 @@
     }
     setupOnlineFeatures();
     syncUI();
-    showScreen("screen-menu");
+    if (DEBUG_START_LIGHTHOUSE_BOSS_TEST) startBossFight(5);
+    else if (DEBUG_START_LIGHTHOUSE_ISLAND_TEST) startGameLevel(5, 1);
+    else if (DEBUG_START_CEMETERY_BOSS_TEST) startBossFight(4);
+    else if (DEBUG_START_CEMETERY_ISLAND_TEST) startGameLevel(4, 1);
+    else if (DEBUG_START_GHOST_BOSS_TEST) startBossFight(3);
+    else if (DEBUG_START_GHOST_ISLAND_TEST) startGameLevel(3, 1);
+    else showScreen("screen-menu");
   </script>
 </body>
 </html>

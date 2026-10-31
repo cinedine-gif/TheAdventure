@@ -56,23 +56,28 @@ Abrir directamente en el navegador haciendo doble clic.
 ### Economía
 - 🪙 Monedas: 1 por enemigo eliminado, 5 por cofre, 10 de bonus al completar nivel
 - **Modo replay** (niveles ya completados): solo monedas de enemigos, NO de cofres ni bonus
-- Sin cuenta: monedas guardadas en localStorage; con sesión iniciada: saldo privado por usuario en Supabase y copia local de las operaciones pendientes
+- Sin cuenta: monedas y progreso guardados en localStorage; con sesión iniciada: saldo privado por usuario en Supabase y progreso vinculado a su cuenta
 - El saldo local previo se traslada una sola vez a la primera cuenta que se conecte en ese navegador; no se vuelve a copiar a otras cuentas
 - Las recompensas se pueden acumular sin conexión y se reenvían al reconectar, volver a la ventana, abrir la tienda o iniciar sesión
-- Las compras online entregan skins, vidas o bombas solo cuando Supabase confirma el gasto; los reenvíos no duplican cargos ni artículos
-- Skins, consumibles y progreso siguen siendo locales; esta sincronización solo comparte las monedas entre dispositivos
+- Las compras online entregan skins, vidas, bombas o dinamita solo cuando Supabase confirma el gasto; los reenvíos no duplican cargos ni artículos
+- Monedas, checkpoints e inventario se sincronizan por separado mediante `player_wallets`, `player_progress` y `player_inventory`
+- `player_progress` guarda el último checkpoint por usuario: niveles completados, islas desbloqueadas, jefes derrotados, salud y reto diario
+- `player_inventory` guarda skins, vidas, bombas y dinamita; las compras confirmadas y los consumos se sincronizan sin guardar la fase en curso
+- El checkpoint se sube solo al completar un nivel o derrotar un jefe. La fase en curso no se sube; en otro dispositivo se abre desde el principio del siguiente nivel pendiente
+- Al actualizar, las cuentas que derrotaron al jefe de Isla 3 repiten las islas 4, 5 y 6: se borran sus niveles y jefes de esas islas y se conserva Isla 4 desbloqueada, sin tocar monedas ni inventario
+- El progreso invitado no se migra al iniciar sesión: el primer snapshot se envía al completar un nivel o derrotar un jefe. Las escrituras fallidas quedan en `lahistoria_progress_pending_<userId>` y se reintentan al reconectar o iniciar sesión
 - **Reto diario**: eliminar 50 enemigos en un mismo nivel para ganar 100 monedas extra; se puede cobrar una vez al día
 - El premio del reto diario aparece en el resumen al completar el nivel
 
 ### Cuentas online y clasificación 🔧
-- Integración frontend preparada con Supabase Auth: registro con correo/contraseña, alias público, inicio y cierre de sesión
+- Integración frontend preparada con Supabase Auth: registro con correo/contraseña, alias público, inicio y cierre de sesión, y restablecimiento de contraseña por correo
 - Clasificación pública con puntos acumulados por jugador y su nivel máximo alcanzado (1-60: Cementerio de la Niebla/nivel 1 = 41; Faro de los Condenados/nivel 1 = 51)
 - Cada intento con sesión iniciada suma 10 puntos por enemigo y 25 por cofre, también al repetir niveles, perder una vida, salir al menú o combatir jefes; sin bajas ni cofres no se generan puntos
 - Los puntos se guardan localmente durante el intento y se envían al detenerlo; los pendientes se recuperan tras recargar y se reintentan al iniciar sesión, recuperar conexión o abrir la clasificación
 - Cada intento tiene un identificador único para que los reenvíos no dupliquen puntos; el récord de cada nivel se conserva por separado
 - Monedero por cuenta en `player_wallets`, con transacciones atómicas en `coin_transactions`; no se permite gastar más saldo del disponible, aunque se usen varios dispositivos
 - Esquema y políticas de acceso en `supabase_setup.sql`
-- Para activar o actualizar el servicio: ejecutar todo `supabase_setup.sql` en Supabase (también si ya estaba instalado) y añadir `https://theadventure.neocities.org` a las URLs permitidas de Auth
+- Para activar o actualizar el servicio: ejecutar todo `supabase_setup.sql` en Supabase (también si ya estaba instalado, para crear `player_progress` y `player_inventory`) y añadir `https://theadventure.neocities.org` y `http://127.0.0.1:8000/**` a las URLs permitidas de redirección de Auth
 - La actualización conserva los puntos ya registrados; no puede recuperar intentos antiguos descartados por la regla anterior de guardar solo el récord
 - Pruebas locales del monedero, sin dependencias adicionales: `node --test scripts/wallet.test.cjs`
 - Pruebas de aparición, disparos y daño del fantasma: `node --test scripts/ghost.test.cjs`
@@ -91,9 +96,11 @@ Abrir directamente en el navegador haciendo doble clic.
 - **Compras:** `purchaseWithCoins()` reserva el importe localmente y solicita confirmación a `apply_coin_transaction`; solo después entrega la skin, las vidas o las bombas. Mientras una compra está pendiente no se inicia otra
 - **Respuesta perdida:** la misma compra se reenvía con el mismo identificador; `coin_transactions` evita cobrarla dos veces y los recibos locales evitan entregar dos veces sus artículos
 - **Varios dispositivos:** el servidor actualiza cada saldo de forma atómica y rechaza gastos si ya no hay suficientes monedas, aunque otro dispositivo mostrase un saldo antiguo. El saldo se refresca al recuperar el foco, abrir la tienda o iniciar sesión; no es una actualización en tiempo real
-- **Privacidad:** las políticas RLS permiten a cada usuario leer solo su monedero y sus transacciones; los cambios de saldo se realizan mediante la función SQL autenticada
-- **Límite actual:** se sincronizan las monedas, los puntos de clasificación y el nivel máximo online. Las skins, vidas, bombas, salud, avance jugable y cobro del reto diario siguen siendo locales y no se trasladan automáticamente entre dispositivos
-- **Reiniciar progreso local:** borra el avance y los artículos locales, además de las monedas de invitado; no borra el monedero de la cuenta ni los puntos o el nivel máximo de la clasificación, y no devuelve el coste de las compras borradas
+- **Privacidad:** las políticas RLS permiten a cada usuario leer y escribir solo sus filas de `player_progress` y `player_inventory`, además de su monedero y transacciones
+- **Checkpoints:** `player_progress` solo se actualiza al completar nivel o jefe. La fase actual no se sube; otro dispositivo comienza desde el principio del siguiente nivel pendiente
+- **Inventario:** compras y consumos actualizan `player_inventory` por separado para que skins, vidas, bombas y dinamita estén disponibles en otros dispositivos
+- **Reintentos:** cada checkpoint pendiente se conserva en `lahistoria_progress_pending_<userId>` y se reenvía al iniciar sesión o recuperar conexión
+- **Reiniciar progreso:** borra el checkpoint de la cuenta o el progreso local de invitado; no borra el monedero ni las puntuaciones de clasificación, y no devuelve el coste de compras ya confirmadas
 
 ### Tienda
 - **Mi taquilla**: skins ya desbloqueadas (cambiar skin)
@@ -163,6 +170,7 @@ Abrir directamente en el navegador haciendo doble clic.
 - [ ] Ejecutar `supabase_setup.sql` en el SQL Editor del proyecto Supabase
 - [ ] Configurar la URL del sitio y la URL de redirección de Auth para Neocities
 - [ ] Probar registro, confirmación de correo, inicio de sesión y publicación en la clasificación
+- [ ] Probar solicitud de recuperación y actualización de contraseña con el enlace del correo
 
 ### Pulido visual
 - [ ] Transición de pantalla entre niveles (fade)

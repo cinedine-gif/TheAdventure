@@ -7,12 +7,13 @@ const vm = require("node:vm");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const walletSource = html.slice(html.indexOf("    function createOperationId()"), html.indexOf("    var onlineScoreQueue = []"));
-const saveSource = html.slice(html.indexOf("    function saveState(state)"), html.indexOf("    function applyGlobalResetIfNeeded()"));
+const saveSource = html.slice(html.indexOf("    function saveState(state)"), html.indexOf("    function buildPlayerProgressSnapshot(sourceState)"));
 
 function createServer() {
   return {
     balances: new Map(),
     operations: new Map(),
+    inventories: new Map(),
     offline: false,
     loseReply: false,
     async rpc(name, parameters, session) {
@@ -43,7 +44,7 @@ function createServer() {
 }
 
 function createBrowser(server, storage = new Map()) {
-  const progress = JSON.parse(storage.get("progress") || '{"lives":3,"bombs":0}');
+  const progress = JSON.parse(storage.get("progress") || '{"lives":3,"bombs":0,"dynamite":0}');
   const context = vm.createContext({
     Uint8Array, Array, Promise, JSON, Number, Math,
     onlineWallet: null,
@@ -55,7 +56,42 @@ function createBrowser(server, storage = new Map()) {
     },
     STORAGE_KEYS: { coins: "coins", selectedSkin: "skin", unlockedSkins: "skins", progress: "progress" },
     SKINS: { red: { label: "Roja" } },
-    GAMEPLAY: { livesPerPack: 3, bombsPerPack: 3 },
+    GAMEPLAY: { livesPerPack: 3, bombsPerPack: 3, dynamitesPerPack: 10 },
+    getAccountProgressCacheKey: function(userId) { return "progress_cache_" + userId; },
+    buildPlayerProgressSnapshot: function(sourceState) {
+      return {
+        selectedSkin: sourceState.selectedSkin,
+        unlockedSkins: sourceState.unlockedSkins.slice(),
+        progress: JSON.parse(JSON.stringify(sourceState.progress))
+      };
+    },
+    buildPlayerAccountCache: function(sourceState) {
+      return {
+        checkpoint: {
+          selectedSkin: sourceState.selectedSkin,
+          unlockedSkins: sourceState.unlockedSkins.slice(),
+          progress: JSON.parse(JSON.stringify(sourceState.progress))
+        },
+        inventory: {
+          selectedSkin: sourceState.selectedSkin,
+          unlockedSkins: sourceState.unlockedSkins.slice(),
+          lives: sourceState.progress.lives,
+          bombs: sourceState.progress.bombs,
+          dynamite: sourceState.progress.dynamite
+        }
+      };
+    },
+    saveOnlineInventory: function() {
+      if (!context.onlineSession) return Promise.resolve(true);
+      context.server.inventories.set(context.onlineSession.user.id, {
+        selectedSkin: context.state.selectedSkin,
+        unlockedSkins: context.state.unlockedSkins.slice(),
+        lives: context.state.progress.lives,
+        bombs: context.state.progress.bombs,
+        dynamite: context.state.progress.dynamite
+      });
+      return Promise.resolve(true);
+    },
     game: { running: false },
     toInt: function(value, fallback) {
       const result = parseInt(value, 10);
@@ -70,6 +106,7 @@ function createBrowser(server, storage = new Map()) {
     setAccountStatus: function() {},
     setStoreMessage: function() {}
   });
+  context.server = server;
   context.supabaseClient = {
     rpc: function(name, parameters) { return server.rpc(name, parameters, context.onlineSession); }
   };
@@ -81,6 +118,25 @@ function createBrowser(server, storage = new Map()) {
       context.onlineSession = userId ? { user: { id: userId } } : null;
       context.connectOnlineWallet(context.onlineSession);
       await context.flushOnlineWallet();
+      const progressCache = userId && storage.get("progress_cache_" + userId);
+      if (progressCache) {
+        const cache = JSON.parse(progressCache);
+        const checkpoint = cache.checkpoint || cache;
+        context.state.progress = checkpoint.progress;
+        if (cache.inventory) {
+          context.state.progress.lives = cache.inventory.lives;
+          context.state.progress.bombs = cache.inventory.bombs;
+          context.state.progress.dynamite = cache.inventory.dynamite;
+        }
+      }
+      const inventory = userId && server.inventories.get(userId);
+      if (inventory) {
+        context.state.selectedSkin = inventory.selectedSkin;
+        context.state.unlockedSkins = inventory.unlockedSkins.slice();
+        context.state.progress.lives = inventory.lives;
+        context.state.progress.bombs = inventory.bombs;
+        context.state.progress.dynamite = inventory.dynamite;
+      }
     }
   };
 }
@@ -120,6 +176,9 @@ test("the same account reads earnings and purchases on another device", async fu
   second.context.purchaseWithCoins(100, { type: "lives" });
   await second.context.flushOnlineWallet();
   assert.equal(second.context.state.progress.lives, 6);
+  assert.equal(server.inventories.get("player").lives, 6);
+  await first.login("player");
+  assert.equal(first.context.state.progress.lives, 6);
   await first.context.flushOnlineWallet(true);
   assert.equal(first.context.state.coins, 100);
 });
@@ -175,4 +234,20 @@ test("a stale device cannot buy with coins already spent elsewhere", async funct
   assert.equal(second.context.state.progress.bombs, 0);
   assert.equal(second.context.state.coins, 0);
   assert.equal(first.context.state.selectedSkin, "red");
+});
+
+test("a dynamite pack grants ten charges once after online confirmation", async function() {
+  const server = createServer();
+  server.balances.set("player", 300);
+  const browser = createBrowser(server);
+  await browser.login("player");
+
+  browser.context.purchaseWithCoins(300, { type: "dynamite" });
+  await browser.context.flushOnlineWallet();
+  assert.equal(browser.context.state.progress.dynamite, 10);
+  assert.equal(server.balances.get("player"), 0);
+
+  await browser.context.flushOnlineWallet(true);
+  assert.equal(browser.context.state.progress.dynamite, 10);
+  assert.equal(server.balances.get("player"), 0);
 });

@@ -37,7 +37,7 @@ function createGame(width, height, mobile = true) {
   game.player = { x: 640, y: 360 };
   game.chests = [{ x: 0, y: 0, active: true }];
   game.enemies = [{ x: 1280, y: 720 }];
-  for (const name of ["drawBackground", "drawTrees", "drawChests", "drawEnemies", "drawBullets", "drawPlayer", "drawParticles", "drawDamageTexts", "drawTentacles", "drawBoss", "drawEnemyBullets"]) {
+  for (const name of ["drawBackground", "drawBloodStains", "drawTrees", "drawDynamites", "drawChests", "drawEnemies", "drawBullets", "drawPlayer", "drawParticles", "drawDamageTexts", "drawTentacles", "drawBoss", "drawEnemyBullets"]) {
     game[name] = function() {};
   }
   return { game: game, calls: calls };
